@@ -24,13 +24,9 @@ $STD apt-get install -y \
   mc
 msg_ok "Installed Dependencies"
 
+# Set the MySQL version automatically (no user prompt)
 RELEASE_REPO="mysql-8.0"
 RELEASE_AUTH="mysql_native_password"
-read -r -p "Would you like to install the MySQL 8.4 LTS release instead of MySQL 8.0 (bug fix track; EOL April-2026)? <y/N> " prompt
-if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then
-      RELEASE_REPO="mysql-8.4-lts"
-      RELEASE_AUTH="caching_sha2_password"
-fi
 
 msg_info "Installing MySQL"
 curl -fsSL https://repo.mysql.com/RPM-GPG-KEY-mysql-2023 | gpg --dearmor  -o /usr/share/keyrings/mysql.gpg
@@ -50,30 +46,28 @@ echo -e "MySQL user: root" >>~/mysql.creds
 echo -e "MySQL password: $ADMIN_PASS" >>~/mysql.creds
 msg_ok "MySQL Server configured"
 
-read -r -p "Would you like to add PhpMyAdmin? <y/N> " prompt
-if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
-  msg_info "Installing phpMyAdmin"
-  $STD apt-get install -y \
-    apache2 \
-    php \
-    php-mysqli \
-    php-mbstring \
-    php-zip \
-    php-gd \
-    php-json \
-    php-curl 
-	
-	wget -q "https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.tar.gz"
-	mkdir -p /var/www/html/phpMyAdmin
-	tar xf phpMyAdmin-5.2.1-all-languages.tar.gz --strip-components=1 -C /var/www/html/phpMyAdmin
-	cp /var/www/html/phpMyAdmin/config.sample.inc.php /var/www/html/phpMyAdmin/config.inc.php
-	SECRET=$(openssl rand -base64 24)
-	sed -i "s#\$cfg\['blowfish_secret'\] = '';#\$cfg['blowfish_secret'] = '${SECRET}';#" /var/www/html/phpMyAdmin/config.inc.php
-	chmod 660 /var/www/html/phpMyAdmin/config.inc.php
-	chown -R www-data:www-data /var/www/html/phpMyAdmin
-	systemctl restart apache2
-  msg_ok "Installed phpMyAdmin"
-fi
+# PhpMyAdmin installation will be automatic (no user prompt)
+msg_info "Installing phpMyAdmin"
+$STD apt-get install -y \
+  apache2 \
+  php \
+  php-mysqli \
+  php-mbstring \
+  php-zip \
+  php-gd \
+  php-json \
+  php-curl
+
+wget -q "https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.tar.gz"
+mkdir -p /var/www/html/phpMyAdmin
+tar xf phpMyAdmin-5.2.1-all-languages.tar.gz --strip-components=1 -C /var/www/html/phpMyAdmin
+cp /var/www/html/phpMyAdmin/config.sample.inc.php /var/www/html/phpMyAdmin/config.inc.php
+SECRET=$(openssl rand -base64 24)
+sed -i "s#\$cfg\['blowfish_secret'\] = '';#\$cfg['blowfish_secret'] = '${SECRET}';#" /var/www/html/phpMyAdmin/config.inc.php
+chmod 660 /var/www/html/phpMyAdmin/config.inc.php
+chown -R www-data:www-data /var/www/html/phpMyAdmin
+systemctl restart apache2
+msg_ok "Installed phpMyAdmin"
 
 msg_info "Start Service"
 systemctl enable -q --now mysql
