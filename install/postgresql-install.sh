@@ -135,14 +135,14 @@ EOF
 sudo systemctl restart postgresql
 msg_ok "Installed PostgreSQL"
 
-read -r -p "Would you like to add Adminer? <y/N> " prompt
-if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then
-  msg_info "Installing Adminer"
-  $STD apt install -y adminer
-  $STD a2enconf adminer
-  systemctl reload apache2
-  msg_ok "Installed Adminer"
-fi
+#read -r -p "Would you like to add Adminer? <y/N> " prompt
+#if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then
+msg_info "Installing Adminer"
+$STD apt install -y adminer
+$STD a2enconf adminer
+systemctl reload apache2
+msg_ok "Installed Adminer"
+#fi
 
 motd_ssh
 customize
