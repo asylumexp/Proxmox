@@ -127,23 +127,13 @@ function select_storage() {
     fi
     MENU+=("$TAG" "$ITEM" "OFF")
   done < <(pvesm status -content $CONTENT | awk 'NR>1')
-  
+  local STORAGE="storage1"
   # Select storage location
-  if [ $((${#MENU[@]}/3)) -eq 1 ]; then
-    printf ${MENU[0]}
+  if [[ ${#MENU[@]} " =~ " $STORAGE " ]]; then
+     printf "%s" "$STORAGE"
   else
-    local STORAGE
-    while [ -z "${STORAGE:+x}" ]; do
-      STORAGE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "Storage Pools" --radiolist \
-      "Which storage pool you would like to use for the ${CONTENT_LABEL,,}?\nTo make a selection, use the Spacebar.\n" \
-      16 $(($MSG_MAX_LENGTH + 23)) 6 \
-      "${MENU[@]}" 3>&1 1>&2 2>&3) || exit "Menu aborted."
-      if [ $? -ne 0 ]; then
-        echo -e "${CROSS}${RD} Menu aborted by user.${CL}"
-        exit 0 
-      fi
-    done
-    printf "%s" "$STORAGE"
+    msg_error "Default storage 'storage1' is not available."
+    exit 203
   fi
 }
 # Test if required variables are set
