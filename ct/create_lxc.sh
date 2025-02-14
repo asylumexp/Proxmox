@@ -127,7 +127,7 @@ function select_storage() {
     fi
     MENU+=("$TAG" "$ITEM" "OFF")
   done < <(pvesm status -content $CONTENT | awk 'NR>1')
-  local STORAGE="storage1"
+  local STORAGE="local-lvm"
   # Select storage location
   if [[ ${#MENU[@]} " =~ " $STORAGE " ]]; then
      printf "%s" "$STORAGE"
