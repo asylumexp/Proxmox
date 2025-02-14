@@ -62,11 +62,9 @@ msg_ok "MySQL service started and ready"
 msg_info "Configuring MySQL Server"
 ADMIN_PASS="$(openssl rand -base64 18 | cut -c1-13)"
 
-# Set root user password for access from localhost
-$STD mysql -uroot -e "UPDATE mysql.user SET authentication_string=PASSWORD('$ADMIN_PASS') WHERE User='root' AND Host='localhost'; FLUSH PRIVILEGES;"
-
-# Allow root access from any host (optional)
-$STD mysql -uroot -e "UPDATE mysql.user SET Host='%' WHERE User='root'; FLUSH PRIVILEGES;"
+# Set root user password for access from localhost and from any host
+$STD mysql -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$ADMIN_PASS'; FLUSH PRIVILEGES;"
+$STD mysql -uroot -e "ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '$ADMIN_PASS'; FLUSH PRIVILEGES;"
 
 echo "" >~/mysql.creds
 echo -e "MySQL user: root" >>~/mysql.creds
