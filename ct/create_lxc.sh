@@ -131,7 +131,7 @@ function select_storage() {
   if [[ " ${MENU[@]} " =~ " $STORAGE " ]]; then
     printf "%s" "$STORAGE"
   else
-    msg_error "Default storage 'storage1' is not available."
+    msg_error "Default storage 'local-lvm' is not available."
     exit 203
   fi
   # Select storage location
