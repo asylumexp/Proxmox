@@ -132,8 +132,8 @@ function select_storage() {
   if [ $((${#MENU[@]})) -eq " $STORAGE " ] then
      printf "%s" "$STORAGE"
   else
-    msg_error "Default storage 'storage1' is not available."
-    exit 203
+    msg_error "Default storage is not available."
+    exit 1
   fi
 }
 # Test if required variables are set
