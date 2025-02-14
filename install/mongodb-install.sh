@@ -29,13 +29,8 @@ $STD apt-get install -y wget
 $STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
-# Abfrage für die MongoDB-Version
-read -p "Do you want to install MongoDB 8.0 instead of 7.0? [y/N]: " install_mongodb_8
-if [[ "$install_mongodb_8" =~ ^[Yy]$ ]]; then
-  MONGODB_VERSION="8.0"
-else
-  MONGODB_VERSION="7.0"
-fi
+# Directly set MongoDB version (no prompt)
+MONGODB_VERSION="8.0"  # Set this to "7.0" if you want MongoDB 7.0 instead of 8.0
 
 msg_info "Installing MongoDB $MONGODB_VERSION"
 wget -qO- https://www.mongodb.org/static/pgp/server-${MONGODB_VERSION}.asc | gpg --dearmor >/usr/share/keyrings/mongodb-server-${MONGODB_VERSION}.gpg
