@@ -129,7 +129,7 @@ function select_storage() {
   done < <(pvesm status -content $CONTENT | awk 'NR>1')
   local STORAGE="local-lvm"
   # Select storage location
-  if [ $((${#MENU[@]})) -eq " $STORAGE " ] then
+  if [ $((${#MENU[@]})) -eq " $STORAGE " ]; then
      printf "%s" "$STORAGE"
   else
     msg_error "Default storage is not available."
