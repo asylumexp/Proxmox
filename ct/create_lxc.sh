@@ -128,13 +128,19 @@ function select_storage() {
     MENU+=("$TAG" "$ITEM" "OFF")
   done < <(pvesm status -content $CONTENT | awk 'NR>1')
   local STORAGE="local-lvm"
-  # Select storage location
-  if [[ ${#MENU[@]} " =~ " $STORAGE " ]]; then
-     printf "%s" "$STORAGE"
+  if [[ " ${MENU[@]} " =~ " $STORAGE " ]]; then
+    printf "%s" "$STORAGE"
   else
     msg_error "Default storage 'storage1' is not available."
     exit 203
   fi
+  # Select storage location
+ # if [[ ${#MENU[@]} " =~ " $STORAGE " ]]; then
+   #  printf "%s" "$STORAGE"
+  #else
+   # msg_error "Default storage 'storage1' is not available."
+    #exit 203
+  #fi
 }
 # Test if required variables are set
 [[ "${CTID:-}" ]] || exit "You need to set 'CTID' variable."
