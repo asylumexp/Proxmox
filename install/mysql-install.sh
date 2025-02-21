@@ -47,7 +47,7 @@ echo -e "MySQL password: $ADMIN_PASS" >>~/mysql.creds
 msg_ok "MySQL Server configured"
 
 # PhpMyAdmin installation will be automatic (no user prompt)
-msg_info "Installing phpMyAdmin"
+msg_info "Installing PHPMyAdmin"
 $STD apt-get install -y \
   apache2 \
   php \
@@ -67,7 +67,7 @@ sed -i "s#\$cfg\['blowfish_secret'\] = '';#\$cfg['blowfish_secret'] = '${SECRET}
 chmod 660 /var/www/html/phpMyAdmin/config.inc.php
 chown -R www-data:www-data /var/www/html/phpMyAdmin
 systemctl restart apache2
-msg_ok "Installed phpMyAdmin"
+msg_ok "Installed PHPMyAdmin"
 
 msg_info "Start Service"
 systemctl enable -q --now mysql
@@ -76,7 +76,7 @@ msg_ok "Service started"
 motd_ssh
 customize
 
-msg_info "Cleaning up"
+#msg_info "Cleaning up"
 $STD apt-get -y autoremove
 $STD apt-get -y autoclean
-msg_ok "Cleaned"
+#msg_ok "Cleaned"
