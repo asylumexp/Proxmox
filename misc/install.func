@@ -147,7 +147,7 @@ network_check() {
    # msg_ok "IPv4 Internet Connected";
     ipv4_connected=true
   else
-    #msg_error "IPv4 Internet Not Connected";
+    msg_error "IPv4 Internet Not Connected";
   fi
 
 # Check IPv6 connectivity to Google, Cloudflare & Quad9 DNS servers.
