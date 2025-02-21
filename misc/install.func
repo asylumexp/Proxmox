@@ -193,7 +193,7 @@ EOF
   $STD apt-get update
   $STD apt-get -o Dpkg::Options::="--force-confold" -y dist-upgrade
   rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
-  msg_ok "Updated Container OS"
+ # msg_ok "Updated Container OS"
 }
 
 # This function modifies the message of the day (motd) and SSH settings
