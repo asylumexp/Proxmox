@@ -148,7 +148,7 @@ setting_up_container() {
   fi
   rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
   systemctl disable -q --now systemd-networkd-wait-online.service
-  msg_ok "Set up Container OS"
+ # msg_ok "Set up Container OS"
   msg_ok "Network Connected: ${BL}$(hostname -I)"
 }
 
@@ -169,7 +169,7 @@ network_check() {
 
   # Check IPv6 connectivity to Google, Cloudflare & Quad9 DNS servers.
   if ping6 -c 1 -W 1 2606:4700:4700::1111 &>/dev/null || ping6 -c 1 -W 1 2001:4860:4860::8888 &>/dev/null || ping6 -c 1 -W 1 2620:fe::fe &>/dev/null; then
-    msg_ok "IPv6 Internet Connected"
+    #msg_ok "IPv6 Internet Connected"
     ipv6_connected=true
   else
     msg_error "IPv6 Internet Not Connected"
@@ -194,7 +194,7 @@ network_check() {
 
 # This function updates the Container OS by running apt-get update and upgrade
 update_os() {
-  msg_info "Updating Container OS"
+ # msg_info "Updating Container OS"
   if [[ "$CACHER" == "yes" ]]; then
     echo "Acquire::http::Proxy-Auto-Detect \"/usr/local/bin/apt-proxy-detect.sh\";" >/etc/apt/apt.conf.d/00aptproxy
     cat <<EOF >/usr/local/bin/apt-proxy-detect.sh
@@ -210,7 +210,7 @@ EOF
   $STD apt-get update
   $STD apt-get -o Dpkg::Options::="--force-confold" -y dist-upgrade
   rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
-  msg_ok "Updated Container OS"
+ # msg_ok "Updated Container OS"
 }
 
 # This function modifies the message of the day (motd) and SSH settings
@@ -230,7 +230,7 @@ motd_ssh() {
   PROFILE_FILE="/etc/profile.d/00_lxc-details.sh"
   echo "echo -e \"\"" >"$PROFILE_FILE"
   echo -e "echo -e \"${BOLD}${APPLICATION} LXC Container${CL}"\" >>"$PROFILE_FILE"
-  echo -e "echo -e \"${TAB}${GATEWAY}${YW} Provided by: ${GN}community-scripts ORG ${YW}| GitHub: ${GN}https://github.com/community-scripts/ProxmoxVE${CL}\"" >>"$PROFILE_FILE"
+ # echo -e "echo -e \"${TAB}${GATEWAY}${YW} Provided by: ${GN}community-scripts ORG ${YW}| GitHub: ${GN}https://github.com/community-scripts/ProxmoxVE${CL}\"" >>"$PROFILE_FILE"
   echo "echo \"\"" >>"$PROFILE_FILE"
   echo -e "echo -e \"${TAB}${OS}${YW} OS: ${GN}${OS_NAME} - Version: ${OS_VERSION}${CL}\"" >>"$PROFILE_FILE"
   echo -e "echo -e \"${TAB}${HOSTNAME}${YW} Hostname: ${GN}\$(hostname)${CL}\"" >>"$PROFILE_FILE"
