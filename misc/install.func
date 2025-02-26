@@ -126,7 +126,7 @@ msg_error() {
 
 # This function sets up the Container OS by generating the locale, setting the timezone, and checking the network connection
 setting_up_container() {
-  msg_info "Setting up Container OS"
+  msg_info " "
   sed -i "/$LANG/ s/\(^# \)//" /etc/locale.gen
   locale_line=$(grep -v '^#' /etc/locale.gen | grep -E '^[a-zA-Z]' | awk '{print $1}' | head -n 1)
   echo "LANG=${locale_line}" >/etc/default/locale
@@ -148,7 +148,7 @@ setting_up_container() {
   fi
   rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
   systemctl disable -q --now systemd-networkd-wait-online.service
- # msg_ok "Set up Container OS"
+  msg_ok " "
   msg_ok "Network Connected: ${BL}$(hostname -I)"
 }
 
@@ -169,7 +169,7 @@ network_check() {
 
   # Check IPv6 connectivity to Google, Cloudflare & Quad9 DNS servers.
   if ping6 -c 1 -W 1 2606:4700:4700::1111 &>/dev/null || ping6 -c 1 -W 1 2001:4860:4860::8888 &>/dev/null || ping6 -c 1 -W 1 2620:fe::fe &>/dev/null; then
-    #msg_ok "IPv6 Internet Connected"
+     msg_ok " "
     ipv6_connected=true
   else
     msg_error "IPv6 Internet Not Connected"
@@ -187,7 +187,7 @@ network_check() {
   fi
 
   RESOLVEDIP=$(getent hosts github.com | awk '{ print $1 }')
-  if [[ -z "$RESOLVEDIP" ]]; then msg_error "DNS Lookup Failure"; else msg_ok "DNS Resolved github.com to ${BL}$RESOLVEDIP${CL}"; fi
+  if [[ -z "$RESOLVEDIP" ]]; then msg_error "DNS Lookup Failure"; else msg_ok " "; fi
   set -e
   trap 'error_handler $LINENO "$BASH_COMMAND"' ERR
 }
@@ -230,7 +230,7 @@ motd_ssh() {
   PROFILE_FILE="/etc/profile.d/00_lxc-details.sh"
   echo "echo -e \"\"" >"$PROFILE_FILE"
   echo -e "echo -e \"${BOLD}${APPLICATION} LXC Container${CL}"\" >>"$PROFILE_FILE"
- # echo -e "echo -e \"${TAB}${GATEWAY}${YW} Provided by: ${GN}community-scripts ORG ${YW}| GitHub: ${GN}https://github.com/community-scripts/ProxmoxVE${CL}\"" >>"$PROFILE_FILE"
+  echo -e "echo -e \"${TAB}${GATEWAY}${YW} Provided by: ${GN}community-scripts ORG ${YW}| GitHub: ${GN}https://github.com/community-scripts/ProxmoxVE${CL}\"" >>"$PROFILE_FILE"
   echo "echo \"\"" >>"$PROFILE_FILE"
   echo -e "echo -e \"${TAB}${OS}${YW} OS: ${GN}${OS_NAME} - Version: ${OS_VERSION}${CL}\"" >>"$PROFILE_FILE"
   echo -e "echo -e \"${TAB}${HOSTNAME}${YW} Hostname: ${GN}\$(hostname)${CL}\"" >>"$PROFILE_FILE"
