@@ -198,10 +198,10 @@ CONTAINER_STORAGE=$(select_storage container) || exit
 msg_ok "Using ${BL}$CONTAINER_STORAGE${CL} ${GN}for Container Storage."
 
 # Update LXC template list
-msg_info "Updating LXC Template List"
+#msg_info "Updating LXC Template List"
 #check_network
 pveam update >/dev/null
-msg_ok "Updated LXC Template List"
+#msg_ok "Updated LXC Template List"
 
 # Get LXC template string
 TEMPLATE_SEARCH=${PCT_OSTYPE}-${PCT_OSVERSION:-}
@@ -234,7 +234,7 @@ if ! pveam list "$TEMPLATE_STORAGE" | grep -q "$TEMPLATE" || ! zstdcat "$TEMPLAT
     sleep $((attempt * 5))
   done
 fi
-msg_ok "LXC Template is ready to use."
+#msg_ok "LXC Template is ready to use."
 
 # Check and fix subuid/subgid
 grep -q "root:100000:65536" /etc/subuid || echo "root:100000:65536" >>/etc/subuid
