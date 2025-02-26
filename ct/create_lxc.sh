@@ -87,7 +87,7 @@ function msg_error() {
 }
 
 # This checks for the presence of valid Container Storage and Template Storage locations
-msg_info "Validating Storage"
+
 VALIDCT=$(pvesm status -content rootdir | awk 'NR>1')
 if [ -z "$VALIDCT" ]; then
   msg_error "Unable to detect a valid Container Storage location."
@@ -194,7 +194,7 @@ PCT_OPTIONS=(${PCT_OPTIONS[@]:-${DEFAULT_PCT_OPTIONS[@]}})
 [[ " ${PCT_OPTIONS[@]} " =~ " -rootfs " ]] || PCT_OPTIONS+=(-rootfs "$CONTAINER_STORAGE:${PCT_DISK_SIZE:-8}")
 
 # Create container with template integrity check
-msg_info "Creating LXC Container"
+#msg_info "Creating LXC Container"
   if ! pct create "$CTID" "${TEMPLATE_STORAGE}:vztmpl/${TEMPLATE}" "${PCT_OPTIONS[@]}" &>/dev/null; then
       [[ -f "$TEMPLATE_PATH" ]] && rm -f "$TEMPLATE_PATH"
       
