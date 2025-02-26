@@ -234,7 +234,7 @@ if ! pveam list "$TEMPLATE_STORAGE" | grep -q "$TEMPLATE" || ! zstdcat "$TEMPLAT
     sleep $((attempt * 5))
   done
 fi
-msg_ok "LXC Template is ready to use."
+
 
 # Check and fix subuid/subgid
 grep -q "root:100000:65536" /etc/subuid || echo "root:100000:65536" >>/etc/subuid
