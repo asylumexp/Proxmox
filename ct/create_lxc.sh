@@ -201,7 +201,7 @@ msg_ok "Using ${BL}$CONTAINER_STORAGE${CL} ${GN}for Container Storage."
 msg_info "Updating LXC Template List"
 #check_network
 pveam update >/dev/null
-msg_ok "Updated LXC Template List"
+#msg_ok "Updated LXC Template List"
 
 # Get LXC template string
 TEMPLATE_SEARCH=${PCT_OSTYPE}-${PCT_OSVERSION:-}
