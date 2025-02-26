@@ -172,7 +172,7 @@ network_check() {
      msg_ok " "
     ipv6_connected=true
   else
-    msg_error "IPv6 Internet Not Connected"
+    msg_error " "
   fi
 
   # If both IPv4 and IPv6 checks fail, prompt the user
