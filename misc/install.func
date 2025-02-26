@@ -149,7 +149,7 @@ setting_up_container() {
   rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
   systemctl disable -q --now systemd-networkd-wait-online.service
   msg_ok " "
-  msg_ok "Network Connected: ${BL}$(hostname -I)"
+  msg_ok " "
 }
 
 # This function checks the network connection by pinging a known IP address and prompts the user to continue if the internet is not connected
