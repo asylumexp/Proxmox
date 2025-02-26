@@ -94,7 +94,7 @@ function msg_error() {
 }
 
 # This checks for the presence of valid Container Storage and Template Storage locations
-#msg_info "Validating Storage"
+msg_info "Validating Storage"
 VALIDCT=$(pvesm status -content rootdir | awk 'NR>1')
 if [ -z "$VALIDCT" ]; then
   msg_error "Unable to detect a valid Container Storage location."
@@ -198,10 +198,10 @@ CONTAINER_STORAGE=$(select_storage container) || exit
 msg_ok "Using ${BL}$CONTAINER_STORAGE${CL} ${GN}for Container Storage."
 
 # Update LXC template list
-#msg_info "Updating LXC Template List"
+msg_info "Updating LXC Template List"
 #check_network
 pveam update >/dev/null
-#msg_ok "Updated LXC Template List"
+msg_ok "Updated LXC Template List"
 
 # Get LXC template string
 TEMPLATE_SEARCH=${PCT_OSTYPE}-${PCT_OSVERSION:-}
@@ -234,7 +234,7 @@ if ! pveam list "$TEMPLATE_STORAGE" | grep -q "$TEMPLATE" || ! zstdcat "$TEMPLAT
     sleep $((attempt * 5))
   done
 fi
-#msg_ok "LXC Template is ready to use."
+msg_ok "LXC Template is ready to use."
 
 # Check and fix subuid/subgid
 grep -q "root:100000:65536" /etc/subuid || echo "root:100000:65536" >>/etc/subuid
@@ -244,7 +244,7 @@ grep -q "root:100000:65536" /etc/subgid || echo "root:100000:65536" >>/etc/subgi
 PCT_OPTIONS=(${PCT_OPTIONS[@]:-${DEFAULT_PCT_OPTIONS[@]}})
 [[ " ${PCT_OPTIONS[@]} " =~ " -rootfs " ]] || PCT_OPTIONS+=(-rootfs "$CONTAINER_STORAGE:${PCT_DISK_SIZE:-8}")
 
-#msg_info "Creating LXC Container"
+msg_info "Creating LXC Container"
 if ! pct create "$CTID" "${TEMPLATE_STORAGE}:vztmpl/${TEMPLATE}" "${PCT_OPTIONS[@]}" &>/dev/null; then
   msg_error "Container creation failed. Checking if template is corrupted."
 
