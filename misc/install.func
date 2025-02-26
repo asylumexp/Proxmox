@@ -161,7 +161,7 @@ network_check() {
   sleep 1
   # Check IPv4 connectivity to Google, Cloudflare & Quad9 DNS servers.
   if ping -c 1 -W 1 1.1.1.1 &>/dev/null || ping -c 1 -W 1 8.8.8.8 &>/dev/null || ping -c 1 -W 1 9.9.9.9 &>/dev/null; then
-    msg_ok "IPv4 Internet Connected"
+    msg_ok " "
     ipv4_connected=true
   else
     msg_error "IPv4 Internet Not Connected"
