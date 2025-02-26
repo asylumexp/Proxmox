@@ -94,7 +94,7 @@ function msg_error() {
 }
 
 # This checks for the presence of valid Container Storage and Template Storage locations
-msg_info "Validating Storage"
+msg_info " "
 VALIDCT=$(pvesm status -content rootdir | awk 'NR>1')
 if [ -z "$VALIDCT" ]; then
   msg_error "Unable to detect a valid Container Storage location."
@@ -167,19 +167,7 @@ function select_storage() {
   exit 205
 }
 
-# Check for network connectivity (IPv4 & IPv6)
-#function check_network() {
-#  local CHECK_URLS=("8.8.8.8" "1.1.1.1" "9.9.9.9" "2606:4700:4700::1111" "2001:4860:4860::8888" "2620:fe::fe")
-#
-#  for url in "${CHECK_URLS[@]}"; do
-#    if ping -c 1 -W 2 "$url" &>/dev/null; then
-#      return 0 # Success: At least one connection works
-#    fi
-#  done
-#
-#  msg_error "No network connection detected. Check your internet connection."
-#  exit 101
-#}
+
 
 # Test if ID is in use
 if qm status "$CTID" &>/dev/null || pct status "$CTID" &>/dev/null; then
@@ -191,17 +179,17 @@ fi
 
 # Get template storage
 TEMPLATE_STORAGE=$(select_storage template) || exit
-msg_ok "Using ${BL}$TEMPLATE_STORAGE${CL} ${GN}for Template Storage."
+msg_ok " "
 
 # Get container storage
 CONTAINER_STORAGE=$(select_storage container) || exit
 msg_ok "Using ${BL}$CONTAINER_STORAGE${CL} ${GN}for Container Storage."
 
 # Update LXC template list
-msg_info "Updating LXC Template List"
+msg_info " "
 #check_network
 pveam update >/dev/null
-msg_ok "Updated LXC Template List"
+msg_ok " "
 
 # Get LXC template string
 TEMPLATE_SEARCH=${PCT_OSTYPE}-${PCT_OSVERSION:-}
@@ -234,7 +222,7 @@ if ! pveam list "$TEMPLATE_STORAGE" | grep -q "$TEMPLATE" || ! zstdcat "$TEMPLAT
     sleep $((attempt * 5))
   done
 fi
-msg_ok "LXC Template is ready to use."
+msg_ok " "
 
 # Check and fix subuid/subgid
 grep -q "root:100000:65536" /etc/subuid || echo "root:100000:65536" >>/etc/subuid
@@ -244,7 +232,7 @@ grep -q "root:100000:65536" /etc/subgid || echo "root:100000:65536" >>/etc/subgi
 PCT_OPTIONS=(${PCT_OPTIONS[@]:-${DEFAULT_PCT_OPTIONS[@]}})
 [[ " ${PCT_OPTIONS[@]} " =~ " -rootfs " ]] || PCT_OPTIONS+=(-rootfs "$CONTAINER_STORAGE:${PCT_DISK_SIZE:-8}")
 
-msg_info "Creating LXC Container"
+msg_info " "
 if ! pct create "$CTID" "${TEMPLATE_STORAGE}:vztmpl/${TEMPLATE}" "${PCT_OPTIONS[@]}" &>/dev/null; then
   msg_error "Container creation failed. Checking if template is corrupted."
 
