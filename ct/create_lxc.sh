@@ -94,7 +94,7 @@ function msg_error() {
 }
 
 # This checks for the presence of valid Container Storage and Template Storage locations
-msg_info "Validating Storage"
+
 VALIDCT=$(pvesm status -content rootdir | awk 'NR>1')
 if [ -z "$VALIDCT" ]; then
   msg_error "Unable to detect a valid Container Storage location."
