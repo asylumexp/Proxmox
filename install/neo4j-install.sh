@@ -14,7 +14,7 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
+#msg_info "Installing Dependencies"
 $STD apt-get install -y curl
 $STD apt-get install -y sudo
 $STD apt-get install -y mc
@@ -23,7 +23,7 @@ $STD apt-get install -y wget
 $STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
-msg_info "Installing Neo4j (patience)"
+#msg_info "Installing Neo4j (patience)"
 wget -qO- https://debian.neo4j.com/neotechnology.gpg.key | gpg --dearmor -o /etc/apt/keyrings/neotechnology.gpg
 echo 'deb [signed-by=/etc/apt/keyrings/neotechnology.gpg] https://debian.neo4j.com stable latest' > /etc/apt/sources.list.d/neo4j.list
 $STD apt-get update
@@ -35,7 +35,7 @@ msg_ok "Installed Neo4j"
 motd_ssh
 customize
 
-msg_info "Cleaning up"
+#msg_info "Cleaning up"
 $STD apt-get -y autoremove
 $STD apt-get -y autoclean
-msg_ok "Cleaned"
+#msg_ok "Cleaned"
