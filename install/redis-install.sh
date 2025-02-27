@@ -13,7 +13,7 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
+#msg_info "Installing Dependencies"
 $STD apt-get install -y curl
 $STD apt-get install -y sudo
 $STD apt-get install -y mc
@@ -24,7 +24,7 @@ $STD apt-get install -y wget
 $STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
-msg_info "Installing Redis"
+#msg_info "Installing Redis"
 wget -qO- https://packages.redis.io/gpg | gpg --dearmor >/usr/share/keyrings/redis-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" >/etc/apt/sources.list.d/redis.list
 $STD apt-get update
@@ -36,7 +36,7 @@ msg_ok "Installed Redis"
 motd_ssh
 customize
 
-msg_info "Cleaning up"
+#msg_info "Cleaning up"
 $STD apt-get -y autoremove
 $STD apt-get -y autoclean
-msg_ok "Cleaned"
+#msg_ok "Cleaned"
