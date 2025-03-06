@@ -13,7 +13,7 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
+#msg_info "Installing Dependencies"
 $STD apt-get install -y curl
 $STD apt-get install -y sudo
 $STD apt-get install -y mc
@@ -21,14 +21,14 @@ $STD apt-get install -y gnupg
 $STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
-msg_info "Installing MariaDB"
+#msg_info "Installing MariaDB"
 $STD apt-get install -y mariadb-server
 sed -i 's/^# *\(port *=.*\)/\1/' /etc/mysql/my.cnf
 sed -i 's/^bind-address/#bind-address/g' /etc/mysql/mariadb.conf.d/50-server.cnf
 msg_ok "Installed MariaDB"
 
 # Automatically install PhpMyAdmin without prompt
-msg_info "Installing phpMyAdmin"
+#msg_info "Installing phpMyAdmin"
 $STD apt-get install -y \
     apache2 \
     php \
@@ -53,7 +53,7 @@ msg_ok "Installed phpMyAdmin"
 motd_ssh
 customize
 
-msg_info "Cleaning up"
+#msg_info "Cleaning up"
 $STD apt-get -y autoremove
 $STD apt-get -y autoclean
-msg_ok "Cleaned"
+#msg_ok "Cleaned"
