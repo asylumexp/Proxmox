@@ -67,7 +67,7 @@ sed -i "s#\$cfg\['blowfish_secret'\] = '';#\$cfg['blowfish_secret'] = '${SECRET}
 chmod 660 /var/www/html/phpMyAdmin/config.inc.php
 chown -R www-data:www-data /var/www/html/phpMyAdmin
 systemctl restart apache2
-msg_ok "Installed PHPMyAdmin"
+msg_ok "Installed PHPMyAdmin version 5.2.1"
 
 #msg_info "Start Service"
 systemctl enable -q --now mysql
