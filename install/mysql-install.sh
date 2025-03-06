@@ -36,7 +36,7 @@ export DEBIAN_FRONTEND=noninteractive
 $STD apt-get install -y \
   mysql-community-client \
   mysql-community-server
-msg_ok "Installed MySQL"
+msg_ok "Installed MySQL  Version 8.0.41"
 
 #msg_info "Configure MySQL Server"
 ADMIN_PASS="$(openssl rand -base64 18 | cut -c1-13)"
