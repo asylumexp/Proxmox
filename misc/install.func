@@ -186,10 +186,10 @@ network_check() {
     fi
   fi
 
-  RESOLVEDIP=$(getent hosts github.com | awk '{ print $1 }')
-  if [[ -z "$RESOLVEDIP" ]]; then msg_error "DNS Lookup Failure"; else msg_ok " "; fi
-  set -e
-  trap 'error_handler $LINENO "$BASH_COMMAND"' ERR
+  #RESOLVEDIP=$(getent hosts github.com | awk '{ print $1 }')
+  #if [[ -z "$RESOLVEDIP" ]]; then msg_error "DNS Lookup Failure"; else msg_ok " "; fi
+  #set -e
+  #trap 'error_handler $LINENO "$BASH_COMMAND"' ERR
 }
 
 # This function updates the Container OS by running apt-get update and upgrade
