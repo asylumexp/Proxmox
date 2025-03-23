@@ -19,7 +19,8 @@ $STD apt-get install -y \
   curl \
   mc \
   wget \
-  openssh-server
+  openssh-server \
+  logrotate
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Unbound"
