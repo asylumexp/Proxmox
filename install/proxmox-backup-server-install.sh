@@ -21,7 +21,8 @@ $STD apt-get install -y \
     mc \
     wget \
     openssh-server \
-    git
+    git \
+    dpkg-dev
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Proxmox Backup Server"
