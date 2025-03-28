@@ -32,12 +32,12 @@ $STD apt-get install -y \
   libtool \
   pkg-config \
   git \
-  curl \
   libtiff-dev \
   libpng-dev \
   libleptonica-dev \
   sudo \
   mc \
+  curl \
   wget \
   openssh-server
 msg_ok "Installed Dependencies"
@@ -224,7 +224,7 @@ EOF
 sed -i -e 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml
 
 systemctl daemon-reload
-$STD systemctl enable -q --now paperless-webserver paperless-scheduler paperless-task-queue paperless-consumer 
+$STD systemctl enable -q --now paperless-webserver paperless-scheduler paperless-task-queue paperless-consumer
 msg_ok "Created Services"
 
 motd_ssh

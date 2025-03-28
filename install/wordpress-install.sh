@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://wordpress.org/
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -39,7 +39,7 @@ $STD mysql -u root -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localho
     echo "Database User: $DB_USER"
     echo "Database Password: $DB_PASS"
     echo "Database Name: $DB_NAME"
-} >> ~/wordpress.creds
+} >>~/wordpress.creds
 msg_ok "Set up Database"
 
 msg_info "Installing Wordpress (Patience)"
@@ -52,13 +52,13 @@ find . -type d -exec chmod 755 {} \;
 find . -type f -exec chmod 644 {} \;
 mv wp-config-sample.php wp-config.php
 sed -i -e "s|^define( 'DB_NAME', '.*' );|define( 'DB_NAME', '$DB_NAME' );|" \
-       -e "s|^define( 'DB_USER', '.*' );|define( 'DB_USER', '$DB_USER' );|" \
-       -e "s|^define( 'DB_PASSWORD', '.*' );|define( 'DB_PASSWORD', '$DB_PASS' );|" \
-       /var/www/html/wordpress/wp-config.php
+    -e "s|^define( 'DB_USER', '.*' );|define( 'DB_USER', '$DB_USER' );|" \
+    -e "s|^define( 'DB_PASSWORD', '.*' );|define( 'DB_PASSWORD', '$DB_PASS' );|" \
+    /var/www/html/wordpress/wp-config.php
 msg_ok "Installed Wordpress"
 
 msg_info "Setup Services"
-cat <<EOF > /etc/apache2/sites-available/wordpress.conf
+cat <<EOF >/etc/apache2/sites-available/wordpress.conf
 <VirtualHost *:80>
     ServerName yourdomain.com
     DocumentRoot /var/www/html/wordpress

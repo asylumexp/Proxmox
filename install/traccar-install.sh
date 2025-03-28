@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://www.traccar.org/
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -27,7 +27,7 @@ wget -q https://github.com/traccar/traccar/releases/download/v${RELEASE}/traccar
 $STD unzip traccar-linux-arm-${RELEASE}.zip
 $STD ./traccar.run
 systemctl enable -q --now traccar
-rm -rf README.txt  traccar-linux-arm-${RELEASE}.zip  traccar.run
+rm -rf README.txt traccar-linux-arm-${RELEASE}.zip traccar.run
 msg_ok "Installed Traccar v${RELEASE}"
 
 motd_ssh

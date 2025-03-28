@@ -22,7 +22,6 @@ $STD apt-get install -y \
     openssh-server
 msg_ok "Installed Dependencies"
 
-
 msg_info "Installing InspIRCd"
 RELEASE=$(curl -s https://api.github.com/repos/inspircd/inspircd/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 cd /opt

@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://cronicle.net/
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -19,7 +19,8 @@ $STD apt-get install -y \
     sudo \
     mc \
     wget \
-    openssh-server
+    openssh-server \
+    gnupg
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"

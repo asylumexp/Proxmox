@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://typesense.org/
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -27,7 +27,7 @@ RELEASE=$(curl -s https://api.github.com/repos/typesense/typesense/releases/late
 cd /opt
 wget -q https://dl.typesense.org/releases/${RELEASE}/typesense-server-${RELEASE}-amd64.deb
 $STD apt install -y /opt/typesense-server-${RELEASE}-amd64.deb
-echo 'enable-cors = true' >> /etc/typesense/typesense-server.ini
+echo 'enable-cors = true' >>/etc/typesense/typesense-server.ini
 echo "${RELEASE}" >"/opt/${APPLICATION}_version.txt"
 msg_ok "Installed TypeSense"
 

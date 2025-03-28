@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://www.tp-link.com/us/support/download/omada-software-controller/
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -34,7 +34,7 @@ wget -qO /etc/apt/trusted.gpg.d/zulu-repo.asc "https://keyserver.ubuntu.com/pks/
 wget -q https://cdn.azul.com/zulu/bin/zulu-repo_1.0.0-3_all.deb
 $STD dpkg -i zulu-repo_1.0.0-3_all.deb
 $STD apt-get update
-$STD apt-get -y install zulu8-jdk
+$STD apt-get -y install zulu21-jre-headless
 msg_ok "Installed Azul Zulu Java"
 
 msg_info "Installing libssl (if needed)"
@@ -55,7 +55,7 @@ $STD apt-get install -y mongodb-org
 msg_ok "Installed MongoDB $MONGODB_VERSION"
 
 msg_info "Installing Omada Controller"
-latest_url=$(curl -s "https://support.omadanetworks.com/en/product/omada-software-controller/?resourceType=download" | grep -o 'https://static\.tp-link\.com/upload/software/[^"]*linux_x64[^"]*\.deb' | head -n 1)
+latest_url=$(curl -s "https://support.omadanetworks.com/en/download/software/omada-controller/" | grep -o 'https://static\.tp-link\.com/upload/software/[^"]*linux_x64[^"]*\.deb' | head -n 1)
 latest_version=$(basename "$latest_url")
 
 wget -qL ${latest_url}

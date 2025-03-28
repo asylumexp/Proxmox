@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://0xerr0r.github.io/blocky/latest/
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -22,7 +22,7 @@ $STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Blocky"
-if systemctl is-active systemd-resolved > /dev/null 2>&1; then
+if systemctl is-active systemd-resolved >/dev/null 2>&1; then
   systemctl disable -q --now systemd-resolved
 fi
 mkdir /opt/blocky

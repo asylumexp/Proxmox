@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://hoarder.app/
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -17,9 +17,7 @@ msg_info "Installing Dependencies"
 $STD apt-get install -y \
   g++ \
   build-essential \
-  curl \
   git \
-  sudo \
   gnupg \
   ca-certificates \
   chromium/stable \
@@ -45,13 +43,13 @@ $STD dpkg -i meilisearch-aarch64.deb
 wget -q https://raw.githubusercontent.com/meilisearch/meilisearch/latest/config.toml -O /etc/meilisearch.toml
 MASTER_KEY=$(openssl rand -base64 12)
 sed -i \
-    -e 's|^env =.*|env = "production"|' \
-    -e "s|^# master_key =.*|master_key = \"$MASTER_KEY\"|" \
-    -e 's|^db_path =.*|db_path = "/var/lib/meilisearch/data"|' \
-    -e 's|^dump_dir =.*|dump_dir = "/var/lib/meilisearch/dumps"|' \
-    -e 's|^snapshot_dir =.*|snapshot_dir = "/var/lib/meilisearch/snapshots"|' \
-    -e 's|^# no_analytics = true|no_analytics = true|' \
-    /etc/meilisearch.toml
+  -e 's|^env =.*|env = "production"|' \
+  -e "s|^# master_key =.*|master_key = \"$MASTER_KEY\"|" \
+  -e 's|^db_path =.*|db_path = "/var/lib/meilisearch/data"|' \
+  -e 's|^dump_dir =.*|dump_dir = "/var/lib/meilisearch/dumps"|' \
+  -e 's|^snapshot_dir =.*|snapshot_dir = "/var/lib/meilisearch/snapshots"|' \
+  -e 's|^# no_analytics = true|no_analytics = true|' \
+  /etc/meilisearch.toml
 msg_ok "Installed Meilisearch"
 
 msg_info "Installing Node.js"

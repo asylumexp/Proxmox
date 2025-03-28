@@ -3,7 +3,7 @@ source <(curl -s https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/b
 # Copyright (c) 2021-2025 tteck
 # Author: tteck (tteckster)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
-# Source: https://www.vaultwarden.net/
+# Source: https://github.com/dani-garcia/vaultwarden
 
 APP="Vaultwarden"
 var_tags="password-manager"

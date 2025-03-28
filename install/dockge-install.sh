@@ -77,7 +77,7 @@ services:
     privileged: true
     network_mode: host
 EOF
-msg_ok "Added Home Assistant compose.yaml"
+  msg_ok "Added Home Assistant compose.yaml"
 fi
 
 motd_ssh

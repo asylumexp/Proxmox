@@ -39,7 +39,7 @@ $STD omd start
     echo "Application-Credentials"
     echo "Username: cmkadmin"
     echo "Password: $PASSWORD"
-} >> ~/checkmk.creds
+} >>~/checkmk.creds
 msg_ok "Created Service"
 
 msg_info "Cleaning up"

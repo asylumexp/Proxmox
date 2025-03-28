@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://gotify.net/
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -26,7 +26,7 @@ RELEASE=$(curl -s https://api.github.com/repos/gotify/server/releases/latest | g
 mkdir -p /opt/gotify
 cd /opt/gotify
 wget -q https://github.com/gotify/server/releases/download/v${RELEASE}/gotify-linux-arm64.zip
-$STD unzip gotify-linux-arm64.zip
+unzip -q gotify-linux-arm64.zip
 rm -rf gotify-linux-arm64.zip
 chmod +x gotify-linux-arm64
 echo "${RELEASE}" >/opt/${APPLICATION}_version.txt

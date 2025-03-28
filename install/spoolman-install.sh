@@ -17,8 +17,6 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y \
   build-essential \
-  curl \
-  sudo \
   make \
   libpq-dev \
   gpg \

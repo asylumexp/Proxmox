@@ -44,7 +44,7 @@ mysql -u root -e "GRANT ALL ON $DB_NAME.* TO '$DB_USER'@'localhost'; FLUSH PRIVI
     echo "Firefly Database User: $DB_USER"
     echo "Firefly Database Password: $DB_PASS"
     echo "Firefly Database Name: $DB_NAME"
-} >> ~/firefly.creds
+} >>~/firefly.creds
 msg_ok "Set up database"
 
 msg_info "Installing Firefly III (Patience)"
@@ -59,7 +59,7 @@ cd /opt/firefly
 cp .env.example .env
 sed -i "s/DB_HOST=.*/DB_HOST=localhost/" /opt/firefly/.env
 sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" /opt/firefly/.env
-echo "export COMPOSER_ALLOW_SUPERUSER=1" >> ~/.bashrc
+echo "export COMPOSER_ALLOW_SUPERUSER=1" >>~/.bashrc
 source ~/.bashrc
 $STD composer install --no-dev --no-plugins --no-interaction
 $STD php artisan firefly:upgrade-database
@@ -90,7 +90,7 @@ chown www-data:www-data /opt/firefly/storage/oauth-*.key
 $STD a2enmod php8.4
 $STD a2enmod rewrite
 $STD a2ensite firefly.conf
-$STD a2dissite 000-default.conf  
+$STD a2dissite 000-default.conf
 $STD systemctl reload apache2
 msg_ok "Created Service"
 

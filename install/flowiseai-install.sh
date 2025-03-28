@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://flowiseai.com/
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -14,9 +14,6 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
 $STD apt-get install -y gpg
 $STD apt-get install -y wget
 $STD apt-get install -y openssh-server
@@ -31,7 +28,11 @@ $STD apt-get install -y nodejs
 msg_ok "Installed Node.js"
 
 msg_info "Installing FlowiseAI (Patience)"
-$STD npm install -g flowise
+$STD npm install -g flowise \
+  @opentelemetry/exporter-trace-otlp-grpc \
+  @opentelemetry/exporter-trace-otlp-proto \
+  @opentelemetry/sdk-trace-node \
+  langchainhub
 mkdir -p /opt/flowiseai
 wget -q https://raw.githubusercontent.com/FlowiseAI/Flowise/main/packages/server/.env.example -O /opt/flowiseai/.env
 msg_ok "Installed FlowiseAI"

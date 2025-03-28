@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://www.kimai.org/
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -16,9 +16,6 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y \
   apt-transport-https \
-  sudo \
-  mc \
-  curl \
   apache2 \
   git \
   expect \
@@ -54,11 +51,11 @@ mysql -u root -e "CREATE DATABASE $DB_NAME;"
 mysql -u root -e "CREATE USER '$DB_USER'@'localhost' IDENTIFIED WITH mysql_native_password AS PASSWORD('$DB_PASS');"
 mysql -u root -e "GRANT ALL ON $DB_NAME.* TO '$DB_USER'@'localhost'; FLUSH PRIVILEGES;"
 {
-    echo "Kimai-Credentials"
-    echo "Kimai Database User: $DB_USER"
-    echo "Kimai Database Password: $DB_PASS"
-    echo "Kimai Database Name: $DB_NAME"
-} >> ~/kimai.creds
+  echo "Kimai-Credentials"
+  echo "Kimai Database User: $DB_USER"
+  echo "Kimai Database Password: $DB_PASS"
+  echo "Kimai Database Name: $DB_NAME"
+} >>~/kimai.creds
 msg_ok "Set up database"
 
 msg_info "Installing Kimai (Patience)"
@@ -67,18 +64,12 @@ wget -q "https://github.com/kimai/kimai/archive/refs/tags/${RELEASE}.zip"
 unzip -q ${RELEASE}.zip
 mv kimai-${RELEASE} /opt/kimai
 cd /opt/kimai
-echo "export COMPOSER_ALLOW_SUPERUSER=1" >> ~/.bashrc
+echo "export COMPOSER_ALLOW_SUPERUSER=1" >>~/.bashrc
 source ~/.bashrc
 $STD composer install --no-dev --optimize-autoloader --no-interaction
 cp .env.dist .env
 sed -i "/^DATABASE_URL=/c\DATABASE_URL=mysql://$DB_USER:$DB_PASS@127.0.0.1:3306/$DB_NAME?charset=utf8mb4&serverVersion=$MYSQL_VERSION" /opt/kimai/.env
 $STD bin/console kimai:install -n
-chown -R :www-data /opt/*
-chmod -R g+r /opt/*
-chmod -R g+rw /opt/*
-chown -R www-data:www-data /opt/*
-chmod -R 755 /opt/*
-chmod -R 777 /opt/kimai/var/ 
 $STD expect <<EOF
 set timeout -1
 log_user 0
@@ -125,9 +116,17 @@ cat <<EOF >/etc/apache2/sites-available/kimai.conf
 </VirtualHost>
 EOF
 $STD a2ensite kimai.conf
-$STD a2dissite 000-default.conf  
+$STD a2dissite 000-default.conf
 $STD systemctl reload apache2
 msg_ok "Created Service"
+
+msg_info "Setup Permissions"
+chown -R :www-data /opt/*
+chmod -R g+r /opt/*
+chmod -R g+rw /opt/*
+chown -R www-data:www-data /opt/*
+chmod -R 777 /opt/*
+msg_ok "Setup Permissions"
 
 motd_ssh
 customize

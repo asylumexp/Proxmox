@@ -29,8 +29,8 @@ curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/doc
 chmod a+r /etc/apt/keyrings/docker.asc
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" |
+  sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 $STD apt-get update
 msg_ok "Setup Docker Repository"
 
@@ -51,24 +51,23 @@ read -rp "Enter your choice (default: 1): " DB_CHOICE
 DB_CHOICE=${DB_CHOICE:-1}
 
 case $DB_CHOICE in
-  1)
-    DB_COMPOSE_FILE="mongo.compose.yaml"
-    ;;
-  2)
-    DB_COMPOSE_FILE="sqlite.compose.yaml"
-    ;;
-  3)
-    DB_COMPOSE_FILE="postgres.compose.yaml"
-    ;;
-  *)
-    echo "Invalid choice. Defaulting to MongoDB."
-    DB_COMPOSE_FILE="mongo.compose.yaml"
-    ;;
+1)
+  DB_COMPOSE_FILE="mongo.compose.yaml"
+  ;;
+2)
+  DB_COMPOSE_FILE="sqlite.compose.yaml"
+  ;;
+3)
+  DB_COMPOSE_FILE="postgres.compose.yaml"
+  ;;
+*)
+  echo "Invalid choice. Defaulting to MongoDB."
+  DB_COMPOSE_FILE="mongo.compose.yaml"
+  ;;
 esac
 mkdir -p /opt/komodo
 cd /opt/komodo
 wget -q "https://raw.githubusercontent.com/mbecker20/komodo/main/compose/$DB_COMPOSE_FILE"
-
 
 msg_info "Setup Komodo Environment"
 wget -q -O /opt/komodo/compose.env https://raw.githubusercontent.com/mbecker20/komodo/main/compose/compose.env

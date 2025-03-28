@@ -29,7 +29,7 @@ function update_script() {
   fi
   msg_info "Updating ${APP} (Patience)"
   cd /opt/open-webui
-  mkdir /opt/open-webui-backup
+  mkdir -p /opt/open-webui-backup
   cp -rf /opt/open-webui/backend/data /opt/open-webui-backup
   git add -A
   $STD git stash
@@ -46,7 +46,9 @@ function update_script() {
   cd ./backend
   $STD pip install -r requirements.txt -U
   cp -rf /opt/open-webui-backup/* /opt/open-webui/backend
-  $STD git stash pop
+  if git stash list | grep -q 'stash@{'; then
+    $STD git stash pop
+  fi
   systemctl start open-webui.service
   msg_ok "Updated Successfully"
   exit

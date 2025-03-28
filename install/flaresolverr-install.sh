@@ -6,7 +6,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://github.com/FlareSolverr/FlareSolverr
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -15,9 +15,6 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
 $STD apt-get install -y apt-transport-https
 $STD apt-get install -y gpg
 $STD apt-get install -y xvfb
@@ -42,7 +39,7 @@ $STD pip install -r /opt/flaresolverr/requirements.txt
 msg_ok "Installed FlareSolverr"
 
 msg_info "Installing Chrome Webdriver"
-wget -q https://github.com/electron/electron/releases/download/v33.2.0/chromedriver-v33.2.0-linux-arm64.zip -O /opt/flaresolverr/webdriver.zip
+wget -q https://github.com/electron/electron/releases/download/v35.1.2/chromedriver-v35.1.2-linux-arm64.zip -O /opt/flaresolverr/webdriver.zip
 cd /opt/flaresolverr
 unzip -q webdriver.zip chromedriver
 sed -i 's|^PATCHED_DRIVER_PATH = None|PATCHED_DRIVER_PATH = "/opt/flaresolverr/chromedriver"|' ./src/utils.py

@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://github.com/Forceu/Gokapi
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -30,7 +30,7 @@ rm gokapi-linux_arm64.zip
 chmod +x /opt/gokapi/gokapi-linux_arm64
 msg_ok "Installed Gokapi"
 
-msg_info "Creating Service" 
+msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/gokapi.service
 [Unit]
 Description=gokapi

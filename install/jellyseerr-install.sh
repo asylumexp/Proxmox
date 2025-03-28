@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://docs.jellyseerr.dev/
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -21,6 +21,7 @@ $STD apt-get install -y git
 $STD apt-get install -y ca-certificates
 $STD apt-get install -y gpg
 $STD apt-get install -y openssh-server
+$STD apt-get install -y build-essential
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"
