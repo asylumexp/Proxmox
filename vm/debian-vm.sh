@@ -132,7 +132,7 @@ function pve_check() {
 }
 
 function arch_check() {
-  if [ "$(dpkg --print-architecture)" != "amd64" ]; then
+  if [ "$(dpkg --print-architecture)" != "arm64" ]; then
     echo -e "\n ${INFO}${YWB}This script will not work with PiMox! \n"
     echo -e "\n ${YWB}Visit https://github.com/asylumexp/Proxmox for ARM64 support. \n"
     echo -e "Exiting..."
@@ -422,7 +422,7 @@ fi
 msg_ok "Using ${CL}${BL}$STORAGE${CL} ${GN}for Storage Location."
 msg_ok "Virtual Machine ID is ${CL}${BL}$VMID${CL}."
 msg_info "Retrieving the URL for the Debian 12 Qcow2 Disk Image"
-URL=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-nocloud-amd64.qcow2
+URL=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-nocloud-arm64.qcow2
 sleep 2
 msg_ok "${CL}${BL}${URL}${CL}"
 wget -q --show-progress $URL
@@ -455,7 +455,7 @@ done
 msg_info "Creating a Debian 12 VM"
 qm create $VMID -agent 1${MACHINE} -tablet 0 -localtime 1 -bios ovmf${CPU_TYPE} -cores $CORE_COUNT -memory $RAM_SIZE \
   -name $HN -tags community-script -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU -onboot 1 -ostype l26 -scsihw virtio-scsi-pci
-pvesm alloc $STORAGE $VMID $DISK0 4M 1>&/dev/null
+pvesm alloc $STORAGE $VMID $DISK0 64M 1>&/dev/null
 qm importdisk $VMID ${FILE} $STORAGE ${DISK_IMPORT:-} 1>&/dev/null
 qm set $VMID \
   -efidisk0 ${DISK0_REF}${FORMAT} \
@@ -493,13 +493,13 @@ DESCRIPTION=$(
 EOF
 )
 qm set "$VMID" -description "$DESCRIPTION" >/dev/null
-if [ -n "$DISK_SIZE" ]; then
-    msg_info "Resizing disk to $DISK_SIZE GB"
-    qm resize $VMID scsi0 ${DISK_SIZE} >/dev/null
-else
-    msg_info "Using default disk size of $DEFAULT_DISK_SIZE GB"
-    qm resize $VMID scsi0 ${DEFAULT_DISK_SIZE} >/dev/null
-fi							
+#if [ -n "$DISK_SIZE" ]; then
+#    msg_info "Resizing disk to $DISK_SIZE GB"
+#    qm resize $VMID scsi0 ${DISK_SIZE} >/dev/null
+#else
+#    msg_info "Using default disk size of $DEFAULT_DISK_SIZE GB"
+#    qm resize $VMID scsi0 ${DEFAULT_DISK_SIZE} >/dev/null
+#fi							
 
 msg_ok "Created a Debian 12 VM ${CL}${BL}(${HN})"
 if [ "$START_VM" == "yes" ]; then
