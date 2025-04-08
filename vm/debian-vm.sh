@@ -4,7 +4,7 @@
 # Author: MickLesk (CanbiZ)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 
-source /dev/stdin <<< $(wget -qLO - https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func)
+source /dev/stdin <<< $(wget -qLO - https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/api.func)
 
 function header_info {
   clear
@@ -133,8 +133,8 @@ function pve_check() {
 
 function arch_check() {
   if [ "$(dpkg --print-architecture)" != "arm64" ]; then
-    echo -e "\n ${INFO}${YWB}This script will not work with PiMox! \n"
-    echo -e "\n ${YWB}Visit https://github.com/asylumexp/Proxmox for ARM64 support. \n"
+    echo -e "\n ${INFO}${YWB}This script only works on PiMox! \n"
+    echo -e "\n ${YWB}Visit https://github.com/community-scripts/ProxmoxVE for AMD64 support. \n"
     echo -e "Exiting..."
     sleep 2
     exit
@@ -492,14 +492,7 @@ DESCRIPTION=$(
 </div>
 EOF
 )
-qm set "$VMID" -description "$DESCRIPTION" >/dev/null
-#if [ -n "$DISK_SIZE" ]; then
-#    msg_info "Resizing disk to $DISK_SIZE GB"
-#    qm resize $VMID scsi0 ${DISK_SIZE} >/dev/null
-#else
-#    msg_info "Using default disk size of $DEFAULT_DISK_SIZE GB"
-#    qm resize $VMID scsi0 ${DEFAULT_DISK_SIZE} >/dev/null
-#fi							
+qm set "$VMID" -description "$DESCRIPTION" >/dev/null				
 
 msg_ok "Created a Debian 12 VM ${CL}${BL}(${HN})"
 if [ "$START_VM" == "yes" ]; then
