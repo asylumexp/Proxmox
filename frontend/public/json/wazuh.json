@@ -39,5 +39,6 @@
       "text": "Show password: `cat ~/wazuh.creds`",
       "type": "info"
     }
-  ]
+  ],
+  "status": "🚧"
 }
