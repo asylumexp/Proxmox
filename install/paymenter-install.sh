@@ -25,15 +25,15 @@ $STD apt-get install -y \
     mariadb-server \
     nginx \
     redis-server
-$STD curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+$STD curl -fsSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Paymenter"
-RELEASE=$(curl -s https://api.github.com/repos/paymenter/paymenter/releases/latest | grep '"tag_name"' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
+RELEASE=$(curl -fsSL https://api.github.com/repos/paymenter/paymenter/releases/latest | grep '"tag_name"' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
 echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
 mkdir -p /opt/paymenter
 cd /opt/paymenter
-wget -q "https://github.com/paymenter/paymenter/releases/download/${RELEASE}/paymenter.tar.gz"
+curl -fsSL "https://github.com/paymenter/paymenter/releases/download/${RELEASE}/paymenter.tar.gz" -o $(basename "https://github.com/paymenter/paymenter/releases/download/${RELEASE}/paymenter.tar.gz")
 $STD tar -xzvf paymenter.tar.gz
 chmod -R 755 storage/* bootstrap/cache/
 msg_ok "Installed Paymenter"
@@ -47,10 +47,10 @@ mysql -u root -e "CREATE DATABASE $DB_NAME;"
 mysql -u root -e "CREATE USER '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';"
 mysql -u root -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost' WITH GRANT OPTION;"
 {
-    echo "Paymenter Database Credentials"
-    echo "Database: $DB_NAME"
-    echo "Username: $DB_USER"
-    echo "Password: $DB_PASS"
+  echo "Paymenter Database Credentials"
+  echo "Database: $DB_NAME"
+  echo "Username: $DB_USER"
+  echo "Password: $DB_PASS"
 } >>~/paymenter_db.creds
 cp .env.example .env
 $STD composer install --no-dev --optimize-autoloader --no-interaction
@@ -125,7 +125,7 @@ RestartSec=5s
 [Install]
 WantedBy=multi-user.target
 EOF
-$STD systemctl enable --now paymenter.service
+$STD systemctl enable --now paymenter
 msg_ok "Setup Service"
 
 msg_info "Cleaning up"

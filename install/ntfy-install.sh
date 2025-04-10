@@ -14,12 +14,9 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y gpg
-$STD apt-get install -y apt-transport-https
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
+$STD apt-get install -y \
+  gpg \
+  apt-transport-https
 msg_ok "Installed Dependencies"
 
 msg_info "Installing ntfy"

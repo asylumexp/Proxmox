@@ -33,7 +33,7 @@ msg_ok "Installed Dependencies"
 msg_info "Installing Node.js"
 mkdir -p /etc/apt/keyrings
 curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" >/etc/apt/sources.list.d/nodesource.list
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" >/etc/apt/sources.list.d/nodesource.list
 $STD apt-get update
 $STD apt-get install -y nodejs
 $STD npm install -g pnpm@9.7.1
@@ -59,8 +59,8 @@ msg_ok "Set up PostgreSQL"
 
 msg_info "Installing Tianji (Extreme Patience)"
 cd /opt
-RELEASE=$(curl -s https://api.github.com/repos/msgbyte/tianji/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
-wget -q "https://github.com/msgbyte/tianji/archive/refs/tags/v${RELEASE}.zip"
+RELEASE=$(curl -fsSL https://api.github.com/repos/msgbyte/tianji/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+curl -fsSL "https://github.com/msgbyte/tianji/archive/refs/tags/v${RELEASE}.zip" -o $(basename "https://github.com/msgbyte/tianji/archive/refs/tags/v${RELEASE}.zip")
 unzip -q v${RELEASE}.zip
 mv tianji-${RELEASE} /opt/tianji
 cd tianji
@@ -97,7 +97,7 @@ Environment=NODE_ENV=production
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now tianji.service
+systemctl enable -q --now tianji
 msg_ok "Created Service"
 
 motd_ssh

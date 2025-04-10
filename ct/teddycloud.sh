@@ -22,8 +22,11 @@ function update_script() {
   header_info
   check_container_storage
   check_container_resources
-  if [[ ! -d /opt/teddycloud ]]; then msg_error "No ${APP} Installation Found!"; exit; fi
-  RELEASE="$(curl -s https://api.github.com/repos/toniebox-reverse-engineering/teddycloud/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')"
+  if [[ ! -d /opt/teddycloud ]]; then
+    msg_error "No ${APP} Installation Found!"
+    exit
+  fi
+  RELEASE="$(curl -fsSL https://api.github.com/repos/toniebox-reverse-engineering/teddycloud/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')"
   VERSION="${RELEASE#tc_v}"
   if [[ ! -f "/opt/${APP}_version.txt" || "${VERSION}" != "$(cat /opt/${APP}_version.txt)" ]]; then
     msg_info "Stopping ${APP}"
@@ -33,7 +36,7 @@ function update_script() {
     msg_info "Updating ${APP} to v${VERSION}"
     cd /opt
     mv /opt/teddycloud /opt/teddycloud_bak
-    wget -q "https://github.com/toniebox-reverse-engineering/teddycloud/releases/download/${RELEASE}/teddycloud.amd64.release_v${VERSION}.zip"
+    curl -fsSL "https://github.com/toniebox-reverse-engineering/teddycloud/releases/download/${RELEASE}/teddycloud.amd64.release_v${VERSION}.zip" -o $(basename "https://github.com/toniebox-reverse-engineering/teddycloud/releases/download/${RELEASE}/teddycloud.amd64.release_v${VERSION}.zip")
     unzip -q -d /opt/teddycloud teddycloud.amd64.release_v${VERSION}.zip
     cp -R /opt/teddycloud_bak/certs /opt/teddycloud_bak/config /opt/teddycloud_bak/data /opt/teddycloud
     echo "${VERSION}" >"/opt/${APP}_version.txt"

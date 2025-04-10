@@ -31,7 +31,7 @@ function update_script() {
     fi
 
     # Crawling the new version and checking whether an update is required
-    RELEASE=$(curl -s https://api.github.com/repos/Bubka/2FAuth/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
+    RELEASE=$(curl -fsSL https://api.github.com/repos/Bubka/2FAuth/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
     if [[ "${RELEASE}" != "$(cat /opt/2fauth_version.txt)" ]] || [[ ! -f /opt/2fauth_version.txt ]]; then
         msg_info "Updating $APP to ${RELEASE}"
 
@@ -41,12 +41,27 @@ function update_script() {
         # Creating Backup
         msg_info "Creating Backup"
         mv "/opt/2fauth" "/opt/2fauth-backup"
+        if ! dpkg -l | grep -q 'php8.3'; then
+            cp /etc/nginx/conf.d/2fauth.conf /etc/nginx/conf.d/2fauth.conf.bak
+        fi
         msg_ok "Backup Created"
 
+        # Upgrade PHP
+        if ! dpkg -l | grep -q 'php8.3'; then
+            $STD apt-get install -y \
+                lsb-release \
+                gpg
+            curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/deb.sury.org-php.gpg
+            echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
+            $STD apt-get update
+            $STD apt-get install -y php8.3-{bcmath,common,ctype,curl,fileinfo,fpm,gd,mbstring,mysql,xml,cli,intl}
+            sed -i 's/php8.2/php8.3/g' /etc/nginx/conf.d/2fauth.conf
+        fi
+
         # Execute Update
-        wget -q "https://github.com/Bubka/2FAuth/archive/refs/tags/${RELEASE}.zip"
+        curl -fsSL -o "${RELEASE}.zip" "https://github.com/Bubka/2FAuth/archive/refs/tags/${RELEASE}.zip"
         unzip -q "${RELEASE}.zip"
-        mv "2FAuth-${RELEASE//v}/" "/opt/2fauth"
+        mv "2FAuth-${RELEASE//v/}/" "/opt/2fauth"
         mv "/opt/2fauth-backup/.env" "/opt/2fauth/.env"
         mv "/opt/2fauth-backup/storage" "/opt/2fauth/storage"
         cd "/opt/2fauth" || return
@@ -59,9 +74,14 @@ function update_script() {
 
         php artisan 2fauth:install
 
+        $STD systemctl restart nginx
+
         # Cleaning up
         msg_info "Cleaning Up"
         rm -rf "v${RELEASE}.zip"
+        if dpkg -l | grep -q 'php8.2'; then
+            $STD apt-get remove --purge -y php8.2*
+        fi
         $STD apt-get -y autoremove
         $STD apt-get -y autoclean
         msg_ok "Cleanup Completed"

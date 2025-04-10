@@ -13,18 +13,10 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Installing go2rtc"
 mkdir -p /opt/go2rtc
 cd /opt/go2rtc
-wget -q https://github.com/AlexxIT/go2rtc/releases/latest/download/go2rtc_linux_arm64
+curl -fsSL "https://github.com/AlexxIT/go2rtc/releases/latest/download/go2rtc_linux_arm64" -o $(basename "https://github.com/AlexxIT/go2rtc/releases/latest/download/go2rtc_linux_arm64")
 chmod +x go2rtc_linux_arm64
 msg_ok "Installed go2rtc"
 

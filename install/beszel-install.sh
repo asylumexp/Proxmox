@@ -15,7 +15,7 @@ update_os
 
 msg_info "Installing Beszel"
 mkdir -p /opt/beszel
-curl -sL "https://github.com/henrygd/beszel/releases/latest/download/beszel_$(uname -s)_$(uname -m | sed -e 's/x86_64/amd64/' -e 's/armv6l/arm/' -e 's/armv7l/arm/' -e 's/aarch64/arm64/').tar.gz" | tar -xz -O beszel | tee /opt/beszel/beszel >/dev/null
+curl -fsSL "https://github.com/henrygd/beszel/releases/latest/download/beszel_$(uname -s)_$(uname -m | sed -e 's/x86_64/amd64/' -e 's/armv6l/arm/' -e 's/armv7l/arm/' -e 's/aarch64/arm64/').tar.gz" | tar -xz -O beszel | tee /opt/beszel/beszel >/dev/null
 chmod +x /opt/beszel/beszel
 msg_ok "Installed Beszel"
 
@@ -34,7 +34,7 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now beszel-hub.service
+systemctl enable -q --now beszel-hub
 msg_ok "Created Service"
 
 motd_ssh

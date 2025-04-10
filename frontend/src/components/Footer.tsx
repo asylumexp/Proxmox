@@ -6,13 +6,13 @@ import { cn } from "@/lib/utils";
 
 export default function Footer() {
   return (
-    <div className="supports-backdrop-blur:bg-background/90 mt-auto border-t w-full flex justify-between border-border bg-background/40 py-6 backdrop-blur-lg">
+    <div className="supports-backdrop-blur:bg-background/90 mt-auto border-t w-full flex justify-between border-border bg-background/40 py-4 backdrop-blur-lg">
       <div className="mx-6 w-full flex justify-between text-xs sm:text-sm text-muted-foreground">
         <div className="flex items-center">
           <p>
             Website built by the community. The source code is available on{" "}
             <Link
-              href={`https://github.com/community-scripts/${basePath}`}
+              href={`https://github.com/community-scripts/${basePath}/frontend`}
               target="_blank"
               rel="noreferrer"
               className="font-semibold underline-offset-2 duration-300 hover:underline"

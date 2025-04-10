@@ -17,12 +17,10 @@ msg_info "Installing Dependencies"
 $STD apt-get install -y lsb-base
 $STD apt-get install -y lsb-release
 $STD apt-get install -y gnupg2
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up InfluxDB Repository"
-wget -qO- https://repos.influxdata.com/influxdata-archive_compat.key | gpg --dearmor >/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg
+curl -fsSL "https://repos.influxdata.com/influxdata-archive_compat.key" | gpg --dearmor >/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg
 echo "deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg] https://repos.influxdata.com/debian stable main" >/etc/apt/sources.list.d/influxdata.list
 msg_ok "Set up InfluxDB Repository"
 
@@ -39,7 +37,7 @@ if [[ $INFLUX == "2" ]]; then
   $STD apt-get install -y influxdb2
 else
   $STD apt-get install -y influxdb
-  wget -q https://dl.influxdata.com/chronograf/releases/chronograf_1.10.1_arm64.deb
+  curl -fsSL "https://dl.influxdata.com/chronograf/releases/chronograf_1.10.1_arm64.deb" -o $(basename "https://dl.influxdata.com/chronograf/releases/chronograf_1.10.1_arm64.deb")
   $STD dpkg -i chronograf_1.10.1_arm64.deb
 fi
 $STD systemctl enable --now influxdb

@@ -27,7 +27,7 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -s https://api.github.com/repos/goauthentik/authentik/releases/latest | grep "tarball_url" | awk '{print substr($2, 2, length($2)-3)}')
+  RELEASE=$(curl -fsSL https://api.github.com/repos/goauthentik/authentik/releases/latest | grep "tarball_url" | awk '{print substr($2, 2, length($2)-3)}')
   if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
     msg_info "Stopping ${APP}"
     systemctl stop authentik-server
@@ -36,7 +36,7 @@ function update_script() {
 
     msg_info "Building ${APP} website"
     mkdir -p /opt/authentik
-    wget -qO authentik.tar.gz "${RELEASE}"
+    curl -fsSL "${RELEASE}" -o "authentik.tar.gz"
     tar -xzf authentik.tar.gz -C /opt/authentik --strip-components 1 --overwrite
     rm -rf authentik.tar.gz
     cd /opt/authentik/website

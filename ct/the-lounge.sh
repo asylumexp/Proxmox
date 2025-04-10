@@ -27,7 +27,14 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -s https://api.github.com/repos/thelounge/thelounge-deb/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+  if ! dpkg -l build-essential >/dev/null 2>&1; then
+    $STD apt-get update
+    $STD apt-get install -y build-essential
+  fi
+  if ! npm list -g node-gyp >/dev/null 2>&1; then
+    $STD npm install -g node-gyp
+  fi
+  RELEASE=$(curl -fsSL https://api.github.com/repos/thelounge/thelounge-deb/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
     msg_info "Stopping Service"
     systemctl stop thelounge
@@ -36,7 +43,7 @@ function update_script() {
     msg_info "Updating ${APP} to v${RELEASE}"
     $STD apt-get install --only-upgrade nodejs
     cd /opt
-    wget -q https://github.com/thelounge/thelounge-deb/releases/download/v${RELEASE}/thelounge_${RELEASE}_all.deb
+    curl -fsSL "https://github.com/thelounge/thelounge-deb/releases/download/v${RELEASE}/thelounge_${RELEASE}_all.deb" -o $(basename "https://github.com/thelounge/thelounge-deb/releases/download/v${RELEASE}/thelounge_${RELEASE}_all.deb")
     dpkg -i ./thelounge_${RELEASE}_all.deb
     msg_ok "Updated ${APP} to v${RELEASE}"
 

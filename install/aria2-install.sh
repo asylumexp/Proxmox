@@ -31,7 +31,7 @@ if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
   $STD apt-get install -y nginx 
   $STD apt-get install -y unzip 
   systemctl disable -q --now nginx
-  wget -q "$(curl -s https://api.github.com/repos/mayswind/ariang/releases/latest | grep download | grep AllInOne.zip | cut -d\" -f4)"
+  curl -fsSL "$(curl -fsSL https://api.github.com/repos/mayswind/ariang/releases/latest | grep download | grep AllInOne.zip | cut -d\" -f4)" -o $(basename "$(curl -fsSL https://api.github.com/repos/mayswind/ariang/releases/latest | grep download | grep AllInOne.zip | cut -d\" -f4)")
   $STD unzip AriaNg-*-AllInOne.zip -d /var/www
   rm /etc/nginx/sites-enabled/*
   cat <<EOF >/etc/nginx/conf.d/ariang.conf
@@ -87,7 +87,7 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now aria2.service
+systemctl enable -q --now aria2
 systemctl enable -q --now ariang
 msg_ok "Created Service"
 

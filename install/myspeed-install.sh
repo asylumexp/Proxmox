@@ -16,9 +16,6 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y \
   build-essential \
-  g++ \
-  make \
-  make \
   gpg \
   ca-certificates \
   mc \
@@ -38,9 +35,9 @@ $STD apt-get install -y nodejs
 msg_ok "Installed Node.js"
 
 msg_info "Installing MySpeed"
-RELEASE=$(wget -q https://github.com/gnmyt/myspeed/releases/latest -O - | grep "title>Release" | cut -d " " -f 5)
+RELEASE=$(curl -fsSL https://github.com/gnmyt/myspeed/releases/latest | grep "title>Release" | cut -d " " -f 5)
 cd /opt
-wget -q https://github.com/gnmyt/myspeed/releases/download/v$RELEASE/MySpeed-$RELEASE.zip
+curl -fsSL "https://github.com/gnmyt/myspeed/releases/download/v$RELEASE/MySpeed-$RELEASE.zip" -o $(basename "https://github.com/gnmyt/myspeed/releases/download/v$RELEASE/MySpeed-$RELEASE.zip")
 unzip -q MySpeed-$RELEASE.zip -d myspeed
 cd myspeed
 $STD npm install
@@ -64,7 +61,7 @@ WorkingDirectory=/opt/myspeed
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now myspeed.service
+systemctl enable -q --now myspeed
 msg_ok "Created Service"
 
 motd_ssh

@@ -21,8 +21,8 @@ $STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Installing IPFS"
-RELEASE=$(wget -q https://github.com/ipfs/kubo/releases/latest -O - | grep "title>Release" | cut -d " " -f 4)
-$STD wget -q "https://github.com/ipfs/kubo/releases/download/${RELEASE}/kubo_${RELEASE}_linux-arm64.tar.gz"
+RELEASE=$(curl -fsSL https://github.com/ipfs/kubo/releases/latest | grep "title>Release" | cut -d " " -f 4)
+$STD curl -fsSL "https://github.com/ipfs/kubo/releases/download/${RELEASE}/kubo_${RELEASE}_linux-arm64.tar.gz" -o "kubo_${RELEASE}_linux-arm64.tar.gz"
 tar -xzf "kubo_${RELEASE}_linux-arm64.tar.gz" -C /usr/local
 $STD ln -s /usr/local/kubo/ipfs /usr/local/bin/ipfs
 $STD ipfs init

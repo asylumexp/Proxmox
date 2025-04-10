@@ -14,13 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apk add newt
-$STD apk add curl
-$STD apk add openssh
 $STD apk add tzdata
-$STD apk add nano
-$STD apk add mc
-$STD apk add openssh
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Docker"
@@ -30,7 +24,7 @@ $STD rc-update add docker default
 msg_ok "Installed Docker"
 
 get_latest_release() {
-  curl -sL https://api.github.com/repos/$1/releases/latest | grep '"tag_name":' | cut -d'"' -f4
+  curl -fsSL https://api.github.com/repos/$1/releases/latest | grep '"tag_name":' | cut -d'"' -f4
 }
 PORTAINER_LATEST_VERSION=$(get_latest_release "portainer/portainer")
 DOCKER_COMPOSE_LATEST_VERSION=$(get_latest_release "docker/compose")
@@ -68,7 +62,7 @@ if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then
   msg_info "Installing Docker Compose $DOCKER_COMPOSE_LATEST_VERSION"
   DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
   mkdir -p $DOCKER_CONFIG/cli-plugins
-  curl -sSL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_LATEST_VERSION/docker-compose-linux-aarch64 -o ~/.docker/cli-plugins/docker-compose
+  curl -fsSL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_LATEST_VERSION/docker-compose-linux-aarch64 -o ~/.docker/cli-plugins/docker-compose
   chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
   msg_ok "Installed Docker Compose $DOCKER_COMPOSE_LATEST_VERSION"
 fi

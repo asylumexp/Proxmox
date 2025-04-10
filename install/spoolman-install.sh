@@ -35,14 +35,14 @@ $STD apt-get install -y \
 msg_ok "Setup Python3"
 
 msg_info "Installing Spoolman"
-RELEASE=$(wget -q https://github.com/Donkie/Spoolman/releases/latest -O - | grep "title>Release" | cut -d " " -f 4)
+RELEASE=$(curl -fsSL https://github.com/Donkie/Spoolman/releases/latest | grep "title>Release" | cut -d " " -f 4)
 cd /opt
-wget -q https://github.com/Donkie/Spoolman/releases/download/$RELEASE/spoolman.zip
+curl -fsSL "https://github.com/Donkie/Spoolman/releases/download/$RELEASE/spoolman.zip" -o $(basename "https://github.com/Donkie/Spoolman/releases/download/$RELEASE/spoolman.zip")
 unzip -q spoolman.zip -d spoolman
 rm -rf spoolman.zip
 cd spoolman
 $STD pip3 install -r requirements.txt
-wget -q https://raw.githubusercontent.com/Donkie/Spoolman/master/.env.example -O .env
+curl -fsSL "https://raw.githubusercontent.com/Donkie/Spoolman/master/.env.example" -o ".env"
 echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
 msg_ok "Installed Spoolman"
 
@@ -61,7 +61,7 @@ User=root
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now spoolman.service
+systemctl enable -q --now spoolman
 msg_ok "Created Service"
 
 motd_ssh

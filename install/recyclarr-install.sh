@@ -16,13 +16,10 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y git
 $STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Recyclarr"
-wget -q $(curl -s https://api.github.com/repos/recyclarr/recyclarr/releases/latest | grep download | grep linux-arm64 | cut -d\" -f4)
+curl -fsSL "$(curl -fsSL https://api.github.com/repos/recyclarr/recyclarr/releases/latest | grep download | grep linux-arm64 | cut -d\" -f4)" -o $(basename "$(curl -fsSL https://api.github.com/repos/recyclarr/recyclarr/releases/latest | grep download | grep linux-arm64 | cut -d\" -f4)")
 tar -C /usr/local/bin -xJf recyclarr*.tar.xz
 mkdir -p /root/.config/recyclarr
 recyclarr config create

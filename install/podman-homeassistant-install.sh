@@ -22,7 +22,7 @@ $STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 get_latest_release() {
-  curl -sL https://api.github.com/repos/$1/releases/latest | grep '"tag_name":' | cut -d'"' -f4
+  curl -fsSL https://api.github.com/repos/$1/releases/latest | grep '"tag_name":' | cut -d'"' -f4
 }
 
 PORTAINER_LATEST_VERSION=$(get_latest_release "portainer/portainer")

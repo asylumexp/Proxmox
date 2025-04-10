@@ -1,4 +1,5 @@
 "use client";
+import FAQ from "@/components/FAQ";
 import AnimatedGradientText from "@/components/ui/animated-gradient-text";
 import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
@@ -111,37 +112,49 @@ export default function Page() {
 							</DialogContent>
 						</Dialog>
 
-						<div className="flex flex-col gap-4">
-							<h1 className="max-w-2xl text-center text-3xl font-semibold tracking-tighter md:text-7xl">
-								Make managing your Homelab a breeze
-							</h1>
-							<div className="max-w-2xl gap-2 flex flex-col text-center sm:text-lg text-sm leading-relaxed tracking-tight text-muted-foreground md:text-xl">
-								<p>
-									We are a community-driven initiative that simplifies the setup
-									of Proxmox Virtual Environment (VE).
-								</p>
-								<p>
-									With 300+ scripts to help you manage your{" "}
-									<b>Proxmox VE environment</b>. Whether you&#39;re a seasoned
-									user or a newcomer, we&#39;ve got you covered.
-								</p>
-							</div>
-						</div>
-						<div className="flex flex-row gap-3">
-							<Link href="/scripts">
-								<Button
-									size="lg"
-									variant="expandIcon"
-									Icon={CustomArrowRightIcon}
-									iconPlacement="right"
-									className="hover:"
-								>
-									View Scripts
-								</Button>
-							</Link>
-						</div>
-					</div>
-				</div>
-			</div>
-		);
+            <div className="flex flex-col gap-4">
+              <h1 className="max-w-2xl text-center text-3xl font-semibold tracking-tighter md:text-7xl">
+                Make managing your Homelab a breeze
+              </h1>
+              <div className="max-w-2xl gap-2 flex flex-col text-center sm:text-lg text-sm leading-relaxed tracking-tight text-muted-foreground md:text-xl">
+                <p>
+                  We are a community-driven initiative that simplifies the setup of Proxmox Virtual Environment (VE).
+                </p>
+                <p>
+                  With 300+ scripts to help you manage your <b>Proxmox VE environment</b>. Whether you&#39;re a seasoned
+                  user or a newcomer, we&#39;ve got you covered.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-row gap-3">
+              <Link href="/scripts">
+                <Button
+                  size="lg"
+                  variant="expandIcon"
+                  Icon={CustomArrowRightIcon}
+                  iconPlacement="right"
+                  className="hover:"
+                >
+                  View Scripts
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* FAQ Section */}
+          <div className="py-20" id="faq">
+            <div className="max-w-4xl mx-auto px-4">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold tracking-tighter md:text-5xl mb-4">Frequently Asked Questions</h2>
+                <p className="text-muted-foreground text-lg">
+                  Find answers to common questions about our Proxmox VE scripts
+                </p>
+              </div>
+              <FAQ />
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }

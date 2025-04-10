@@ -16,13 +16,11 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y ffmpeg
 $STD apt-get install -y vlc
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Threadfin"
 mkdir -p /opt/threadfin
-wget -q -O /opt/threadfin/threadfin 'https://github.com/Threadfin/Threadfin/releases/latest/download/Threadfin_linux_arm64'
+curl -fsSL "https://github.com/Threadfin/Threadfin/releases/latest/download/Threadfin_linux_arm64" -o "/opt/threadfin/threadfin"
 chmod +x /opt/threadfin/threadfin
 
 msg_ok "Installed Threadfin"
@@ -42,7 +40,7 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now threadfin.service
+systemctl enable -q --now threadfin
 msg_ok "Created Service"
 
 motd_ssh

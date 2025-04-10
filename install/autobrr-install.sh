@@ -13,16 +13,8 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Installing Autobrr"
-wget -q $(curl -s https://api.github.com/repos/autobrr/autobrr/releases/latest | grep download | grep linux_arm64.tar.gz | cut -d\" -f4)
+curl -fsSL "$(curl -fsSL https://api.github.com/repos/autobrr/autobrr/releases/latest | grep download | grep linux_arm64 | cut -d\" -f4)" -o $(basename "$(curl -fsSL https://api.github.com/repos/autobrr/autobrr/releases/latest | grep download | grep linux_x86_64 | cut -d\" -f4)")
 tar -C /usr/local/bin -xzf autobrr*.tar.gz
 rm -rf autobrr*.tar.gz
 mkdir -p /root/.config/autobrr

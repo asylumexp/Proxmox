@@ -14,17 +14,12 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 wget -qL http://ports.ubuntu.com/pool/universe/g/gcc-defaults/g++-multilib-arm-linux-gnueabi_9.3.0-1ubuntu2_arm64.deb
 $STD dpkg -i g++-multilib-arm-linux-gnueabi_9.3.0-1ubuntu2_arm64.deb
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Daemon Sync Server"
-wget -qL https://github.com/tteck/Proxmox/raw/main/misc/daemonsync_2.2.0.0059_amd64.deb
+curl -fsSL "https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/daemonsync_2.2.0.0059_amd64.deb" -o "daemonsync_2.2.0.0059_amd64.deb"
 $STD dpkg -i daemonsync_2.2.0.0059_amd64.deb
 msg_ok "Installed Daemon Sync Server"
 

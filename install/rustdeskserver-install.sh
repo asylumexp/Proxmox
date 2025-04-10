@@ -13,23 +13,19 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y \
-  curl \
-  sudo \
-  mc \
-  wget \
-  openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Setup RustDesk"
-RELEASE=$(curl -s https://api.github.com/repos/rustdesk/rustdesk-server/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
+
+RELEASE=$(curl -fsSL https://api.github.com/repos/rustdesk/rustdesk-server/releases/latest | grep "tag_name" | awk -F '"' '{print $4}')
 TEMPDIR=$(mktemp -d)
-wget -q "https://github.com/rustdesk/rustdesk-server/releases/download/${RELEASE}/rustdesk-server-hbbr_${RELEASE}_arm64.deb" -P $TEMPDIR
-wget -q "https://github.com/rustdesk/rustdesk-server/releases/download/${RELEASE}/rustdesk-server-hbbs_${RELEASE}_arm64.deb" -P $TEMPDIR
-wget -q "https://github.com/rustdesk/rustdesk-server/releases/download/${RELEASE}/rustdesk-server-utils_${RELEASE}_arm64.deb" -P $TEMPDIR
-$STD dpkg -i $TEMPDIR/*.deb
-echo "${RELEASE}" >/opt/rustdesk.txt
+
+curl -fsSL "https://github.com/rustdesk/rustdesk-server/releases/download/${RELEASE}/rustdesk-server-hbbr_${RELEASE}_arm64.deb" \
+    -o "${TEMPDIR}/rustdesk-server-hbbr_${RELEASE}_arm64.deb"
+curl -fsSL "https://github.com/rustdesk/rustdesk-server/releases/download/${RELEASE}/rustdesk-server-hbbs_${RELEASE}_arm64.deb" \
+    -o "${TEMPDIR}/rustdesk-server-hbbs_${RELEASE}_arm64.deb"
+curl -fsSL "https://github.com/rustdesk/rustdesk-server/releases/download/${RELEASE}/rustdesk-server-utils_${RELEASE}_arm64.deb" \
+    -o "${TEMPDIR}/rustdesk-server-utils_${RELEASE}_arm64.deb"
+$STD dpkg -i "${TEMPDIR}"/*.deb
+echo "${RELEASE}" >/opt/rustdesk_version.txt
 msg_ok "Setup RustDesk"
 
 motd_ssh

@@ -27,7 +27,7 @@ $STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Installing TasmoAdmin"
-wget -q https://github.com/TasmoAdmin/TasmoAdmin/releases/download/v3.1.1/tasmoadmin_v3.1.1.tar.gz
+curl -fsSL "https://github.com/TasmoAdmin/TasmoAdmin/releases/download/v3.1.1/tasmoadmin_v3.1.1.tar.gz" -o $(basename "https://github.com/TasmoAdmin/TasmoAdmin/releases/download/v3.1.1/tasmoadmin_v3.1.1.tar.gz")
 tar -xzf tasmoadmin_v3.1.1.tar.gz -C /var/www/
 rm -rf tasmoadmin_v3.1.1.tar.gz /etc/php/8.2/apache2/conf.d/10-opcache.ini
 chown -R www-data:www-data /var/www/tasmoadmin

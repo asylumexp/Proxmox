@@ -34,7 +34,7 @@ $STD npm install -g flowise \
   @opentelemetry/sdk-trace-node \
   langchainhub
 mkdir -p /opt/flowiseai
-wget -q https://raw.githubusercontent.com/FlowiseAI/Flowise/main/packages/server/.env.example -O /opt/flowiseai/.env
+curl -fsSL "https://raw.githubusercontent.com/FlowiseAI/Flowise/main/packages/server/.env.example" -o "/opt/flowiseai/.env"
 msg_ok "Installed FlowiseAI"
 
 msg_info "Creating Service"
@@ -51,7 +51,7 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now flowise.service
+systemctl enable -q --now flowise
 msg_ok "Created Service"
 
 motd_ssh

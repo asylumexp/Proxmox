@@ -13,17 +13,9 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Installing Ombi"
-RELEASE=$(curl -sL https://api.github.com/repos/Ombi-app/Ombi/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
-wget -q https://github.com/Ombi-app/Ombi/releases/download/${RELEASE}/linux-arm64.tar.gz
+RELEASE=$(curl -fsSL https://api.github.com/repos/Ombi-app/Ombi/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
+curl -fsSL "https://github.com/Ombi-app/Ombi/releases/download/${RELEASE}/linux-arm64.tar.gz" -o $(basename "https://github.com/Ombi-app/Ombi/releases/download/${RELEASE}/linux-arm64.tar.gz")
 echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
 mkdir -p /opt/ombi
 tar -xzf linux-arm64.tar.gz -C /opt/ombi
@@ -44,7 +36,7 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now ombi.service
+systemctl enable -q --now ombi
 msg_ok "Created Service"
 
 motd_ssh

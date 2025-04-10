@@ -22,7 +22,7 @@ msg_ok "Installed Dependencies"
 msg_info "Installing Homer"
 mkdir -p /opt/homer
 cd /opt/homer
-wget -q https://github.com/bastienwirtz/homer/releases/latest/download/homer.zip
+curl -fsSL "https://github.com/bastienwirtz/homer/releases/latest/download/homer.zip" -o $(basename "https://github.com/bastienwirtz/homer/releases/latest/download/homer.zip")
 $STD unzip homer.zip
 rm -rf homer.zip
 cp assets/config.yml.dist assets/config.yml

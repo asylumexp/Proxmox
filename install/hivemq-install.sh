@@ -15,20 +15,18 @@ update_os
 
 msg_info "Installing Dependencies"
 $STD apt-get install -y gpg
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Installing OpenJDK"
-wget -qO- https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor >/etc/apt/trusted.gpg.d/adoptium.gpg
+curl -fsSL "https://packages.adoptium.net/artifactory/api/gpg/key/public" | gpg --dearmor >/etc/apt/trusted.gpg.d/adoptium.gpg
 echo 'deb [arch=arm64 signed-by=/etc/apt/trusted.gpg.d/adoptium.gpg] https://packages.adoptium.net/artifactory/deb bookworm main' >/etc/apt/sources.list.d/adoptium.list
 $STD apt-get update
 $STD apt-get install -y temurin-17-jre
 msg_ok "Installed OpenJDK"
 
 msg_info "Installing HiveMQ CE"
-RELEASE=$(curl -s https://api.github.com/repos/hivemq/hivemq-community-edition/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
-wget -q https://github.com/hivemq/hivemq-community-edition/releases/download/${RELEASE}/hivemq-ce-${RELEASE}.zip
+RELEASE=$(curl -fsSL https://api.github.com/repos/hivemq/hivemq-community-edition/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
+curl -fsSL "https://github.com/hivemq/hivemq-community-edition/releases/download/${RELEASE}/hivemq-ce-${RELEASE}.zip" -o $(basename "https://github.com/hivemq/hivemq-community-edition/releases/download/${RELEASE}/hivemq-ce-${RELEASE}.zip")
 unzip -q hivemq-ce-${RELEASE}.zip
 mkdir -p /opt/hivemq
 mv hivemq-ce-${RELEASE}/* /opt/hivemq

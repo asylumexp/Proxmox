@@ -20,17 +20,15 @@ $STD apt-get install -y alsa-utils
 $STD apt-get install -y libxext-dev
 $STD apt-get install -y fontconfig
 $STD apt-get install -y libva-drm2
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Installing AgentDVR"
 mkdir -p /opt/agentdvr/agent
-RELEASE=$(curl -s "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0" | grep -o 'https://.*\.zip')
+RELEASE=$(curl -fsSL "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuARM64&fromVersion=0" | grep -o 'https://.*\.zip')
 cd /opt/agentdvr/agent
-wget -q $RELEASE
+curl -fsSL "$RELEASE" -o $(basename "$RELEASE")
 $STD unzip Agent_LinuxARM64*.zip
-rm -rf Agent_LinuxARM64*.zip
+rm -rf Agent_Linux64*.zip
 chmod +x ./Agent
 msg_ok "Installed AgentDVR"
 
@@ -50,7 +48,7 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now AgentDVR.service
+systemctl enable -q --now AgentDVR
 msg_ok "Created Service"
 
 motd_ssh

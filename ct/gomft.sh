@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source <(curl -s https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: Slaviša Arežina (tremor021)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
@@ -28,11 +28,17 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -s https://api.github.com/repos/StarFleetCPTN/GoMFT/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if ! dpkg -l | grep -q "^ii.*build-essential"; then
     $STD apt-get install -y build-essential
   fi
-
+  if [[ ! -f "/usr/bin/node" ]]; then
+    mkdir -p /etc/apt/keyrings
+    curl -fsSL "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" >/etc/apt/sources.list.d/nodesource.list
+    $STD apt-get update
+    $STD apt-get install -y nodejs
+  fi
+  RELEASE=$(curl -fsSL "https://api.github.com/repos/StarFleetCPTN/GoMFT/releases/latest" | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
     msg_info "Stopping $APP"
     systemctl stop gomft
@@ -41,13 +47,16 @@ function update_script() {
     msg_info "Updating $APP to ${RELEASE}"
     rm -f /opt/gomft/gomft
     temp_file=$(mktemp)
-    wget -q "https://github.com/StarFleetCPTN/GoMFT/archive/refs/tags/v${RELEASE}.tar.gz" -O $temp_file
-    tar -xzf $temp_file
-    cp -rf GoMFT-${RELEASE}/* /opt/gomft
-    cd /opt/gomft
+    curl -fsSL "https://github.com/StarFleetCPTN/GoMFT/archive/refs/tags/v${RELEASE}.tar.gz" -o "$temp_file"
+    tar -xzf "$temp_file"
+    cp -rf "GoMFT-${RELEASE}"/* /opt/gomft/
+    cd /opt/gomft || exit
+    rm -rf /opt/gomft/node_modules
+    $STD npm ci
+    $STD node build.js
     $STD go mod download
-    $STD go install github.com/a-h/templ/cmd/templ@latest
-    $STD $HOME/go/bin/templ generate
+    $STD go get -u github.com/a-h/templ
+    $STD "$HOME"/go/bin/templ generate
     export CGO_ENABLED=1
     export GOOS=linux
     $STD go build -o gomft
@@ -56,8 +65,8 @@ function update_script() {
     msg_ok "Updated $APP to ${RELEASE}"
 
     msg_info "Cleaning Up"
-    rm -f $temp_file
-    rm -rf GoMFT-${RELEASE}
+    rm -f "$temp_file"
+    rm -rf "$HOME/GoMFT-v.${RELEASE}/"
     msg_ok "Cleanup Complete"
 
     msg_info "Starting $APP"

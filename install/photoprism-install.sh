@@ -25,9 +25,7 @@ $STD apt-get install -y \
     darktable \
     rawtherapee \
     libvips42 \
-    lsb-release \
-    wget \
-    openssh-server
+    lsb-release
 
 echo 'export PATH=/usr/local:$PATH' >>~/.bashrc
 export PATH=/usr/local:$PATH
@@ -37,9 +35,9 @@ msg_info "Installing PhotoPrism (Patience)"
 mkdir -p /opt/photoprism/{cache,config,photos,storage,temp}
 mkdir -p /opt/photoprism/photos/{originals,import}
 mkdir -p /opt/photoprism_backups
-wget -q -cO - https://dl.photoprism.app/pkg/linux/arm64.tar.gz | tar -xz -C /opt/photoprism --strip-components=1
-LIBHEIF_URL=$(wget -q -O - "https://dl.photoprism.app/dist/libheif/" | grep -oP "libheif-$(lsb_release -cs)-arm64-v[0-9\.]+\.tar\.gz" | sort -V | tail -n 1)
-wget -q -cO - "https://dl.photoprism.app/dist/libheif/$LIBHEIF_URL" | tar -xzf - -C /usr/local --strip-components=1
+curl -fsSL https://dl.photoprism.app/pkg/linux/arm64.tar.gz | tar -xz -C /opt/photoprism --strip-components=1
+LIBHEIF_URL=$(curl -fsSL "https://dl.photoprism.app/dist/libheif/" | grep -oP "libheif-$(lsb_release -cs)-arm64-v[0-9\.]+\.tar\.gz" | sort -V | tail -n 1)
+curl -fsSL "https://dl.photoprism.app/dist/libheif/$LIBHEIF_URL" | tar -xzf - -C /usr/local --strip-components=1
 ldconfig
 chmod -R 755 /opt/photoprism/photos/originals
 cat <<EOF >/opt/photoprism/config/.env

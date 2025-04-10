@@ -13,18 +13,10 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Installing Gokapi"
-LATEST=$(curl -sL https://api.github.com/repos/Forceu/Gokapi/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
+LATEST=$(curl -fsSL https://api.github.com/repos/Forceu/Gokapi/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
 mkdir -p /opt/gokapi/{data,config}
-wget -q https://github.com/Forceu/Gokapi/releases/download/$LATEST/gokapi-linux_arm64.zip
+curl -fsSL "https://github.com/Forceu/Gokapi/releases/download/$LATEST/gokapi-linux_arm64.zip" -o $(basename "https://github.com/Forceu/Gokapi/releases/download/$LATEST/gokapi-linux_arm64.zip")
 unzip -q gokapi-linux_arm64.zip -d /opt/gokapi
 rm gokapi-linux_arm64.zip
 chmod +x /opt/gokapi/gokapi-linux_arm64

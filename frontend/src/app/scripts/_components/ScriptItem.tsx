@@ -1,148 +1,156 @@
+"use client";
 
-import { Separator } from "@/components/ui/separator";
 import { extractDate } from "@/lib/time";
-import { Script, AppVersion } from "@/lib/types";
-import { fetchVersions } from "@/lib/data";
+import { AppVersion, Script } from "@/lib/types";
 
 import { X } from "lucide-react";
 import Image from "next/image";
 
+import { Separator } from "@/components/ui/separator";
+import { basePath } from "@/config/siteConfig";
+import { useVersions } from "@/hooks/useVersions";
+import { cleanSlug } from "@/lib/utils/resource-utils";
+import { Suspense } from "react";
+import { ResourceDisplay } from "./ResourceDisplay";
 import { getDisplayValueFromType } from "./ScriptInfoBlocks";
 import Alerts from "./ScriptItems/Alerts";
-import Buttons from "./ScriptItems/Buttons";
 import DefaultPassword from "./ScriptItems/DefaultPassword";
-import DefaultSettings from "./ScriptItems/DefaultSettings";
 import Description from "./ScriptItems/Description";
 import InstallCommand from "./ScriptItems/InstallCommand";
-import InterFaces from "./ScriptItems/InterFaces";
 import Tooltips from "./ScriptItems/Tooltips";
-import { basePath } from "@/config/siteConfig";
-import { useEffect, useState } from "react";
+import InterFaces from "./ScriptItems/InterFaces";
+import Buttons from "./ScriptItems/Buttons";
 
-
-function ScriptItem({
-  item,
-  setSelectedScript,
-}: {
+interface ScriptItemProps {
   item: Script;
   setSelectedScript: (script: string | null) => void;
-}) {
-  const closeScript = () => {
-    window.history.pushState({}, document.title, window.location.pathname);
-    setSelectedScript(null);
-  };
-  const [versions, setVersions] = useState<AppVersion[]>([]);
+}
 
-
-  useEffect(() => {
-    fetchVersions()
-      .then((fetchedVersions) => {
-        console.log("Fetched Versions: ", fetchedVersions);
-        if (Array.isArray(fetchedVersions)) {
-          setVersions(fetchedVersions);
-        } else if (fetchedVersions && typeof fetchedVersions === "object") {
-          setVersions([fetchedVersions]);
-        } else {
-          setVersions([]);
-        }
-      })
-      .catch((error) => console.error("Error fetching versions:", error));
-  }, []);
-
+function ScriptHeader({ item }: { item: Script }) {
   const defaultInstallMethod = item.install_methods?.[0];
   const os = defaultInstallMethod?.resources?.os || "Proxmox Node";
   const version = defaultInstallMethod?.resources?.version || "";
 
   return (
-    <div className="mr-7 mt-0 flex w-full min-w-fit">
-      <div className="flex w-full min-w-fit">
-        <div className="flex w-full flex-col">
-          <div className="flex h-[36px] min-w-max items-center justify-between">
-            <h2 className="text-lg font-semibold">Selected Script</h2>
-            <X onClick={closeScript} className="cursor-pointer" />
-          </div>
-          <div className="rounded-lg border bg-accent/20 p-4">
-            <div className="flex justify-between">
-              <div className="flex">
-                <Image
-                  className="h-32 w-32 rounded-lg bg-accent/60 object-contain p-3 shadow-md"
-                  src={item.logo || `/${basePath}/logo.png`}
-                  width={400}
-                  onError={(e) =>
-                  ((e.currentTarget as HTMLImageElement).src =
-                    `/${basePath}/logo.png`)
-                  }
-                  height={400}
-                  alt={item.name}
-                  unoptimized
-                />
-                <div className="ml-4 flex flex-col justify-between">
-                  <div className="flex h-full w-full flex-col justify-between">
-                    <div>
-                      <h1 className="text-lg font-semibold">
-                        {item.status} {item.name} {getDisplayValueFromType(item.type)}
-                      </h1>
-                      <p className="w-full text-sm text-muted-foreground">
-                        Date added: {extractDate(item.date_created)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Default OS: {os} {version}
-                      </p>
-                    </div>
-                    <div className="flex gap-5">
-                      <DefaultSettings item={item} />
-                    </div>
-                    <div>{versions.length === 0 ? (<p>Loading versions...</p>) :
-                      (<>
-                        <p className="text-l text-foreground">Version:</p>
-                        <p className="text-l text-muted-foreground">{versions.find((v) =>
-                          v.name === item.slug.replace(/[^a-z0-9]/g, '') ||
-                          v.name.includes(item.slug.replace(/[^a-z0-9]/g, '')) ||
-                          v.name.replace(/[^a-z0-9]/g, '') === item.slug.replace(/[^a-z0-9]/g, '')
-
-                        )?.version || "No Version information found"
-                        }</p>
-                        <p className="text-l text-foreground">Latest Version changes(Pulled from newreleases.io):</p>
-                        <p className="text-l text-muted-foreground">
-                          {(() => {
-                            const matchedVersion = versions.find((v) =>
-                              v.name === item.slug.replace(/[^a-z0-9]/g, '') ||
-                              v.name.includes(item.slug.replace(/[^a-z0-9]/g, '')) ||
-                              v.name.replace(/[^a-z0-9]/g, '') === item.slug.replace(/[^a-z0-9]/g, '')
-                            );
-                            return matchedVersion?.date ?
-                              extractDate(matchedVersion.date as unknown as string) :
-                              "No date information found"
-                          })()}
-                        </p>
-                      </>)
-                    }
-                    </div>
-                  </div>
+    <div className="flex flex-col lg:flex-row gap-6 w-full">
+      <div className="flex flex-col md:flex-row gap-6 flex-grow">
+        <div className="flex-shrink-0">
+          <Image
+            className="h-32 w-32 rounded-xl bg-gradient-to-br from-accent/40 to-accent/60 object-contain p-3 shadow-lg transition-transform hover:scale-105"
+            src={item.logo || `/${basePath}/logo.png`}
+            width={400}
+            onError={(e) => ((e.currentTarget as HTMLImageElement).src = `/${basePath}/logo.png`)}
+            height={400}
+            alt={item.name}
+            unoptimized
+          />
+        </div>
+        <div className="flex flex-col justify-between flex-grow space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+                  {item.name}
+                  <VersionInfo item={item} />
+                  <span className="inline-flex items-center rounded-md bg-accent/30 px-2 py-1 text-sm">
+                    {getDisplayValueFromType(item.type)}
+                  </span>
+                </h1>
+                <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+                  <span>Added {extractDate(item.date_created)}</span>
+                  <span>•</span>
+                  <span className=" capitalize">
+                    {os} {version}
+                  </span>
                 </div>
               </div>
-              <div className="hidden flex-col justify-between gap-2 sm:flex">
-                <InterFaces item={item} />
-                <Buttons item={item} />
-              </div>
+              {/* <VersionInfo item={item} /> */}
             </div>
-            <Separator className="mt-4" />
-            <div>
-              <div className="mt-4">
-                <Description item={item} />
-                <Alerts item={item} />
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              {defaultInstallMethod?.resources && (
+                <ResourceDisplay
+                  title="Default"
+                  cpu={defaultInstallMethod.resources.cpu}
+                  ram={defaultInstallMethod.resources.ram}
+                  hdd={defaultInstallMethod.resources.hdd}
+                />
+              )}
+              {item.install_methods.find((method) => method.type === "alpine")?.resources && (
+                <ResourceDisplay
+                  title="Alpine"
+                  {...item.install_methods.find((method) => method.type === "alpine")!.resources!}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col gap-4 justify-between">
+        <InterFaces item={item} />
+        <div className="flex justify-end">
+          <Buttons item={item} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VersionInfo({ item }: { item: Script }) {
+  const { data: versions = [], isLoading } = useVersions();
+
+  if (isLoading || versions.length === 0) {
+    return <p className="text-sm text-muted-foreground">Loading versions...</p>;
+  }
+
+  const matchedVersion = versions.find((v: AppVersion) => {
+    const cleanName = v.name.replace(/[^a-z0-9]/gi, "").toLowerCase();
+    return cleanName === cleanSlug(item.slug) || cleanName.includes(cleanSlug(item.slug));
+  });
+
+  if (!matchedVersion) return null;
+
+  return <span className="font-medium text-sm">{matchedVersion.version}</span>;
+}
+
+export function ScriptItem({ item, setSelectedScript }: ScriptItemProps) {
+  const closeScript = () => {
+    window.history.pushState({}, document.title, window.location.pathname);
+    setSelectedScript(null);
+  };
+
+  return (
+    <div className="w-full max-w-5xl mx-auto">
+      <div className="flex w-full flex-col">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground/90">Selected Script</h2>
+          <button
+            onClick={closeScript}
+            className="rounded-full p-2 text-muted-foreground hover:bg-card/50 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="rounded-xl border border-border/40 bg-gradient-to-b from-card/30 to-background/50 backdrop-blur-sm shadow-sm">
+          <div className="p-6 space-y-6">
+            <Suspense fallback={<div className="animate-pulse h-32 bg-accent/20 rounded-xl" />}>
+              <ScriptHeader item={item} />
+            </Suspense>
+
+            <Description item={item} />
+            <Alerts item={item} />
+
+            <div className="mt-4 rounded-lg border shadow-sm">
+              <div className="flex gap-3 px-4 py-2 bg-accent/25">
+                <h2 className="text-lg font-semibold">How to {item.type === "misc" ? "use" : "install"}</h2>
+                <Tooltips item={item} />
               </div>
-              <div className="mt-4 rounded-lg border bg-accent/50">
-                <div className="flex gap-3 px-4 py-2">
-                  <h2 className="text-lg font-semibold">
-                    How to {item.type == "misc" ? "use" : "install"}
-                  </h2>
-                  <Tooltips item={item} />
-                </div>
-                <Separator className="w-full"></Separator>
+              <Separator />
+              <div className="">
                 <InstallCommand item={item} />
               </div>
             </div>
+
             <DefaultPassword item={item} />
           </div>
         </div>
@@ -150,5 +158,3 @@ function ScriptItem({
     </div>
   );
 }
-
-export default ScriptItem;

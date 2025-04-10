@@ -16,14 +16,12 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y git
 $STD apt-get install -y git-lfs
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Forgejo"
 mkdir -p /opt/forgejo
-RELEASE=$(curl -s https://codeberg.org/api/v1/repos/forgejo/forgejo/releases/latest | grep -oP '"tag_name":\s*"\K[^"]+' | sed 's/^v//')
-wget -qO /opt/forgejo/forgejo-$RELEASE-linux-arm64 "https://codeberg.org/forgejo/forgejo/releases/download/v${RELEASE}/forgejo-${RELEASE}-linux-arm64"
+RELEASE=$(curl -fsSL https://codeberg.org/api/v1/repos/forgejo/forgejo/releases/latest | grep -oP '"tag_name":\s*"\K[^"]+' | sed 's/^v//')
+curl -fsSL "https://codeberg.org/forgejo/forgejo/releases/download/v${RELEASE}/forgejo-${RELEASE}-linux-arm64" -o "/opt/forgejo/forgejo-$RELEASE-linux-arm64"
 chmod +x /opt/forgejo/forgejo-$RELEASE-linux-arm64
 ln -sf /opt/forgejo/forgejo-$RELEASE-linux-arm64 /usr/local/bin/forgejo
 msg_ok "Installed Forgejo"

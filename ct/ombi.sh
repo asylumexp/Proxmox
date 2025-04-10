@@ -27,14 +27,14 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -sL https://api.github.com/repos/Ombi-app/Ombi/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
+  RELEASE=$(curl -fsSL https://api.github.com/repos/Ombi-app/Ombi/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
   if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
     msg_info "Stopping ${APP}"
     systemctl stop ombi
     msg_ok "Stopped ${APP}"
 
     msg_info "Updating ${APP} to ${RELEASE}"
-    wget -q https://github.com/Ombi-app/Ombi/releases/download/${RELEASE}/linux-x64.tar.gz
+    curl -fsSL "https://github.com/Ombi-app/Ombi/releases/download/${RELEASE}/linux-x64.tar.gz" -o $(basename "https://github.com/Ombi-app/Ombi/releases/download/${RELEASE}/linux-x64.tar.gz")
     tar -xzf linux-x64.tar.gz -C /opt/ombi
     rm -rf linux-x64.tar.gz
     echo "${RELEASE}" >/opt/${APP}_version.txt

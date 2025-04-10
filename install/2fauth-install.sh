@@ -14,13 +14,20 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
+
+$STD apt-get install -y \
+        lsb-release \
+        gpg
+
+curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/deb.sury.org-php.gpg
+echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
+$STD apt-get update
+
 $STD apt-get install -y \
         nginx \
         composer \
-        php8.2-{bcmath,common,ctype,curl,fileinfo,fpm,gd,mbstring,mysql,xml,cli} \
-        mariadb-server \
-        wget \
-        openssh-server
+        php8.3-{bcmath,common,ctype,curl,fileinfo,fpm,gd,mbstring,mysql,xml,cli} \
+        mariadb-server
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Database"
@@ -39,8 +46,8 @@ $STD mysql -u root -e "GRANT ALL ON $DB_NAME.* TO '$DB_USER'@'localhost'; FLUSH 
 msg_ok "Set up Database"
 
 msg_info "Setup 2FAuth"
-RELEASE=$(curl -s https://api.github.com/repos/Bubka/2FAuth/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
-wget -q "https://github.com/Bubka/2FAuth/archive/refs/tags/${RELEASE}.zip"
+RELEASE=$(curl -fsSL https://api.github.com/repos/Bubka/2FAuth/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
+curl -fsSL "https://github.com/Bubka/2FAuth/archive/refs/tags/${RELEASE}.zip" -o $(basename "https://github.com/Bubka/2FAuth/archive/refs/tags/${RELEASE}.zip")
 unzip -q "${RELEASE}.zip"
 mv "2FAuth-${RELEASE//v/}/" /opt/2fauth
 
@@ -92,7 +99,7 @@ server {
         error_page 404 /index.php;
 
         location ~ \.php\$ {
-                fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+                fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
                 fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
                 include fastcgi_params;
         }

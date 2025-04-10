@@ -100,7 +100,7 @@ function update_script() {
     msg_ok "Installed FileBrowser"
 
     msg_info "Creating Service"
-    cat <<EOF > /etc/systemd/system/filebrowser.service
+    cat <<EOF >/etc/systemd/system/filebrowser.service
 [Unit]
 Description=Filebrowser
 After=network-online.target

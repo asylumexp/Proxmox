@@ -25,13 +25,12 @@ $STD apt-get install -y \
     dpkg-dev
 msg_ok "Installed Dependencies"
 
-msg_info "Installing Proxmox Backup Server"
-$STD apt-get update
+msg_info "Installing Proxmox Backup Server (Patience)"
 export DEBIAN_FRONTEND=noninteractive
 git clone https://github.com/wofferl/proxmox-backup-arm64
 cd ./proxmox-backup-arm64
-./build.sh download
-apt install -y -f ./packages/*
+$STD ./build.sh download
+$STD apt install -y -f ./packages/*
 msg_ok "Installed Proxmox Backup Server"
 
 motd_ssh

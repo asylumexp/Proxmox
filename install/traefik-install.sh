@@ -16,14 +16,12 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y gpg
 $STD apt-get install -y apt-transport-https
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
-RELEASE=$(curl -s https://api.github.com/repos/traefik/traefik/releases | grep -oP '"tag_name":\s*"v\K[\d.]+?(?=")' | sort -V | tail -n 1)
+RELEASE=$(curl -fsSL https://api.github.com/repos/traefik/traefik/releases | grep -oP '"tag_name":\s*"v\K[\d.]+?(?=")' | sort -V | tail -n 1)
 msg_info "Installing Traefik v${RELEASE}"
 mkdir -p /etc/traefik/{conf.d,ssl}
-wget -q https://github.com/traefik/traefik/releases/download/v${RELEASE}/traefik_v${RELEASE}_linux_arm64.tar.gz
+curl -fsSL "https://github.com/traefik/traefik/releases/download/v${RELEASE}/traefik_v${RELEASE}_linux_arm64.tar.gz" -o $(basename "https://github.com/traefik/traefik/releases/download/v${RELEASE}/traefik_v${RELEASE}_linux_arm64.tar.gz")
 tar -C /tmp -xzf traefik*.tar.gz
 mv /tmp/traefik /usr/bin/
 rm -rf traefik*.tar.gz
@@ -101,7 +99,7 @@ ExecReload=/bin/kill -USR1 \$MAINPID
 WantedBy=multi-user.target
 EOF
 
-systemctl enable -q --now traefik.service
+systemctl enable -q --now traefik
 msg_ok "Created Service"
 
 motd_ssh

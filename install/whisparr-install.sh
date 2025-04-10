@@ -25,8 +25,9 @@ msg_ok "Installed Dependencies"
 msg_info "Installing Whisparr"
 mkdir -p /var/lib/whisparr/
 chmod 775 /var/lib/whisparr/
-$STD wget --content-disposition 'https://whisparr.servarr.com/v1/update/nightly/updatefile?os=linux&runtime=netcore&arch=arm64'
-$STD tar -xvzf Whisparr.develop.*.tar.gz
+cd /var/lib/whisparr/
+$STD curl -fsSL 'https://whisparr.servarr.com/v1/update/nightly/updatefile?os=linux&runtime=netcore&arch=arm64' -o whisparr.tar.gz
+$STD tar -xvzf whisparr.tar.gz
 mv Whisparr /opt
 chmod 775 /opt/Whisparr
 msg_ok "Installed Whisparr"

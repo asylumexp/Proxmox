@@ -13,14 +13,6 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Setting Phoscon Repository"
 VERSION="$(awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release)"
 curl -fsSL http://phoscon.de/apt/deconz.pub.key >/etc/apt/trusted.gpg.d/deconz.pub.asc
@@ -28,8 +20,8 @@ echo "deb [arch=arm64] http://phoscon.de/apt/deconz $VERSION main" >/etc/apt/sou
 msg_ok "Setup Phoscon Repository"
 
 msg_info "Installing deConz"
-wget -qL http://ports.ubuntu.com/pool/main/o/openssl/libssl1.0.0_1.0.2g-1ubuntu4.20_arm64.deb
-$STD dpkg -i libssl1.0.0_1.0.2g-1ubuntu4.20_arm64.deb
+curl -fsSL "http://ports.ubuntu.com/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_arm64.deb" -o $(basename "http://ports.ubuntu.com/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_arm64.deb")
+$STD dpkg -i libssl1.1_1.1.1f-1ubuntu2.24_arm64.deb
 $STD apt-get update
 $STD apt-get install -y deconz
 msg_ok "Installed deConz"
@@ -58,7 +50,7 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-rm -rf libssl1.0.0_1.0.2g-1ubuntu4.20_arm64.deb
+rm -rf libssl1.1_1.1.1f-1ubuntu2.24_arm64
 $STD apt-get -y autoremove
 $STD apt-get -y autoclean
 msg_ok "Cleaned"

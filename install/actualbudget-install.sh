@@ -18,8 +18,7 @@ $STD apt-get install -y \
   tini \
   gpg \
   build-essential \
-  wget \
-  openssh-server
+  git
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"
@@ -35,11 +34,11 @@ $STD npm install --global yarn
 msg_ok "Installed Node.js"
 
 msg_info "Installing Actual Budget"
-cd /opt
-RELEASE=$(curl -s https://api.github.com/repos/actualbudget/actual/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
-wget -q https://github.com/actualbudget/actual/archive/refs/tags/v${RELEASE}.tar.gz
-tar -xzf v${RELEASE}.tar.gz
-mv actual-${RELEASE} /opt/actualbudget
+cd /opt || exit
+RELEASE=$(curl -fsSL https://api.github.com/repos/actualbudget/actual/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+curl -fsSL "https://github.com/actualbudget/actual/archive/refs/tags/v${RELEASE}.tar.gz" -o $(basename "https://github.com/actualbudget/actual/archive/refs/tags/v${RELEASE}.tar.gz")
+tar -xzf v"${RELEASE}".tar.gz
+mv actual-"${RELEASE}" /opt/actualbudget
 
 mkdir -p /opt/actualbudget-data/{server-files,upload,migrate,user-files,migrations,config}
 chown -R root:root /opt/actualbudget-data
@@ -55,8 +54,10 @@ ACTUAL_TRUSTED_PROXIES="10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1/32,::1
 ACTUAL_HTTPS_KEY=/opt/actualbudget/selfhost.key
 ACTUAL_HTTPS_CERT=/opt/actualbudget/selfhost.crt
 EOF
-cd /opt/actualbudget
-$STD yarn workspaces focus @actual-app/sync-server --production
+cd /opt/actualbudget || exit
+export NODE_OPTIONS="--max_old_space_size=4096"
+$STD yarn install
+$STD yarn run build:server
 $STD openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout selfhost.key -out selfhost.crt <<EOF
 US
 California
@@ -95,7 +96,7 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-rm -rf /opt/v${RELEASE}.tar.gz
+rm -rf /opt/v"${RELEASE}".tar.gz
 $STD apt-get -y autoremove
 $STD apt-get -y autoclean
 msg_ok "Cleaned"

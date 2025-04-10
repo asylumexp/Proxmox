@@ -33,12 +33,13 @@ function update_script() {
     $STD apt-get remove -y ocrmypdf
     $STD apt-get install -y qpdf
   fi
-  RELEASE=$(curl -s https://api.github.com/repos/Stirling-Tools/Stirling-PDF/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
-  wget -q https://github.com/Stirling-Tools/Stirling-PDF/archive/refs/tags/v$RELEASE.tar.gz
+  RELEASE=$(curl -fsSL https://api.github.com/repos/Stirling-Tools/Stirling-PDF/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+  curl -fsSL "https://github.com/Stirling-Tools/Stirling-PDF/archive/refs/tags/v$RELEASE.tar.gz" -o $(basename "https://github.com/Stirling-Tools/Stirling-PDF/archive/refs/tags/v$RELEASE.tar.gz")
   tar -xzf v$RELEASE.tar.gz
   cd Stirling-PDF-$RELEASE
   chmod +x ./gradlew
   $STD ./gradlew build
+  rm -rf /opt/Stirling-PDF/Stirling-PDF-*.jar
   cp -r ./build/libs/Stirling-PDF-*.jar /opt/Stirling-PDF/
   cp -r scripts /opt/Stirling-PDF/
   cd ~

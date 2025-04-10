@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://github.com/rogerfar/rdt-client
 
-source /dev/stdin <<< "$FUNCTIONS_FILE_PATH"
+source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
 verb_ip6
 catch_errors
@@ -14,12 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
 $STD apt-get install -y unzip
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Installing ASP.NET Core Runtime"
@@ -39,7 +34,7 @@ $STD ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
 msg_ok "Installed ASP.NET Core Runtime"
 
 msg_info "Installing rdtclient"
-wget -q https://github.com/rogerfar/rdt-client/releases/latest/download/RealDebridClient.zip
+curl -fsSL "https://github.com/rogerfar/rdt-client/releases/latest/download/RealDebridClient.zip" -o $(basename "https://github.com/rogerfar/rdt-client/releases/latest/download/RealDebridClient.zip")
 unzip -qq RealDebridClient.zip -d /opt/rdtc
 rm RealDebridClient.zip
 cd /opt/rdtc

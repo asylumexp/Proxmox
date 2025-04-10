@@ -23,11 +23,14 @@ function update_script() {
     header_info
     check_container_storage
     check_container_resources
-    if [[ ! -e /usr/sbin/proxmox-backup-manager ]]; then msg_error "No ${APP} Installation Found!"; exit; fi
-        msg_info "Updating $APP LXC"
-        $STD apt-get update
-        $STD apt-get -y upgrade
-        msg_ok "Updated $APP LXC"
+    if [[ ! -e /usr/sbin/proxmox-backup-manager ]]; then
+        msg_error "No ${APP} Installation Found!"
+        exit
+    fi
+    msg_info "Updating $APP LXC"
+    $STD apt-get update
+    $STD apt-get -y upgrade
+    msg_ok "Updated $APP LXC"
     exit
 }
 

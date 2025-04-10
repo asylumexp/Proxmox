@@ -33,8 +33,8 @@ $STD apt-get install -y nut-client
 msg_ok "Installed NUT"
 
 msg_info "Installing Peanut"
-RELEASE=$(curl -sL https://api.github.com/repos/Brandawg93/PeaNUT/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
-wget -qO peanut.tar.gz https://api.github.com/repos/Brandawg93/PeaNUT/tarball/${RELEASE}
+RELEASE=$(curl -fsSL https://api.github.com/repos/Brandawg93/PeaNUT/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
+curl -fsSL "https://api.github.com/repos/Brandawg93/PeaNUT/tarball/${RELEASE}" -o "peanut.tar.gz"
 mkdir -p /opt/peanut
 tar -xzf peanut.tar.gz -C /opt/peanut --strip-components 1
 rm peanut.tar.gz
@@ -75,7 +75,7 @@ TimeoutStopSec=30
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now peanut.service
+systemctl enable -q --now peanut
 msg_ok "Created Service"
 
 motd_ssh

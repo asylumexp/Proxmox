@@ -14,19 +14,13 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
-    mc \
-    curl \
-    sudo \
-    git \
-    wget \
-    openssh-server
+$STD apt-get install -y git
 msg_ok "Installed Dependencies"
 
 msg_info "Install Opengist"
-RELEASE=$(curl -s https://api.github.com/repos/thomiceli/opengist/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+RELEASE=$(curl -fsSL https://api.github.com/repos/thomiceli/opengist/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 echo "${RELEASE}" >"/opt/${APPLICATION}_version.txt"
-wget -q "https://github.com/thomiceli/opengist/releases/download/v${RELEASE}/opengist${RELEASE}-linux-arm64.tar.gz"
+curl -fsSL "https://github.com/thomiceli/opengist/releases/download/v${RELEASE}/opengist${RELEASE}-linux-arm64.tar.gz" -o $(basename "https://github.com/thomiceli/opengist/releases/download/v${RELEASE}/opengist${RELEASE}-linux-arm64.tar.gz")
 $STD tar -xzf opengist${RELEASE}-linux-arm64.tar.gz
 mv opengist /opt/opengist
 chmod +x /opt/opengist/opengist
@@ -51,7 +45,7 @@ User=root
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now opengist.service
+systemctl enable -q --now opengist
 msg_ok "Created Service"
 
 motd_ssh

@@ -19,15 +19,15 @@ variables
 color
 catch_errors
 function update_script() {
-    header_info
-    check_container_storage
-    check_container_resources
-    if [[ ! -d /opt/ErsatzTV ]]; then
-        msg_error "No ${APP} Installation Found!"
-        exit
-    fi
-    RELEASE=$(curl -s https://api.github.com/repos/ErsatzTV/ErsatzTV/releases | grep -oP '"tag_name": "\K[^"]+' | head -n 1)
-    if [[ ! -f /opt/${APP}_version.txt && $(echo "x.x.x" > /opt/${APP}_version.txt) || "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
+  header_info
+  check_container_storage
+  check_container_resources
+  if [[ ! -d /opt/ErsatzTV ]]; then
+    msg_error "No ${APP} Installation Found!"
+    exit
+  fi
+  RELEASE=$(curl -fsSL https://api.github.com/repos/ErsatzTV/ErsatzTV/releases | grep -oP '"tag_name": "\K[^"]+' | head -n 1)
+  if [[ ! -f /opt/${APP}_version.txt && $(echo "x.x.x" >/opt/${APP}_version.txt) || "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
     msg_info "Stopping ErsatzTV"
     systemctl stop ersatzTV
     msg_ok "Stopped ErsatzTV"
@@ -37,9 +37,9 @@ function update_script() {
     rm ErsatzTV-backup/ErsatzTV
     rm -rf /opt/ErsatzTV
     temp_file=$(mktemp)
-    wget -qO- https://github.com/ErsatzTV/ErsatzTV/releases/download/${RELEASE}/ErsatzTV-${RELEASE}-linux-x64.tar.gz -O "$temp_file"
+    curl -fsSL "https://github.com/ErsatzTV/ErsatzTV/releases/download/${RELEASE}/ErsatzTV-${RELEASE}-linux-x64.tar.gz" -o "$temp_file"
     tar -xzf "$temp_file"
-    mv /opt/ErsatzTV-${RELEASE}-linux-x64 /opt/ErsatzTV
+    mv ErsatzTV-${RELEASE}-linux-x64 /opt/ErsatzTV
     cp -R ErsatzTV-backup/* /opt/ErsatzTV/
     rm -rf ErsatzTV-backup
     echo "${RELEASE}" >/opt/${APP}_version.txt
@@ -58,7 +58,6 @@ function update_script() {
   fi
   exit
 }
-
 
 start
 build_container

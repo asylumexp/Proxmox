@@ -39,7 +39,8 @@ $STD pip install -r /opt/flaresolverr/requirements.txt
 msg_ok "Installed FlareSolverr"
 
 msg_info "Installing Chrome Webdriver"
-wget -q https://github.com/electron/electron/releases/download/v35.1.2/chromedriver-v35.1.2-linux-arm64.zip -O /opt/flaresolverr/webdriver.zip
+RELEASE=$(curl -fsSL https://github.com/electron/electron/releases/latest | grep "title>Release" | cut -d " " -f 4)
+wget -q https://github.com/electron/electron/releases/download/$RELEASE//chromedriver-$RELEASE/-linux-arm64.zip -O /opt/flaresolverr/webdriver.zip
 cd /opt/flaresolverr
 unzip -q webdriver.zip chromedriver
 sed -i 's|^PATCHED_DRIVER_PATH = None|PATCHED_DRIVER_PATH = "/opt/flaresolverr/chromedriver"|' ./src/utils.py
@@ -63,7 +64,7 @@ TimeoutStopSec=30
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now flaresolverr.service
+systemctl enable -q --now flaresolverr
 msg_ok "Created Service"
 
 motd_ssh

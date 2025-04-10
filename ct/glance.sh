@@ -29,7 +29,7 @@ function update_script() {
     exit
   fi
 
-  RELEASE=$(curl -s https://api.github.com/repos/glanceapp/glance/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+  RELEASE=$(curl -fsSL https://api.github.com/repos/glanceapp/glance/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
     msg_info "Stopping Service"
     systemctl stop glance
@@ -37,7 +37,7 @@ function update_script() {
 
     msg_info "Updating ${APP} to v${RELEASE}"
     cd /opt
-    wget -q https://github.com/glanceapp/glance/releases/download/v${RELEASE}/glance-linux-amd64.tar.gz
+    curl -fsSL "https://github.com/glanceapp/glance/releases/download/v${RELEASE}/glance-linux-amd64.tar.gz" -o $(basename "https://github.com/glanceapp/glance/releases/download/v${RELEASE}/glance-linux-amd64.tar.gz")
     rm -rf /opt/glance/glance
     tar -xzf glance-linux-amd64.tar.gz -C /opt/glance
     echo "${RELEASE}" >"/opt/${APP}_version.txt"

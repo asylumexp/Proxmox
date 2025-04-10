@@ -26,13 +26,13 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  if ! command -v pnpm &>/dev/null; then  
+  if ! command -v pnpm &>/dev/null; then
     msg_info "Installing pnpm"
     #export NODE_OPTIONS=--openssl-legacy-provider
     $STD npm install -g pnpm@latest
     msg_ok "Installed pnpm"
   fi
-  RELEASE=$(curl -s https://api.github.com/repos/diced/zipline/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+  RELEASE=$(curl -fsSL https://api.github.com/repos/diced/zipline/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
     msg_info "Stopping ${APP}"
     systemctl stop zipline
@@ -41,7 +41,7 @@ function update_script() {
     msg_info "Updating ${APP} to ${RELEASE}"
     cp /opt/zipline/.env /opt/
     rm -R /opt/zipline
-    wget -q "https://github.com/diced/zipline/archive/refs/tags/v${RELEASE}.zip"
+    curl -fsSL "https://github.com/diced/zipline/archive/refs/tags/v${RELEASE}.zip" -o $(basename "https://github.com/diced/zipline/archive/refs/tags/v${RELEASE}.zip")
     unzip -q v${RELEASE}.zip
     mv zipline-${RELEASE} /opt/zipline
     cd /opt/zipline

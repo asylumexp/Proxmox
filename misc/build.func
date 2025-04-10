@@ -43,6 +43,7 @@ color() {
   CPUCORE="${TAB}🧠${TAB}${CL}"
   RAMSIZE="${TAB}🛠️${TAB}${CL}"
   SEARCH="${TAB}🔍${TAB}${CL}"
+  VERBOSE_CROPPED="🔍${TAB}"
   VERIFYPW="${TAB}🔐${TAB}${CL}"
   CONTAINERID="${TAB}🆔${TAB}${CL}"
   HOSTNAME="${TAB}🏠${TAB}${CL}"
@@ -287,21 +288,20 @@ update_motd_ip() {
 
 # Function to download & save header files
 get_header() {
-  local app_name=$(echo ${APP,,} | tr -d ' ')
-  local header_url="https://github.com/asylumexp/Proxmox/raw/main/ct/headers/${app_name}"
-  local local_header_path="/usr/local/community-scripts/headers/${app_name}"
+    local app_name=$(echo "${APP,,}" | tr -d ' ')
+    local header_url="https://raw.githubusercontent.com/asylumexp/Proxmox/main/ct/headers/${app_name}"
+    local local_header_path="/usr/local/community-scripts/headers/${app_name}"
 
-  mkdir -p "/usr/local/community-scripts/headers"
+    mkdir -p "$(dirname "$local_header_path")"
 
-  # Check if local file already present
-  if [ ! -f "$local_header_path" ]; then
-    wget -qO "$local_header_path" "$header_url"
-    if [ $? -ne 0 ]; then
-      echo -e "${WARN}${BOLD}${YLW}Failed to download header for ${app_name}. No header will be displayed.${CL}"
-      return 1
+    if [ ! -s "$local_header_path" ]; then
+        if ! curl -fsSL "$header_url" -o "$local_header_path"; then
+            echo -e "Failed to download header for ${app_name}. No header will be displayed."
+            return 1
+        fi
     fi
-  fi
-  cat "$local_header_path"
+
+    cat "$local_header_path"
 }
 
 # This function sets the APP-Name into an ASCII Header in Slant, figlet needed on proxmox main node.
@@ -949,7 +949,7 @@ install_script() {
       ;;
     2)
       header_info
-      echo -e "${DEFAULT}${BOLD}${BL}Using Default Settings on node $PVEHOST_NAME (${SEARCH}Verbose)${CL}"
+      echo -e "${DEFAULT}${BOLD}${BL}Using Default Settings on node $PVEHOST_NAME (${VERBOSE_CROPPED}Verbose)${CL}"
       VERB="yes"
       METHOD="default"
       base_settings "$VERB"
@@ -1100,9 +1100,9 @@ build_container() {
   TEMP_DIR=$(mktemp -d)
   pushd $TEMP_DIR >/dev/null
   if [ "$var_os" == "alpine" ]; then
-    export FUNCTIONS_FILE_PATH="$(curl -s https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/alpine-install.func)"
+    export FUNCTIONS_FILE_PATH="$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/alpine-install.func)"
   else
-    export FUNCTIONS_FILE_PATH="$(curl -s https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/install.func)"
+    export FUNCTIONS_FILE_PATH="$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/install.func)"
   fi
   export RANDOM_UUID="$RANDOM_UUID"
   export CACHER="$APT_CACHER"
@@ -1134,7 +1134,7 @@ build_container() {
     $PW
   "
   # This executes create_lxc.sh and creates the container and .conf file
-  bash -c "$(wget -qLO - https://raw.githubusercontent.com/asylumexp/Proxmox/main/ct/create_lxc.sh)" || exit $?
+  bash -c "$(curl -fsSL - https://raw.githubusercontent.com/asylumexp/Proxmox/main/ct/create_lxc.sh)" || exit $?
 
   LXC_CONFIG=/etc/pve/lxc/${CTID}.conf
   if [ "$CT_TYPE" == "0" ]; then
@@ -1196,7 +1196,7 @@ http://dl-cdn.alpinelinux.org/alpine/latest-stable/community
 EOF'
     pct exec "$CTID" -- ash -c "apk add bash >/dev/null"
   fi
-  lxc-attach -n "$CTID" -- bash -c "$(wget -qLO - https://raw.githubusercontent.com/asylumexp/Proxmox/main/install/$var_install.sh)" || exit $?
+  lxc-attach -n "$CTID" -- bash -c "$(curl -fsSL - https://raw.githubusercontent.com/asylumexp/Proxmox/main/install/$var_install.sh)" || exit $?
 
 }
 

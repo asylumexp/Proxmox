@@ -22,7 +22,7 @@ msg_ok "Installed Dependencies"
 msg_info "Installing Owncast"
 mkdir /opt/owncast
 cd /opt/owncast
-wget -q $(curl -s https://api.github.com/repos/owncast/owncast/releases/latest | grep download | grep linux-arm64 | cut -d\" -f4)
+curl -fsSL "$(curl -fsSL https://api.github.com/repos/owncast/owncast/releases/latest | grep download | grep linux-arm64 | cut -d\" -f4)" -o $(basename "$(curl -fsSL https://api.github.com/repos/owncast/owncast/releases/latest | grep download | grep linux-arm64 | cut -d\" -f4)")
 $STD unzip owncast*.zip
 rm owncast*.zip
 msg_ok "Installed Owncast"
@@ -41,7 +41,7 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now owncast.service
+systemctl enable -q --now owncast
 msg_ok "Created Service"
 
 motd_ssh

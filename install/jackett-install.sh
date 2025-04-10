@@ -13,17 +13,9 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Installing Jackett"
-RELEASE=$(wget -q https://github.com/Jackett/Jackett/releases/latest -O - | grep "title>Release" | cut -d " " -f 4)
-wget -q https://github.com/Jackett/Jackett/releases/download/$RELEASE/Jackett.Binaries.LinuxARM64.tar.gz
+RELEASE=$(curl -fsSL https://github.com/Jackett/Jackett/releases/latest | grep "title>Release" | cut -d " " -f 4)
+curl -fsSL "https://github.com/Jackett/Jackett/releases/download/$RELEASE/Jackett.Binaries.LinuxARM64.tar.gz" -o $(basename "https://github.com/Jackett/Jackett/releases/download/$RELEASE/Jackett.Binaries.LinuxARM64.tar.gz")
 tar -xzf Jackett.Binaries.LinuxARM64.tar.gz -C /opt
 rm -rf Jackett.Binaries.LinuxARM64.tar.gz
 echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
@@ -46,7 +38,7 @@ Environment="DisableRootWarning=true"
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable -q --now jackett.service
+systemctl enable -q --now jackett
 msg_ok "Created Service"
 
 motd_ssh

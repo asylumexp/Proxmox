@@ -27,18 +27,18 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -s https://api.github.com/repos/thomiceli/opengist/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+  RELEASE=$(curl -fsSL https://api.github.com/repos/thomiceli/opengist/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
     msg_info "Stopping Service"
     systemctl stop opengist.service
     msg_ok "Stopped Service"
-    
+
     msg_info "Updating ${APP} to v${RELEASE}"
     $STD apt-get update
     $STD apt-get -y upgrade
     cd /opt
     mv /opt/opengist /opt/opengist-backup
-    wget -q "https://github.com/thomiceli/opengist/releases/download/v${RELEASE}/opengist${RELEASE}-linux-arm64.tar.gz"
+    curl -fsSL "https://github.com/thomiceli/opengist/releases/download/v${RELEASE}/opengist${RELEASE}-linux-arm64.tar.gz" -o $(basename "https://github.com/thomiceli/opengist/releases/download/v${RELEASE}/opengist${RELEASE}-linux-arm64.tar.gz")
     tar -xzf opengist${RELEASE}-linux-arm64.tar.gz
     mv /opt/opengist-backup/config.yml /opt/opengist/config.yml
     chmod +x /opt/opengist/opengist
@@ -50,7 +50,7 @@ function update_script() {
     msg_ok "Started Service"
 
     msg_info "Cleaning up"
-    rm -rf /opt/opengist${RELEASE}-linux-amd64.tar.gz
+    rm -rf /opt/opengist${RELEASE}-linux-arm64.tar.gz
     rm -rf /opt/opengist-backup
     $STD apt-get -y autoremove
     $STD apt-get -y autoclean

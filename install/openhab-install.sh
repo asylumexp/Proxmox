@@ -14,15 +14,14 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y gnupg
-$STD apt-get install -y apt-transport-https
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
+$STD apt-get install -y \
+  gnupg \
+  apt-transport-https
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Azul Zulu21"
-wget -qO /etc/apt/trusted.gpg.d/zulu-repo.asc "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xB1998361219BD9C9"
-wget -q https://cdn.azul.com/zulu/bin/zulu-repo_1.0.0-3_all.deb
+curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xB1998361219BD9C9" -o "/etc/apt/trusted.gpg.d/zulu-repo.asc"
+curl -fsSL "https://cdn.azul.com/zulu/bin/zulu-repo_1.0.0-3_all.deb" -o $(basename "https://cdn.azul.com/zulu/bin/zulu-repo_1.0.0-3_all.deb")
 $STD dpkg -i zulu-repo_1.0.0-3_all.deb
 $STD apt-get update
 $STD apt-get -y install zulu21-jdk
@@ -36,7 +35,7 @@ echo "deb [signed-by=/usr/share/keyrings/openhab.gpg] https://openhab.jfrog.io/a
 $STD apt update
 $STD apt-get -y install openhab
 systemctl daemon-reload
-systemctl enable -q --now openhab.service
+systemctl enable -q --now openhab
 msg_ok "Installed openHAB"
 
 motd_ssh

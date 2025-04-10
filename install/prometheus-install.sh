@@ -13,20 +13,11 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y \
-  curl \
-  sudo \
-  mc \
-  wget \
-  openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Installing Prometheus"
-RELEASE=$(curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+RELEASE=$(curl -fsSL https://api.github.com/repos/prometheus/prometheus/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 mkdir -p /etc/prometheus
 mkdir -p /var/lib/prometheus
-wget -q https://github.com/prometheus/prometheus/releases/download/v${RELEASE}/prometheus-${RELEASE}.linux-arm64.tar.gz
+curl -fsSL "https://github.com/prometheus/prometheus/releases/download/v${RELEASE}/prometheus-${RELEASE}.linux-arm64.tar.gz" -o $(basename "https://github.com/prometheus/prometheus/releases/download/v${RELEASE}/prometheus-${RELEASE}.linux-arm64.tar.gz")
 tar -xf prometheus-${RELEASE}.linux-arm64.tar.gz
 mv prometheus-${RELEASE}.linux-arm64/prometheus prometheus-${RELEASE}.linux-arm64/promtool /usr/local/bin/
 mv prometheus-${RELEASE}.linux-arm64/prometheus.yml /etc/prometheus/prometheus.yml

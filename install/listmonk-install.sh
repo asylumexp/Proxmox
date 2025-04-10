@@ -14,13 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
-  curl \
-  sudo \
-  mc \
-  postgresql \
-  wget \
-  openssh-server
+$STD apt-get install -y postgresql
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up PostgreSQL"
@@ -41,8 +35,8 @@ msg_info "Installing listmonk"
 cd /opt
 mkdir /opt/listmonk
 mkdir /opt/listmonk/uploads
-RELEASE=$(curl -s https://api.github.com/repos/knadh/listmonk/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
-wget -q "https://github.com/knadh/listmonk/releases/download/v${RELEASE}/listmonk_${RELEASE}_linux_arm64.tar.gz"
+RELEASE=$(curl -fsSL https://api.github.com/repos/knadh/listmonk/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+curl -fsSL "https://github.com/knadh/listmonk/releases/download/v${RELEASE}/listmonk_${RELEASE}_linux_arm64.tar.gz" -o $(basename "https://github.com/knadh/listmonk/releases/download/v${RELEASE}/listmonk_${RELEASE}_linux_arm64.tar.gz")
 tar -xzf "listmonk_${RELEASE}_linux_arm64.tar.gz" -C /opt/listmonk
 
 $STD /opt/listmonk/listmonk --new-config --config /opt/listmonk/config.toml

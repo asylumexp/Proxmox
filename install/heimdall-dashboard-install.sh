@@ -21,15 +21,15 @@ $STD apt-get install -y php8.2-{bz2,curl,sqlite3,zip,xml}
 $STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
-RELEASE=$(curl -sX GET "https://api.github.com/repos/linuxserver/Heimdall/releases/latest" | awk '/tag_name/{print $4;exit}' FS='[""]')
-echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
+RELEASE=$(curl -fsSL "https://api.github.com/repos/linuxserver/Heimdall/releases/latest" | awk '/tag_name/{print $4;exit}' FS='[""]')
+echo "${RELEASE}" >/opt/"${APPLICATION}"_version.txt
 msg_info "Installing Heimdall Dashboard ${RELEASE}"
-wget -q https://github.com/linuxserver/Heimdall/archive/${RELEASE}.tar.gz
-tar xzf ${RELEASE}.tar.gz
-VER=$(curl -s https://api.github.com/repos/linuxserver/Heimdall/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
-rm -rf ${RELEASE}.tar.gz
-mv Heimdall-${VER} /opt/Heimdall
-cd /opt/Heimdall
+curl -fsSL "https://github.com/linuxserver/Heimdall/archive/${RELEASE}.tar.gz" -o $(basename "https://github.com/linuxserver/Heimdall/archive/${RELEASE}.tar.gz")
+tar xzf "${RELEASE}".tar.gz
+VER=$(curl -fsSL https://api.github.com/repos/linuxserver/Heimdall/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+rm -rf "${RELEASE}".tar.gz
+mv Heimdall-"${VER}" /opt/Heimdall
+cd /opt/Heimdall || exit
 cp .env.example .env
 $STD php artisan key:generate
 msg_ok "Installed Heimdall Dashboard ${RELEASE}"
@@ -51,7 +51,7 @@ TimeoutStopSec=30
 
 [Install]
 WantedBy=multi-user.target" >$service_path
-systemctl enable -q --now heimdall.service
+systemctl enable -q --now heimdall
 cd /opt/Heimdall
 COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload &>/dev/null
 systemctl restart heimdall.service

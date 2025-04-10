@@ -27,11 +27,11 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -s https://api.github.com/repos/ellite/Wallos/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+  RELEASE=$(curl -fsSL https://api.github.com/repos/ellite/Wallos/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
     msg_info "Updating ${APP} to ${RELEASE}"
     cd /opt
-    wget -q "https://github.com/ellite/Wallos/archive/refs/tags/v${RELEASE}.zip"
+    curl -fsSL "https://github.com/ellite/Wallos/archive/refs/tags/v${RELEASE}.zip" -o $(basename "https://github.com/ellite/Wallos/archive/refs/tags/v${RELEASE}.zip")
     mkdir -p /opt/logos
     mv /opt/wallos/db/wallos.db /opt/wallos.db
     mv /opt/wallos/images/uploads/logos /opt/logos/

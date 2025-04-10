@@ -17,16 +17,11 @@ msg_info "Installing Dependencies"
 $STD apt-get update
 $STD apt-get -y install \
   gnupg \
-  make \
-  gcc \
-  g++ \
   ca-certificates \
   apache2-utils \
   logrotate \
   build-essential \
-  git \
-  wget \
-  openssh-server
+  git
 msg_ok "Installed Dependencies"
 msg_info "Installing Python Dependencies"
 $STD apt-get install -y \
@@ -46,9 +41,9 @@ msg_ok "Installed Python Dependencies"
 VERSION="$(awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release)"
 
 msg_info "Installing Openresty"
-wget -O - https://openresty.org/package/pubkey.gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/openresty.gpg
-codename=`grep -Po 'VERSION="[0-9]+ \(\K[^)]+' /etc/os-release`
-echo "deb http://openresty.org/package/arm64/debian $codename openresty" | sudo tee /etc/apt/sources.list.d/openresty.list
+curl -fsSL "https://openresty.org/package/pubkey.gpg" | gpg --dearmor -o /etc/apt/trusted.gpg.d/openresty-archive-keyring.gpg
+codename=`grep -Po 'VERSION="[0-9]+ \(\K[^)]+' /etc/os-r
+echo -e "deb http://openresty.org/package/debian $codename openresty" >/etc/apt/sources.list.d/openresty.list
 $STD apt-get update
 $STD apt-get -y install openresty
 msg_ok "Installed Openresty"
@@ -64,19 +59,19 @@ msg_info "Installing pnpm"
 $STD npm install -g pnpm@8.15
 msg_ok "Installed pnpm"
 
-RELEASE=$(curl -s https://api.github.com/repos/NginxProxyManager/nginx-proxy-manager/releases/latest |
+RELEASE=$(curl -fsSL https://api.github.com/repos/NginxProxyManager/nginx-proxy-manager/releases/latest |
   grep "tag_name" |
   awk '{print substr($2, 3, length($2)-4) }')
 
 read -r -p "Would you like to install an older version (v2.10.4)? <y/N> " prompt
 if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
   msg_info "Downloading Nginx Proxy Manager v2.10.4"
-  wget -q https://codeload.github.com/NginxProxyManager/nginx-proxy-manager/tar.gz/v2.10.4 -O - | tar -xz
+  curl -fsSL "https://codeload.github.com/NginxProxyManager/nginx-proxy-manager/tar.gz/v2.10.4" | tar -xz
   cd ./nginx-proxy-manager-2.10.4
   msg_ok "Downloaded Nginx Proxy Manager v2.10.4"
 else
   msg_info "Downloading Nginx Proxy Manager v${RELEASE}"
-  wget -q https://codeload.github.com/NginxProxyManager/nginx-proxy-manager/tar.gz/v${RELEASE} -O - | tar -xz
+  curl -fsSL "https://codeload.github.com/NginxProxyManager/nginx-proxy-manager/tar.gz/v${RELEASE}" | tar -xz
   cd ./nginx-proxy-manager-${RELEASE}
   msg_ok "Downloaded Nginx Proxy Manager v${RELEASE}"
 fi

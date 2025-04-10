@@ -15,14 +15,9 @@ update_os
 
 msg_info "Installing Dependencies"
 $STD apk add \
-    newt \
-    curl \
-    openssh \
     tzdata \
-    nano \
     gawk \
-    yq \
-    mc
+    yq
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Docker & Compose"
@@ -31,18 +26,18 @@ $STD rc-service docker start
 $STD rc-update add docker default
 
 get_latest_release() {
-    curl -sL https://api.github.com/repos/$1/releases/latest | grep '"tag_name":' | cut -d'"' -f4
+    curl -fsSL https://api.github.com/repos/$1/releases/latest | grep '"tag_name":' | cut -d'"' -f4
 }
 DOCKER_COMPOSE_LATEST_VERSION=$(get_latest_release "docker/compose")
 DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
 mkdir -p $DOCKER_CONFIG/cli-plugins
-curl -sSL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_LATEST_VERSION/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+curl -fsSL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_LATEST_VERSION/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
 chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 msg_ok "Installed Docker & Compose"
 
 msg_info "Fetching NPMplus"
 cd /opt
-wget -q https://raw.githubusercontent.com/ZoeyVid/NPMplus/refs/heads/develop/compose.yaml
+curl -fsSL "https://raw.githubusercontent.com/ZoeyVid/NPMplus/refs/heads/develop/compose.yaml" -o $(basename "https://raw.githubusercontent.com/ZoeyVid/NPMplus/refs/heads/develop/compose.yaml")
 msg_ok "Fetched NPMplus"
 
 attempts=0
@@ -95,7 +90,7 @@ customize
 msg_info "Retrieving Default Login (Patience)"
 PASSWORD_FOUND=0
 for i in {1..60}; do
-    PASSWORD_LINE=$(docker logs "$CONTAINER_ID" 2>&1 | grep -m1 "Creating a new user:")
+    PASSWORD_LINE=$(docker logs "$CONTAINER_ID" 2>&1 | awk '/Creating a new user:/ { print; exit }')
     if [[ -n "$PASSWORD_LINE" ]]; then
         PASSWORD=$(echo "$PASSWORD_LINE" | awk -F 'password: ' '{print $2}')
         echo -e "username: admin@example.org\npassword: $PASSWORD" >/opt/.npm_pwd
@@ -107,5 +102,6 @@ for i in {1..60}; do
 done
 
 if [[ $PASSWORD_FOUND -eq 0 ]]; then
-    msg_ok "No default login found, use docker ps & docker logs for container password."
+    msg_error "Could not retrieve default login after 60 seconds."
+    echo -e "\nYou can manually check the container logs with:\n  docker logs $CONTAINER_ID | grep 'Creating a new user:'\n"
 fi

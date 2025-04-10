@@ -27,7 +27,7 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -s https://api.github.com/repos/BookStackApp/BookStack/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+  RELEASE=$(curl -fsSL https://api.github.com/repos/BookStackApp/BookStack/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
     msg_info "Stopping Apache2"
     systemctl stop apache2
@@ -35,15 +35,15 @@ function update_script() {
 
     msg_info "Updating ${APP} to v${RELEASE}"
     mv /opt/bookstack /opt/bookstack-backup
-    wget -q --directory-prefix=/opt "https://github.com/BookStackApp/BookStack/archive/refs/tags/v${RELEASE}.zip"
-    unzip -q /opt/v${RELEASE}.zip -d /opt
-    mv /opt/BookStack-${RELEASE} /opt/bookstack
+    curl -fsSL "https://github.com/BookStackApp/BookStack/archive/refs/tags/v${RELEASE}.zip" -o "/opt/BookStack-${RELEASE}.zip"
+    unzip -q "/opt/BookStack-${RELEASE}.zip" -d /opt
+    mv "/opt/BookStack-${RELEASE}" /opt/bookstack
     cp /opt/bookstack-backup/.env /opt/bookstack/.env
     cp -r /opt/bookstack-backup/public/uploads/* /opt/bookstack/public/uploads/ || true
     cp -r /opt/bookstack-backup/storage/uploads/* /opt/bookstack/storage/uploads/ || true
     cp -r /opt/bookstack-backup/themes/* /opt/bookstack/themes/ || true
-    cd /opt/bookstack
-    export COMPOSER_ALLOW_SUPERUSER=1 
+    cd /opt/bookstack || exit
+    export COMPOSER_ALLOW_SUPERUSER=1
     $STD composer install --no-dev
     $STD php artisan migrate --force
     chown www-data:www-data -R /opt/bookstack /opt/bookstack/bootstrap/cache /opt/bookstack/public/uploads /opt/bookstack/storage
@@ -59,7 +59,7 @@ function update_script() {
 
     msg_info "Cleaning Up"
     rm -rf /opt/bookstack-backup
-    rm -rf /opt/v${RELEASE}.zip
+    rm -rf "/opt/BookStack-${RELEASE}.zip"
     msg_ok "Cleaned"
     msg_ok "Updated Successfully"
   else

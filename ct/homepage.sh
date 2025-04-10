@@ -36,11 +36,11 @@ function update_script() {
     fi
   fi
   LOCAL_IP=$(hostname -I | awk '{print $1}')
-  RELEASE=$(curl -s https://api.github.com/repos/gethomepage/homepage/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+  RELEASE=$(curl -fsSL https://api.github.com/repos/gethomepage/homepage/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
     msg_info "Updating Homepage to v${RELEASE} (Patience)"
     systemctl stop homepage
-    wget -q https://github.com/gethomepage/homepage/archive/refs/tags/v${RELEASE}.tar.gz
+    curl -fsSL "https://github.com/gethomepage/homepage/archive/refs/tags/v${RELEASE}.tar.gz" -o $(basename "https://github.com/gethomepage/homepage/archive/refs/tags/v${RELEASE}.tar.gz")
     tar -xzf v${RELEASE}.tar.gz
     rm -rf v${RELEASE}.tar.gz
     cp -r homepage-${RELEASE}/* /opt/homepage/
@@ -53,7 +53,7 @@ function update_script() {
     export NEXT_TELEMETRY_DISABLED=1
     $STD pnpm build
     if [[ ! -f /opt/homepage/.env ]]; then
-        echo "HOMEPAGE_ALLOWED_HOSTS=localhost:3000,${LOCAL_IP}:3000" > /opt/homepage/.env
+      echo "HOMEPAGE_ALLOWED_HOSTS=localhost:3000,${LOCAL_IP}:3000" >/opt/homepage/.env
     fi
     systemctl start homepage
     echo "${RELEASE}" >/opt/${APP}_version.txt

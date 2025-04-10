@@ -14,11 +14,10 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y git
-$STD apt-get install -y ca-certificates
-$STD apt-get install -y gnupg
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
+$STD apt-get install -y \
+  git \
+  ca-certificates \
+  gnupg
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"
@@ -64,7 +63,7 @@ Group=root
 
 [Install]
 WantedBy=multi-user.target" >$service_path
-$STD systemctl enable --now nodered.service
+systemctl enable -q --now nodered
 msg_ok "Created Service"
 
 motd_ssh

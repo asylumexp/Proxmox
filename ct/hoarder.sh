@@ -27,7 +27,7 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -s https://api.github.com/repos/hoarder-app/hoarder/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+  RELEASE=$(curl -fsSL https://api.github.com/repos/hoarder-app/hoarder/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   PREV_RELEASE=$(cat /opt/${APP}_version.txt)
   if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "${PREV_RELEASE}" ]]; then
     msg_info "Stopping Services"
@@ -38,25 +38,25 @@ function update_script() {
       $STD npm install -g corepack@0.31.0
     fi
     if [[ "${PREV_RELEASE}" < 0.23.0 ]]; then
-        $STD apt-get install -y graphicsmagick ghostscript
+      $STD apt-get install -y graphicsmagick ghostscript
     fi
-    cd /opt
+    cd /opt || exit
     if [[ -f /opt/hoarder/.env ]] && [[ ! -f /etc/hoarder/hoarder.env ]]; then
       mkdir -p /etc/hoarder
       mv /opt/hoarder/.env /etc/hoarder/hoarder.env
     fi
     rm -rf /opt/hoarder
-    wget -q "https://github.com/hoarder-app/hoarder/archive/refs/tags/v${RELEASE}.zip"
-    unzip -q v${RELEASE}.zip
-    mv hoarder-${RELEASE} /opt/hoarder
-    cd /opt/hoarder/apps/web
+    curl -fsSL "https://github.com/hoarder-app/hoarder/archive/refs/tags/v${RELEASE}.zip" -o "v${RELEASE}.zip"
+    unzip -q v"${RELEASE}".zip
+    mv karakeep-"${RELEASE}" /opt/hoarder
+    cd /opt/hoarder/apps/web || exit
     $STD pnpm install --frozen-lockfile
     $STD pnpm exec next build --experimental-build-mode compile
     cp -r /opt/hoarder/apps/web/.next/standalone/apps/web/server.js /opt/hoarder/apps/web
-    cd /opt/hoarder/apps/workers
+    cd /opt/hoarder/apps/workers || exit
     $STD pnpm install --frozen-lockfile
     export DATA_DIR=/opt/hoarder_data
-    cd /opt/hoarder/packages/db
+    cd /opt/hoarder/packages/db || exit
     $STD pnpm migrate
     sed -i "s/SERVER_VERSION=${PREV_RELEASE}/SERVER_VERSION=${RELEASE}/" /etc/hoarder/hoarder.env
     msg_ok "Updated ${APP} to v${RELEASE}"
@@ -65,7 +65,7 @@ function update_script() {
     systemctl start hoarder-browser hoarder-workers hoarder-web
     msg_ok "Started Services"
     msg_info "Cleaning up"
-    rm -R /opt/v${RELEASE}.zip
+    rm -R /opt/v"${RELEASE}".zip
     echo "${RELEASE}" >/opt/${APP}_version.txt
     msg_ok "Cleaned"
     msg_ok "Updated Successfully"

@@ -13,17 +13,9 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y openssh-server
-$STD apt-get install -y wget
-msg_ok "Installed Dependencies"
-
-RELEASE=$(curl -s https://api.github.com/repos/juanfont/headscale/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+RELEASE=$(curl -fsSL https://api.github.com/repos/juanfont/headscale/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 msg_info "Installing ${APPLICATION} v${RELEASE}"
-wget -q https://github.com/juanfont/headscale/releases/download/v${RELEASE}/headscale_${RELEASE}_linux_arm64.deb
+curl -fsSL "https://github.com/juanfont/headscale/releases/download/v${RELEASE}/headscale_${RELEASE}_linux_arm64.deb" -o $(basename "https://github.com/juanfont/headscale/releases/download/v${RELEASE}/headscale_${RELEASE}_linux_arm64.deb")
 $STD dpkg -i headscale_${RELEASE}_linux_arm64.deb
 systemctl enable -q --now headscale
 echo "${RELEASE}" >/opt/${APPLICATION}_version.txt

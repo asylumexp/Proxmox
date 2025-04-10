@@ -27,7 +27,7 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -s https://api.github.com/repos/wavelog/wavelog/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+  RELEASE=$(curl -fsSL https://api.github.com/repos/wavelog/wavelog/releases/latest | grep "tag_name" | cut -d '"' -f 4)
   if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
     msg_info "Stopping Services"
     systemctl stop apache2
@@ -40,7 +40,7 @@ function update_script() {
     if [[ -f /opt/wavelog/assets/js/sections/custom.js ]]; then
       cp /opt/wavelog/assets/js/sections/custom.js /opt/custom.js
     fi
-    wget -q "https://github.com/wavelog/wavelog/archive/refs/tags/${RELEASE}.zip"
+    curl -fsSL "https://github.com/wavelog/wavelog/archive/refs/tags/${RELEASE}.zip" -o $(basename "https://github.com/wavelog/wavelog/archive/refs/tags/${RELEASE}.zip")
     unzip -q ${RELEASE}.zip
     rm -rf /opt/wavelog
     mv wavelog-${RELEASE}/ /opt/wavelog

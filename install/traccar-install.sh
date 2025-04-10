@@ -13,17 +13,9 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
-msg_ok "Installed Dependencies"
-
-RELEASE=$(curl -s https://api.github.com/repos/traccar/traccar/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+RELEASE=$(curl -fsSL https://api.github.com/repos/traccar/traccar/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 msg_info "Installing Traccar v${RELEASE}"
-wget -q https://github.com/traccar/traccar/releases/download/v${RELEASE}/traccar-linux-arm-${RELEASE}.zip
+curl -fsSL "https://github.com/traccar/traccar/releases/download/v${RELEASE}/traccar-linux-arm-${RELEASE}.zip" -o $(basename "https://github.com/traccar/traccar/releases/download/v${RELEASE}/traccar-linux-arm-${RELEASE}.zip")
 $STD unzip traccar-linux-arm-${RELEASE}.zip
 $STD ./traccar.run
 systemctl enable -q --now traccar
