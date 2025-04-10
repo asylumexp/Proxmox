@@ -1,4 +1,4 @@
-script.py
+script*.py
 # General OS files
 .DS_Store
 Thumbs.db

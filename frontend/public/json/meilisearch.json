@@ -39,5 +39,6 @@
       "text": "Meilisearch-UI has early development status and can caused performance issues",
       "type": "warn"
     }
-  ]
+  ],
+  "status": "🚧"
 }
