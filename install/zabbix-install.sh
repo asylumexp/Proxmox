@@ -13,15 +13,6 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y \
-  curl \
-  sudo \
-  mc \
-  wget \
-  openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Installing Zabbix"
 cd /tmp || exit
 curl -fsSL "$(curl -fsSL https://repo.zabbix.com/zabbix/ |

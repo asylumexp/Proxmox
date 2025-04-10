@@ -24,9 +24,7 @@ $STD apt-get install -y \
   libffi-dev \
   libpq-dev \
   libssl-dev \
-  zlib1g-dev \
-  wget \
-  openssh-server
+  zlib1g-dev
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Python"

@@ -18,15 +18,10 @@ $STD apt-get install -y \
   unzip \
   mariadb-server \
   apache2 \
-  curl \
-  sudo \
   php8.2-{mbstring,gd,fpm,curl,intl,ldap,tidy,bz2,mysql,zip,xml} \
   composer \
   libapache2-mod-php \
   make \
-  mc \
-  wget \
-  openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Database"

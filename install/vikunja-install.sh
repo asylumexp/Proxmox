@@ -14,13 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
-  curl \
-  sudo \
-  make \
-  mc \
-  wget \
-  openssh-server
+$STD apt-get install -y make
 msg_ok "Installed Dependencies"
 
 msg_info "Setup Vikunja (Patience)"

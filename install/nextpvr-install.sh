@@ -24,10 +24,7 @@ $STD apt-get install -y \
   libdvbv5-0 \
   dtv-scan-tables \
   libc6-dev \
-  ffmpeg \
-  mc \
-  wget \
-  openssh-server
+  ffmpeg
 msg_ok "Installed Dependencies"
 
 msg_info "Setup NextPVR (Patience)"

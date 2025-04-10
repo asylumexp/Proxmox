@@ -45,9 +45,7 @@ $STD apt-get install -y \
   libatlas-base-dev \
   software-properties-common \
   libmariadb-dev \
-  pkg-config \
-  wget \
-  openssh-server
+  pkg-config
 msg_ok "Installed Dependencies"
 
 msg_info "Setup Python3"

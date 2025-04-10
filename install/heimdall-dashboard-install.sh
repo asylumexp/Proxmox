@@ -16,9 +16,7 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y apt-transport-https
 $STD apt-get install -y composer
-$STD apt-get install -y wget
 $STD apt-get install -y php8.2-{bz2,curl,sqlite3,zip,xml}
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 RELEASE=$(curl -fsSL "https://api.github.com/repos/linuxserver/Heimdall/releases/latest" | awk '/tag_name/{print $4;exit}' FS='[""]')

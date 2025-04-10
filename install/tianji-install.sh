@@ -24,10 +24,7 @@ $STD apt-get install -y \
   git \
   make \
   gnupg \
-  ca-certificates \
-  mc \
-  wget \
-  openssh-server
+  ca-certificates
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Node.js"

@@ -28,9 +28,7 @@ $STD apt-get -y install \
   nmap \
   aria2 \
   wakeonlan \
-  wget \
-  cron \
-  openssh-server
+  cron
 msg_ok "Installed Dependencies"
 
 msg_info "Installing PHP Dependencies"

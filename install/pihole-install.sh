@@ -14,13 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
-  curl \
-  sudo \
-  mc \
-  ufw \
-  wget \
-  openssh-server
+$STD apt-get install -y ufw
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Pi-hole"

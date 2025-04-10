@@ -30,10 +30,7 @@ $STD apt-get install -y --no-install-recommends \
   pkg-config \
   libxmlsec1-dev \
   libxml2-dev \
-  libxmlsec1-openssl \
-  mc \
-  wget \
-  openssh-server
+  libxmlsec1-openssl
 msg_ok "Installed Dependencies"
 
 msg_info "Setup Python3"

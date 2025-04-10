@@ -26,9 +26,7 @@ $STD apt-get install -y \
   g++ \
   unpaper \
   ocrmypdf \
-  poppler-utils \
-  wget \
-  openssh-server
+  poppler-utils
 msg_ok "Installed Dependencies"
 
 msg_info "Installing LibreOffice Components"

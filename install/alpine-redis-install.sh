@@ -14,14 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apk add \
-	newt \
-	curl \
-	openssh \
-	nano \
-	mc \
-	gpg
-
+$STD apk add gpg
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Redis"

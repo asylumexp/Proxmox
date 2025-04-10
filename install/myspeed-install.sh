@@ -17,10 +17,7 @@ msg_info "Installing Dependencies"
 $STD apt-get install -y \
   build-essential \
   gpg \
-  ca-certificates \
-  mc \
-  wget \
-  openssh-server
+  ca-certificates
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"

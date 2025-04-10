@@ -21,7 +21,7 @@ msg_ok "Installed Dependencies"
 msg_info "Setup ${APPLICATION}"
 tmp_file=$(mktemp)
 RELEASE=$(curl -s https://api.github.com/repos/slskd/slskd/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
-curl -fsSL "https://github.com/slskd/slskd/releases/download/${RELEASE}/slskd-${RELEASE}-linux-x64.zip" -o $tmp_file
+curl -fsSL "https://github.com/slskd/slskd/releases/download/${RELEASE}/slskd-${RELEASE}-linux-arm64.zip" -o $tmp_file
 unzip -q $tmp_file -d /opt/${APPLICATION}
 echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
 JWT_KEY=$(openssl rand -base64 44)

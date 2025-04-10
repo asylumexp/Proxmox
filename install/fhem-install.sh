@@ -16,7 +16,6 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y avahi-daemon
 $STD apt-get install -y gnupg2
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Fhem Repository"

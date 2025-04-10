@@ -16,8 +16,6 @@ update_os
 msg_info "Installing Dependencies (Patience)"
 $STD apt-get install -y ffmpeg
 $STD apt-get install -y python3-pip
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Installed Dependencies"
 

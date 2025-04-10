@@ -14,13 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
-  curl \
-  sudo \
-  mc \
-  ca-certificates \
-  wget \
-  openssh-server
+$STD apt-get install -y ca-certificates
 msg_ok "Installed Dependencies"
 
 msg_info "Setup Docker Repository"

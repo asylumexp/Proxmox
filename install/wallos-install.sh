@@ -19,8 +19,6 @@ $STD apt-get install -y \
   apache2 \
   libapache2-mod-php \
   php8.2-{mbstring,gd,curl,intl,imagick,bz2,sqlite3,zip,xml} \
-  wget \
-  openssh-server \
   cron
 msg_ok "Installed Dependencies"
 

@@ -15,16 +15,11 @@ update_os
 
 msg_info "Installing Dependencies (Patience)"
 $STD apt-get install -y \
-  curl \
   unzip \
-  sudo \
-  mc \
   apache2 \
   php8.2-{bcmath,common,cli,curl,fpm,gd,snmp,imap,mbstring,mysql,xml,zip} \
   libapache2-mod-php \
-  mariadb-server \
-  wget \
-  openssh-server
+  mariadb-server
  msg_ok "Installed Dependencies"
 
 msg_info "Setting up Database"

@@ -17,9 +17,7 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y \
   git \
-  gnupg \
-  wget \
-  openssh-server
+  gnupg
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"

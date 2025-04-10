@@ -22,11 +22,6 @@ fi
 
 msg_info "Installing Dependencies"
 $STD apt-get install -y gnupg
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 read -p "Do you want to install MongoDB 8.0 instead of 7.0? [y/N]: " install_mongodb_8

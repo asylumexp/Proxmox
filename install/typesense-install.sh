@@ -13,20 +13,11 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y \
-    curl \
-    mc \
-    sudo \
-    wget \
-    openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Installing TypeSense"
 RELEASE=$(curl -fsSL https://api.github.com/repos/typesense/typesense/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 cd /opt
-curl -fsSL "https://dl.typesense.org/releases/${RELEASE}/typesense-server-${RELEASE}-amd64.deb" -o $(basename "https://dl.typesense.org/releases/${RELEASE}/typesense-server-${RELEASE}-amd64.deb")
-$STD apt install -y /opt/typesense-server-${RELEASE}-amd64.deb
+curl -fsSL "https://dl.typesense.org/releases/${RELEASE}/typesense-server-${RELEASE}-arm64.deb" -o $(basename "https://dl.typesense.org/releases/${RELEASE}/typesense-server-${RELEASE}-arm64.deb")
+$STD apt install -y /opt/typesense-server-${RELEASE}-arm64.deb
 echo 'enable-cors = true' >>/etc/typesense/typesense-server.ini
 echo "${RELEASE}" >"/opt/${APPLICATION}_version.txt"
 msg_ok "Installed TypeSense"
@@ -35,7 +26,7 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-rm -rf /opt/typesense-server-${RELEASE}-amd64.deb
+rm -rf /opt/typesense-server-${RELEASE}-arm64.deb
 $STD apt-get -y autoremove
 $STD apt-get -y autoclean
 msg_ok "Cleaned"

@@ -14,13 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
-  curl \
-  sudo \
-  mc \
-  jq \
-  wget \
-  openssh-server
+$STD apt-get install -y jq
 echo "deb http://deb.debian.org/debian bookworm non-free non-free-firmware" > /etc/apt/sources.list.d/non-free.list
 $STD apt-get update
 $STD apt-get install -y unrar

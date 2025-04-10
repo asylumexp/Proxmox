@@ -20,10 +20,7 @@ $STD apt-get install -y \
   make \
   libpq-dev \
   gpg \
-  ca-certificates \
-  mc \
-  wget \
-  openssh-server
+  ca-certificates
 msg_ok "Installed Dependencies"
 
 msg_info "Setup Python3"

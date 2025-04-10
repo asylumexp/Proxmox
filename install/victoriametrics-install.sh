@@ -18,10 +18,10 @@ temp_dir=$(mktemp -d)
 cd $temp_dir
 mkdir -p /opt/victoriametrics/data
 RELEASE=$(curl -fsSL https://api.github.com/repos/VictoriaMetrics/VictoriaMetrics/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
-curl -fsSL "https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/v${RELEASE}/victoria-metrics-linux-amd64-v${RELEASE}.tar.gz" -o $(basename "https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/v${RELEASE}/victoria-metrics-linux-amd64-v${RELEASE}.tar.gz")
-curl -fsSL "https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/v${RELEASE}/vmutils-linux-amd64-v${RELEASE}.tar.gz" -o $(basename "https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/v${RELEASE}/vmutils-linux-amd64-v${RELEASE}.tar.gz")
-tar -xf victoria-metrics-linux-amd64-v${RELEASE}.tar.gz -C /opt/victoriametrics
-tar -xf vmutils-linux-amd64-v${RELEASE}.tar.gz -C /opt/victoriametrics
+curl -fsSL "https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/v${RELEASE}/victoria-metrics-linux-arm64-v${RELEASE}.tar.gz" -o $(basename "https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/v${RELEASE}/victoria-metrics-linux-arm64-v${RELEASE}.tar.gz")
+curl -fsSL "https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/v${RELEASE}/vmutils-linux-arm64-v${RELEASE}.tar.gz" -o $(basename "https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/v${RELEASE}/vmutils-linux-arm64-v${RELEASE}.tar.gz")
+tar -xf victoria-metrics-linux-arm64-v${RELEASE}.tar.gz -C /opt/victoriametrics
+tar -xf vmutils-linux-arm64-v${RELEASE}.tar.gz -C /opt/victoriametrics
 chmod +x /opt/victoriametrics/*
 msg_ok "Setup VictoriaMetrics"
 

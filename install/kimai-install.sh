@@ -21,9 +21,7 @@ $STD apt-get install -y \
   expect \
   composer \
   mariadb-server \
-  lsb-release \
-  wget \
-  openssh-server
+  lsb-release
 msg_ok "Installed Dependencies"
 
 msg_info "Adding PHP8.4 Repository"

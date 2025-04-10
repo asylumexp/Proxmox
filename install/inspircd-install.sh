@@ -13,14 +13,7 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y \
-    curl \
-    mc \
-    sudo \
-    wget \
-    openssh-server
-msg_ok "Installed Dependencies"
+# broken on arm64
 
 msg_info "Installing InspIRCd"
 RELEASE=$(curl -fsSL https://api.github.com/repos/inspircd/inspircd/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')

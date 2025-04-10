@@ -21,9 +21,7 @@ $STD apt-get install -y \
   libgdal-dev \
   git \
   python3-venv \
-  python3-pip \
-  openssh-server \
-  wget
+  python3-pip
 rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Installed Dependencies"
 

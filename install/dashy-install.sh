@@ -14,12 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y wget
 $STD apt-get install -y gpg
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"

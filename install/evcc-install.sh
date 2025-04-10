@@ -17,9 +17,7 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y \
   lsb-release \
-  gpg \
-  wget \
-  openssh-server
+  gpg
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up evcc Repository"

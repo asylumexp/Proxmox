@@ -13,13 +13,6 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y curl
-$STD apt-get install -y sudo
-$STD apt-get install -y mc
-$STD apt-get install -y openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Installing AdGuard Home"
 $STD tar zxvf <(curl -fsSL https://static.adtidy.org/adguardhome/release/AdGuardHome_linux_arm64.tar.gz) -C /opt
 msg_ok "Installed AdGuard Home"

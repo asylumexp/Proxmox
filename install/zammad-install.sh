@@ -19,9 +19,7 @@ $STD apt-get install -y \
   gpg \
   nginx \
   apt-transport-https \
-  gnupg \
-  wget \
-  openssh-server
+  gnupg
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Elasticsearch"

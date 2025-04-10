@@ -15,8 +15,6 @@ update_os
 
 msg_info "Installing Dependencies"
 $STD apt-get install -y apt-transport-https
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Installing PHP8.2"

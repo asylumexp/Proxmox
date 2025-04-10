@@ -39,7 +39,7 @@ msg_ok "Installed pnpm"
 msg_info "Installing Golang"
 set +o pipefail
 temp_file=$(mktemp)
-golang_tarball=$(curl -fsSL https://go.dev/dl/ | grep -oP 'go[\d\.]+\.linux-amd64\.tar\.gz' | head -n 1)
+golang_tarball=$(curl -fsSL https://go.dev/dl/ | grep -oP 'go[\d\.]+\.linux-arm64\.tar\.gz' | head -n 1)
 curl -fsSL "https://golang.org/dl/${golang_tarball}" -o "$temp_file"
 tar -C /usr/local -xzf "$temp_file"
 ln -sf /usr/local/go/bin/go /usr/local/bin/go

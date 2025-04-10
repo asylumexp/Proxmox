@@ -23,9 +23,7 @@ $STD add-apt-repository -y ppa:dotnet/backports
 $STD apt-get install -y \
   dotnet-sdk-9.0 \
   vsftpd \
-  nginx \
-  wget \
-  openssh-server
+  nginx
 msg_ok "Installed Dependencies"
 
 msg_info "Configure Application"

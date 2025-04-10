@@ -15,14 +15,8 @@ update_os
 
 msg_info "Installing Dependencies"
 $STD apt-get install -y \
-    curl \
-    sudo \
-    wget \
-    mc \
     zip \
-    jq \
-    wget \
-    openssh-server
+    jq
 msg_ok "Installed Dependencies"
 
 msg_info "Installing LubeLogger"

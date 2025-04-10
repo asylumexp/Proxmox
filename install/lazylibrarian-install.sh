@@ -20,9 +20,7 @@ $STD apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libtiff-dev \
-    imagemagick \
-    wget \
-    openssh-server
+    imagemagick
 msg_ok "Installed Dependencies"
 
 msg_info "Setup Python3"

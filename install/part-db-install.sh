@@ -22,9 +22,7 @@ $STD apt-get install -y \
   php-{opcache,curl,gd,mbstring,xml,bcmath,intl,zip,xsl,pgsql} \
   libapache2-mod-php \
   composer \
-  postgresql \
-  wget \
-  openssh-server
+  postgresql
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up PHP"

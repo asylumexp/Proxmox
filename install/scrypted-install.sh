@@ -31,13 +31,7 @@ $STD apt-get -y install \
     libpango1.0-dev \
     librsvg2-dev \
     pkg-config \
-    curl \
-    sudo \
-    mc \
-    ca-certificates \
-    gpg \
-    wget \
-    openssh-server
+    gpg
 msg_ok "Installed Dependencies"
 
 msg_info "Setting Up Hardware Acceleration"

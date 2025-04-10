@@ -14,13 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
-  sudo \
-  curl \
-  mc \
-  wget \
-  openssh-server \
-  logrotate
+$STD apt-get install -y logrotate
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Unbound"

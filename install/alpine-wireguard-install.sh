@@ -15,11 +15,6 @@ update_os
 
 msg_info "Installing Dependencies"
 $STD apk add \
-    newt \
-    curl \
-    openssh \
-    nano \
-    mc \
     gpg \
     iptables \
     openrc

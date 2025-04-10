@@ -20,9 +20,6 @@ $STD apt-get install -y \
   gnupg \
   apt-transport-https \
   make \
-  mc \
-  wget \
-  openssh-server \
   software-properties-common
 msg_ok "Installed Dependencies"
 

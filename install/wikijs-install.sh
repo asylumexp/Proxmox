@@ -21,9 +21,7 @@ $STD apt-get install -y \
   build-essential \
   python3 \
   g++ \
-  make \
-  wget \
-  openssh-server
+  make
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"

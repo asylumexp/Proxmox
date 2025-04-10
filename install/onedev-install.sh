@@ -17,9 +17,7 @@ msg_info "Installing Dependencies"
 $STD apt-get install -y \
     default-jdk \
     git \
-    git-lfs \
-    wget \
-    openssh-server
+    git-lfs
 msg_ok "Installed Dependencies"
 
 msg_info "Installing OneDev"

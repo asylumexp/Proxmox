@@ -17,11 +17,7 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y \
   lsb-release \
-  curl \
-  gnupg \
-  mc \
-  wget \
-  openssh-server
+  gnupg
 msg_ok "Installed Dependencies"
 
 RELEASE_REPO="mysql-8.0"

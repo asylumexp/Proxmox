@@ -18,9 +18,7 @@ msg_info "Installing Dependencies"
 $STD apt-get install -y \
   gpg \
   git \
-  ffmpeg \
-  wget \
-  openssh-server
+  ffmpeg
 msg_ok "Installed Dependencies"
 
 msg_info "Setup Python3"
@@ -61,9 +59,9 @@ msg_ok "Installed Open WebUI"
 read -r -p "Would you like to add Ollama? <y/N> " prompt
 if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
   msg_info "Installing Ollama"
-  curl -fsSLO https://ollama.com/download/ollama-linux-amd64.tgz
-  tar -C /usr -xzf ollama-linux-amd64.tgz
-  rm -rf ollama-linux-amd64.tgz
+  curl -fsSLO https://ollama.com/download/ollama-linux-arm64.tgz
+  tar -C /usr -xzf ollama-linux-arm64.tgz
+  rm -rf ollama-linux-arm64.tgz
   cat <<EOF >/etc/systemd/system/ollama.service
 [Unit]
 Description=Ollama Service

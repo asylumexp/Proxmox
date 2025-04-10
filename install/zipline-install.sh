@@ -17,12 +17,7 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y \
   postgresql \
-  gpg \
-  curl \
-  sudo \
-  mc \
-  wget \
-  openssh-server
+  gpg
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"

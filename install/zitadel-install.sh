@@ -40,8 +40,8 @@ msg_ok "Installed PostgreSQL"
 
 msg_info "Installing Zitadel"
 RELEASE=$(curl -fsSL https://api.github.com/repos/zitadel/zitadel/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
-curl -fsSL "https://github.com/zitadel/zitadel/releases/download/v$RELEASE/zitadel-linux-amd64.tar.gz" | tar -xz
-mv zitadel-linux-amd64/zitadel /usr/local/bin
+curl -fsSL "https://github.com/zitadel/zitadel/releases/download/v$RELEASE/zitadel-linux-arm64.tar.gz" | tar -xz
+mv zitadel-linux-arm64/zitadel /usr/local/bin
 msg_ok "Installed Zitadel"
 
 msg_info "Setting up Zitadel Environments"
@@ -144,7 +144,7 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-rm -rf ~/zitadel-linux-amd64
+rm -rf ~/zitadel-linux-arm64
 $STD apt-get -y autoremove
 $STD apt-get -y autoclean
 msg_ok "Cleaned"

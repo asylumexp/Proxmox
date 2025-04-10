@@ -17,10 +17,10 @@ msg_info "Installing Prometheus Alertmanager"
 RELEASE=$(curl -fsSL https://api.github.com/repos/prometheus/alertmanager/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 mkdir -p /etc/alertmanager
 mkdir -p /var/lib/alertmanager
-curl -fsSL "https://github.com/prometheus/alertmanager/releases/download/v${RELEASE}/alertmanager-${RELEASE}.linux-amd64.tar.gz" -o $(basename "https://github.com/prometheus/alertmanager/releases/download/v${RELEASE}/alertmanager-${RELEASE}.linux-amd64.tar.gz")
-tar -xf alertmanager-${RELEASE}.linux-amd64.tar.gz
-mv alertmanager-${RELEASE}.linux-amd64/alertmanager alertmanager-${RELEASE}.linux-amd64/amtool /usr/local/bin/
-mv alertmanager-${RELEASE}.linux-amd64/alertmanager.yml /etc/alertmanager/alertmanager.yml
+curl -fsSL "https://github.com/prometheus/alertmanager/releases/download/v${RELEASE}/alertmanager-${RELEASE}.linux-arm64.tar.gz" -o $(basename "https://github.com/prometheus/alertmanager/releases/download/v${RELEASE}/alertmanager-${RELEASE}.linux-arm64.tar.gz")
+tar -xf alertmanager-${RELEASE}.linux-arm64.tar.gz
+mv alertmanager-${RELEASE}.linux-arm64/alertmanager alertmanager-${RELEASE}.linux-arm64/amtool /usr/local/bin/
+mv alertmanager-${RELEASE}.linux-arm64/alertmanager.yml /etc/alertmanager/alertmanager.yml
 echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
 msg_ok "Installed Prometheus Alertmanager"
 
@@ -53,5 +53,5 @@ customize
 msg_info "Cleaning up"
 $STD apt-get -y autoremove
 $STD apt-get -y autoclean
-rm -rf alertmanager-${RELEASE}.linux-amd64 alertmanager-${RELEASE}.linux-amd64.tar.gz
+rm -rf alertmanager-${RELEASE}.linux-arm64 alertmanager-${RELEASE}.linux-arm64.tar.gz
 msg_ok "Cleaned"

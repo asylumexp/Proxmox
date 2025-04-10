@@ -19,8 +19,8 @@ $STD apt-get install -y \
     gnupg \
     build-essential \
     git
-curl -fsSL "http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb" -o $(basename "http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb")
-$STD dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+curl -fsSL "http://ports.ubuntu.com/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_arm64.deb" -o $(basename "http://ports.ubuntu.com/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_arm64.deb")
+$STD dpkg -i libssl1.1_1.1.1f-1ubuntu2.24_arm64.deb
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"

@@ -16,8 +16,6 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y chromium
 $STD apt-get install -y xvfb
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 if [[ "$CTTYPE" == "0" ]]; then
