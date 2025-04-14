@@ -5,6 +5,9 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://wazuh.com/
 
+echo -e "Wazuh not supported on ARM64.\n"
+exit
+
 APP="Wazuh"
 var_tags="security;monitoring"
 var_cpu="4"
