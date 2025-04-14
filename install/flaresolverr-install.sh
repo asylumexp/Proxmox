@@ -40,7 +40,7 @@ msg_ok "Installed FlareSolverr"
 
 msg_info "Installing Chrome Webdriver"
 RELEASE=$(curl -fsSL https://api.github.com/repos/electron/electron/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
-wget -q https://github.com/electron/electron/releases/download/$RELEASE/chromedriver-$RELEASE/-linux-arm64.zip -O /opt/flaresolverr/webdriver.zip
+wget -q "https://github.com/electron/electron/releases/download/$RELEASE/chromedriver-$RELEASE-linux-arm64.zip" -O /opt/flaresolverr/webdriver.zip
 cd /opt/flaresolverr
 unzip -q webdriver.zip chromedriver
 sed -i 's|^PATCHED_DRIVER_PATH = None|PATCHED_DRIVER_PATH = "/opt/flaresolverr/chromedriver"|' ./src/utils.py
