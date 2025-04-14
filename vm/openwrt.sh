@@ -49,7 +49,7 @@ CROSS="${RD}✗${CL}"
 set -Eeo pipefail
 trap 'error_handler $LINENO "$BASH_COMMAND"' ERR
 trap cleanup EXIT
-trap 'post_update_to_api "failed" "INTERRUPTED"' SIGINT
+trap 'post_update_to_api "failed" "INTERRUPTED"' SIGINT 
 trap 'post_update_to_api "failed" "TERMINATED"' SIGTERM
 function error_handler() {
   local exit_code="$?"
@@ -170,13 +170,13 @@ function msg_error() {
 }
 
 function pve_check() {
-  if ! pveversion | grep -Eq "pve-manager/8\.[1-3](\.[0-9]+)*"; then
+  if ! pveversion | grep -Eq "pve-manager/8\.[1-4](\.[0-9]+)*"; then
     msg_error "This version of Proxmox Virtual Environment is not supported"
     echo -e "Requires Proxmox Virtual Environment Version 8.1 or later."
     echo -e "Exiting..."
     sleep 2
     exit
-  fi
+fi
 }
 
 function arch_check() {

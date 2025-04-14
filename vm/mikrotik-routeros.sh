@@ -7,6 +7,7 @@
 
 source /dev/stdin <<<$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func)
 
+
 function header_info {
   cat <<"EOF"
     __  ____ __              __  _ __      ____              __            ____  _____    ________  ______
@@ -49,7 +50,7 @@ shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
 trap cleanup EXIT
-trap 'post_update_to_api "failed" "INTERRUPTED"' SIGINT
+trap 'post_update_to_api "failed" "INTERRUPTED"' SIGINT 
 trap 'post_update_to_api "failed" "TERMINATED"' SIGTERM
 function error_exit() {
   trap - ERR
@@ -74,7 +75,7 @@ function cleanup() {
 }
 TEMP_DIR=$(mktemp -d)
 pushd $TEMP_DIR >/dev/null
-if ! pveversion | grep -Eq "pve-manager/8\.[1-3](\.[0-9]+)*"; then
+if ! pveversion | grep -Eq "pve-manager/8\.[1-4](\.[0-9]+)*"; then
   msg_error "This version of Proxmox Virtual Environment is not supported"
   echo -e "Requires Proxmox Virtual Environment Version 8.1 or later."
   echo -e "Exiting..."

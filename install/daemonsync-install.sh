@@ -19,7 +19,7 @@ $STD dpkg -i g++-multilib-arm-linux-gnueabi_9.3.0-1ubuntu2_arm64.deb
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Daemon Sync Server"
-curl -fsSL "https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/daemonsync_2.2.0.0059_amd64.deb" -o "daemonsync_2.2.0.0059_amd64.deb"
+curl -fsSL "https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/addon/daemonsync_2.2.0.0059_amd64.deb" -o "daemonsync_2.2.0.0059_amd64.deb"
 $STD dpkg -i daemonsync_2.2.0.0059_amd64.deb
 msg_ok "Installed Daemon Sync Server"
 

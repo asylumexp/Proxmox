@@ -6,13 +6,13 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 # Source: https://triliumnext.github.io/Docs/
 
 APP="Trilium"
-var_tags="notes"
-var_cpu="1"
-var_ram="512"
-var_disk="2"
-var_os="debian"
-var_version="12"
-var_unprivileged="1"
+var_tags="${var_tags:-notes}"
+var_cpu="${var_cpu:-1}"
+var_ram="${var_ram:-512}"
+var_disk="${var_disk:-2}"
+var_os="${var_os:-debian}"
+var_version="${var_version:-12}"
+var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
 variables
@@ -37,13 +37,13 @@ function update_script() {
 
     msg_info "Updating to ${RELEASE}"
     mkdir -p /opt/trilium_backup
-    mv /opt/trilium/{db,dump-db} /opt/trilium_backup/
+    mv /opt/trilium/db /opt/trilium_backup/
     rm -rf /opt/trilium
     cd /tmp
     curl -fsSL "https://github.com/TriliumNext/Notes/releases/download/v${RELEASE}/TriliumNextNotes-Server-v${RELEASE}-linux-x64.tar.xz" -o $(basename "https://github.com/TriliumNext/Notes/releases/download/v${RELEASE}/TriliumNextNotes-Server-v${RELEASE}-linux-x64.tar.xz")
     tar -xf TriliumNextNotes-Server-v${RELEASE}-linux-x64.tar.xz
     mv TriliumNextNotes-Server-$RELEASE-linux-x64 /opt/trilium
-    cp -r /opt/trilium_backup/{db,dump-db} /opt/trilium/
+    cp -r /opt/trilium_backup/db /opt/trilium/
     echo "v${RELEASE}" >/opt/${APP}_version.txt
     msg_ok "Updated to ${RELEASE}"
 

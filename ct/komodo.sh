@@ -6,13 +6,13 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 # Source: https://komo.do
 
 APP="Komodo"
-var_tags="docker"
-var_cpu="2"
-var_ram="2048"
-var_disk="10"
-var_os="debian"
-var_version="12"
-var_unprivileged="1"
+var_tags="${var_tags:-docker}"
+var_cpu="${var_cpu:-2}"
+var_ram="${var_ram:-2048}"
+var_disk="${var_disk:-10}"
+var_os="${var_os:-debian}"
+var_version="${var_version:-12}"
+var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
 variables
@@ -47,7 +47,7 @@ function update_script() {
         exit 1
     }
 
-    GITHUB_URL="https://raw.githubusercontent.com/mbecker20/komodo/main/compose/${COMPOSE_FILE}"
+    GITHUB_URL="https://raw.githubusercontent.com/moghtech/komodo/main/compose/${COMPOSE_FILE}"
     if ! curl -fsSL "$GITHUB_URL" -o "/opt/komodo/${COMPOSE_FILE}"; then
         msg_error "Failed to download ${COMPOSE_FILE} from GitHub!"
         mv "/opt/komodo/${BACKUP_FILE}" "/opt/komodo/${COMPOSE_FILE}"

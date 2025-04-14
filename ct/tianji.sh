@@ -6,13 +6,13 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 # Source: https://tianji.msgbyte.com/
 
 APP="Tianji"
-var_tags="monitoring"
-var_cpu="4"
-var_ram="4096"
-var_disk="12"
-var_os="debian"
-var_version="12"
-var_unprivileged="1"
+var_tags="${var_tags:-monitoring}"
+var_cpu="${var_cpu:-4}"
+var_ram="${var_ram:-4096}"
+var_disk="${var_disk:-12}"
+var_os="${var_os:-debian}"
+var_version="${var_version:-12}"
+var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
 variables
@@ -26,22 +26,19 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  if command -v node >/dev/null; then
-    NODE_MAJOR=$(/usr/bin/env node -v | grep -oP '^v\K[0-9]+')
-    if [[ "$NODE_MAJOR" != "22" ]]; then
-      $STD apt-get purge -y nodejs
-      rm -f /etc/apt/sources.list.d/nodesource.list
-      rm -f /etc/apt/keyrings/nodesource.gpg
-    else
-      return
-    fi
+  if ! command -v node >/dev/null || [[ "$(/usr/bin/env node -v | grep -oP '^v\K[0-9]+')" != "22" ]]; then
+    msg_info "Installing Node.js 22"
+    $STD apt-get purge -y nodejs
+    rm -f /etc/apt/sources.list.d/nodesource.list
+    rm -f /etc/apt/keyrings/nodesource.gpg
+    mkdir -p /etc/apt/keyrings
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" >/etc/apt/sources.list.d/nodesource.list
+    $STD apt-get update
+    $STD apt-get install -y nodejs
+    $STD npm install -g pnpm@9.7.1
+    msg_ok "Node.js 22 installed"
   fi
-  mkdir -p /etc/apt/keyrings
-  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-  echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" >/etc/apt/sources.list.d/nodesource.list
-  $STD apt-get update
-  $STD apt-get install -y nodejs
-  $STD npm install -g pnpm@9.7.1
   RELEASE=$(curl -fsSL https://api.github.com/repos/msgbyte/tianji/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
     msg_info "Stopping ${APP} Service"

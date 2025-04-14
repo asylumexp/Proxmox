@@ -10,13 +10,23 @@ import { Script } from "@/lib/types";
 import { BookOpenText, Code, Globe, LinkIcon, RefreshCcw } from "lucide-react";
 
 const generateInstallSourceUrl = (slug: string) => {
-  const baseUrl = `https://raw.githubusercontent.com/asykynexo/${basePath}/main`;
+  const baseUrl = `https://raw.githubusercontent.com/asylumexp/Proxmox/main`;
   return `${baseUrl}/install/${slug}-install.sh`;
 };
 
 const generateSourceUrl = (slug: string, type: string) => {
-  const baseUrl = `https://raw.githubusercontent.com/asylumexp/${basePath}/main`;
-  return type === "vm" ? `${baseUrl}/vm/${slug}.sh` : `${baseUrl}/misc/${slug}.sh`;
+  const baseUrl = `https://raw.githubusercontent.com/asylumexp/Proxmox/main`;
+
+  switch (type) {
+    case "vm":
+      return `${baseUrl}/vm/${slug}.sh`;
+    case "pve":
+      return `${baseUrl}/tools/pve/${slug}.sh`;
+    case "addon":
+      return `${baseUrl}/tools/addon/${slug}.sh`;
+    default:
+      return `${baseUrl}/ct/${slug}.sh`; // fallback for "ct"
+  }
 };
 
 const generateUpdateUrl = (slug: string) => {
