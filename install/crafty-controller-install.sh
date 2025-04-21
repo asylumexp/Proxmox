@@ -29,7 +29,7 @@ curl -fsSL "https://packages.adoptium.net/artifactory/api/gpg/key/public" | tee 
 echo "deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list
 $STD apt-get update
 $STD apt-get install -y temurin-{8,11,17,21}-jre
-sudo update-alternatives --set java /usr/lib/jvm/temurin-21-jre-amd64/bin/java
+sudo update-alternatives --set java /usr/lib/jvm/temurin-21-jre-arm64/bin/java
 msg_ok "Installed TemurinJDK"
 
 msg_info "Setup Python3"
