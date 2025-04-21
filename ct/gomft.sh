@@ -50,12 +50,9 @@ function update_script() {
     curl -fsSL "https://github.com/StarFleetCPTN/GoMFT/archive/refs/tags/v${RELEASE}.tar.gz" -o "$temp_file"
     tar -xzf "$temp_file"
     cp -rf "GoMFT-${RELEASE}"/* /opt/gomft/
-    cd /opt/gomft || exit
-    rm -rf /opt/gomft/node_modules
-    $STD npm ci
-    $STD node build.js
-    $STD go mod download
-    $STD go get -u github.com/a-h/templ
+    cd /opt/gomft
+    $STD npm install
+    $STD npm run build
     $STD "$HOME"/go/bin/templ generate
     export CGO_ENABLED=1
     export GOOS=linux

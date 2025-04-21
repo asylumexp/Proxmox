@@ -146,7 +146,7 @@ function select_storage() {
     local STORAGE
     while [ -z "${STORAGE:+x}" ]; do
       STORAGE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "Storage Pools" --radiolist \
-        "Which storage pool you would like to use for the ${CONTENT_LABEL,,}?\nTo make a selection, use the Spacebar.\n" \
+        "Which storage pool would you like to use for the ${CONTENT_LABEL,,}?\nTo make a selection, use the Spacebar.\n" \
         16 $(($MSG_MAX_LENGTH + 23)) 6 \
         "${MENU[@]}" 3>&1 1>&2 2>&3) || {
         msg_error "Menu aborted."
@@ -199,11 +199,11 @@ if qm status "$CTID" &>/dev/null || pct status "$CTID" &>/dev/null; then
 fi
 
 # Get template storage
-TEMPLATE_STORAGE=$(select_storage template) || exit
+TEMPLATE_STORAGE=$(select_storage template)
 msg_ok "Using ${BL}$TEMPLATE_STORAGE${CL} ${GN}for Template Storage."
 
 # Get container storage
-CONTAINER_STORAGE=$(select_storage container) || exit
+CONTAINER_STORAGE=$(select_storage container)
 msg_ok "Using ${BL}$CONTAINER_STORAGE${CL} ${GN}for Container Storage."
 
 # Get LXC template string

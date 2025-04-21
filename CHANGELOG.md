@@ -14,11 +14,76 @@ Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit 
 All LXC instances created using this repository come pre-installed with Midnight Commander, which is a command-line tool (`mc`) that offers a user-friendly file and directory management interface for the terminal environment.
 
 
+## 2025-04-19
+
+### 🆕 New Scripts
+
+  - LXC Iptag [@DesertGamer](https://github.com/DesertGamer) ([#3531](https://github.com/community-scripts/ProxmoxVE/pull/3531))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - seelf: Add missing gpg dependency [@tremor021](https://github.com/tremor021) ([#3953](https://github.com/community-scripts/ProxmoxVE/pull/3953))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - Tailscale: Clarify tailscale script instruction on website [@tremor021](https://github.com/tremor021) ([#3952](https://github.com/community-scripts/ProxmoxVE/pull/3952))
+
+## 2025-04-18
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Changedetection: Increase connection timeout for older systems [@tremor021](https://github.com/tremor021) ([#3935](https://github.com/community-scripts/ProxmoxVE/pull/3935))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - VaultWarden: Update json with additonal information [@uSlackr](https://github.com/uSlackr) ([#3929](https://github.com/community-scripts/ProxmoxVE/pull/3929))
+
+## 2025-04-17
+
+### 🚀 Updated Scripts
+
+  - fix minor grammatical error in several scripts [@jordanpatton](https://github.com/jordanpatton) ([#3921](https://github.com/community-scripts/ProxmoxVE/pull/3921))
+
+  - #### 🐞 Bug Fixes
+
+    - PeaNUT: Fix tar command [@tremor021](https://github.com/tremor021) ([#3925](https://github.com/community-scripts/ProxmoxVE/pull/3925))
+    - GoMFT: Fix install and update process (final time) [@tremor021](https://github.com/tremor021) ([#3922](https://github.com/community-scripts/ProxmoxVE/pull/3922))
+
+## 2025-04-15
+
+### 🚀 Updated Scripts
+
+  - [core] remove unneeded vars from shellcheck [@MickLesk](https://github.com/MickLesk) ([#3899](https://github.com/community-scripts/ProxmoxVE/pull/3899))
+
+  - #### 🐞 Bug Fixes
+
+    - Outline: Installation and update fixes [@tremor021](https://github.com/tremor021) ([#3895](https://github.com/community-scripts/ProxmoxVE/pull/3895))
+    - SABnzbd: Fix update error caused by externaly managed message [@tremor021](https://github.com/tremor021) ([#3892](https://github.com/community-scripts/ProxmoxVE/pull/3892))
+
+### 🧰 Maintenance
+
+  - #### 📡 API
+
+    - Bump golang.org/x/crypto from 0.32.0 to 0.35.0 in /api [@dependabot[bot]](https://github.com/dependabot[bot]) ([#3887](https://github.com/community-scripts/ProxmoxVE/pull/3887))
+
+  - #### 📂 Github
+
+    - shrink & minimalize report templates [@MickLesk](https://github.com/MickLesk) ([#3902](https://github.com/community-scripts/ProxmoxVE/pull/3902))
+
 ## 2025-04-14
 
 ### 🆕 New Scripts
 
-  - Alpine-AdGuardHome [@MickLesk](https://github.com/MickLesk) ([#3875](https://github.com/community-scripts/ProxmoxVE/pull/3875))
+  - openziti-controller ([#3880](https://github.com/community-scripts/ProxmoxVE/pull/3880))
+- Alpine-AdGuardHome [@MickLesk](https://github.com/MickLesk) ([#3875](https://github.com/community-scripts/ProxmoxVE/pull/3875))
 
 ### 🚀 Updated Scripts
 
