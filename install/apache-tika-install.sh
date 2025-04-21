@@ -25,6 +25,8 @@ $STD apt-get install -y \
   tesseract-ocr-deu
 
 $STD echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections
+echo "deb http://deb.debian.org/debian bookworm contrib non-free" > /etc/apt/sources.list.d/contrib.list
+$STD apt-get update
 $STD apt-get install -y \
   xfonts-utils \
   fonts-freefont-ttf \
