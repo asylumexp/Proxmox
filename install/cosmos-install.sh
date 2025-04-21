@@ -41,8 +41,8 @@ curl -fsSL "https://github.com/azukaar/Cosmos-Server/releases/download/${LATEST_
 cd /opt/cosmos
 unzip -o -q "${ZIP_FILE}"
 LATEST_RELEASE_NO_V=${LATEST_RELEASE#v}
-mv /opt/cosmos/cosmos-cloud-${LATEST_RELEASE_NO_V}/* /opt/cosmos/
-rmdir /opt/cosmos/cosmos-cloud-${LATEST_RELEASE_NO_V}
+mv /opt/cosmos/cosmos-cloud-${LATEST_RELEASE_NO_V}-arm64/* /opt/cosmos/
+rmdir /opt/cosmos/cosmos-cloud-${LATEST_RELEASE_NO_V}-arm64
 chmod +x /opt/cosmos/cosmos
 msg_ok "Installed Cosmos"
 
