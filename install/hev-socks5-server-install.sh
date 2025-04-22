@@ -15,7 +15,7 @@ update_os
 
 msg_info "Setup ${APPLICATION}"
 RELEASE=$(curl -fsSL https://api.github.com/repos/heiher/${APPLICATION}/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
-curl -L -o "${APPLICATION}" "https://github.com/heiher/${APPLICATION}/releases/download/${RELEASE}/hev-socks5-server-linux-x86_64"
+curl -L -o "${APPLICATION}" "https://github.com/heiher/${APPLICATION}/releases/download/${RELEASE}/hev-socks5-server-linux-arm64"
 mv ${APPLICATION} /opt/${APPLICATION}
 chmod +x /opt/${APPLICATION}
 echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
