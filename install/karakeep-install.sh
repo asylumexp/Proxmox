@@ -27,7 +27,7 @@ $STD apt-get install -y \
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Additional Tools"
-curl -fsSL "https://github.com/Y2Z/monolith/releases/latest/download/monolith-gnu-linux-x86_64" -o "/usr/bin/monolith"
+curl -fsSL "https://github.com/Y2Z/monolith/releases/latest/download/monolith-gnu-linux-aarch64" -o "/usr/bin/monolith"
 chmod +x /usr/bin/monolith
 curl -fsSL "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux" -o "/usr/bin/yt-dlp"
 chmod +x /usr/bin/yt-dlp
