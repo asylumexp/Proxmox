@@ -31,6 +31,22 @@ function ScriptHeader({ item }: { item: Script }) {
   const os = defaultInstallMethod?.resources?.os || "Proxmox Node";
   const version = defaultInstallMethod?.resources?.version || "";
 
+  // helper to map status symbols to labels
+  const renderStatus = () => {
+    switch (item.status) {
+      case "❌":
+        return "❌ Broken";
+      case "✅":
+        return "✅ Working";
+      case "🚧":
+        return "🚧 Unported";
+      case "🧪":
+        return "🧪 Untested";
+      default:
+        return "🚧 Unported";
+    }
+  };
+
   return (
     <div className="flex flex-col lg:flex-row gap-6 w-full">
       <div className="flex flex-col md:flex-row gap-6 flex-grow">
@@ -75,12 +91,15 @@ function ScriptHeader({ item }: { item: Script }) {
                   hdd={defaultInstallMethod.resources.hdd}
                 />
               )}
-              {item.install_methods.find((method) => method.type === "alpine")?.resources && (
+              {item.install_methods.find((m) => m.type === "alpine")?.resources && (
                 <ResourceDisplay
                   title="Alpine"
-                  {...item.install_methods.find((method) => method.type === "alpine")!.resources!}
+                  {...item.install_methods.find((m) => m.type === "alpine")!.resources!}
                 />
               )}
+              <div className="mt-2 text-sm font-medium text-foreground">
+                {renderStatus()}
+              </div>
             </div>
           </div>
         </div>
