@@ -97,7 +97,7 @@ function ScriptHeader({ item }: { item: Script }) {
                   {...item.install_methods.find((m) => m.type === "alpine")!.resources!}
                 />
               )}
-              <div className="mt-2 text-sm font-medium text-foreground">
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
                 {renderStatus()}
               </div>
             </div>
