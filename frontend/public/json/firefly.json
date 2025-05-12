@@ -36,7 +36,6 @@
       "text": "Database credentials: `cat ~/firefly.creds`",
       "type": "info"
     }
-  ],
-  "status": "✅"
+  ]
 }
 

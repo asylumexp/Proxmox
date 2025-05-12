@@ -55,7 +55,6 @@
             "text": "Application credentials: `cat /opt/.npm_pwd`",
             "type": "info"
         }
-    ],
-    "status": "✅"
+    ]
 }
 

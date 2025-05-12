@@ -42,7 +42,6 @@
       "text": "The script only works in Debian/Ubuntu, not in Alpine!",
       "type": "warning"
     }
-  ],
-  "status": "✅"
+  ]
 }
 

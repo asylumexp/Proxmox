@@ -35,7 +35,6 @@
         "text": "To enable folder adding append your lxc.conf on your host with 'lxc.environment: DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1'",
         "type": "info"
       }
-    ],
-    "status": "✅"
+    ]
 }
 

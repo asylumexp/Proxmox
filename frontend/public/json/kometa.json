@@ -24,13 +24,13 @@
           "hdd": 8,
           "os": "debian",
           "version": "12"
+        }
       }
-    }
-  ],
-  "default_credentials": {
-    "username": null,
-    "password": null
-  },
+    ],
+    "default_credentials": {
+      "username": null,
+      "password": null
+    },
     "notes": [
       {
         "text": "During installation you will be prompted to input your TMDb key, Plex URL and Plex token. Make sure you have them ready.",
@@ -40,7 +40,6 @@
         "text": "Configuration file is at `/opt/kometa/config/config.yml`",
         "type": "info"
       }
-    ],
-    "status": "🚧"
+    ]
   }
 

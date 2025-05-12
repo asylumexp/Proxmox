@@ -40,7 +40,6 @@
         "text": "Type `cat ~/graylog.creds` to get admin password that you use to log in AFTER the Initial Setup",
         "type": "info"
         }
-    ],
-    "status": "🚧"
+    ]
 }
 

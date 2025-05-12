@@ -36,6 +36,5 @@
             "text": "To view the database credentials : `cat umami.creds`",
             "type": "info"
         }
-    ],
-    "status": "✅"
+    ]
 }

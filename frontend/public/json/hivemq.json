@@ -36,6 +36,5 @@
             "text": "To check if HiveMQ is listening to the default port for MQTT `lsof -i :1883`",
             "type": "info"
         }
-    ],
-    "status": "✅"
+    ]
 }

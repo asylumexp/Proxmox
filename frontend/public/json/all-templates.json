@@ -34,7 +34,6 @@
       "text": "Resource and network settings are adjustable post LXC creation.",
       "type": "info"
     }
-  ],
-  "status": "✅"
+  ]
 }
 

@@ -36,6 +36,5 @@
             "text": "Container must be privileged.",
             "type": "warning"
         }
-    ],
-    "status": "✅"
+    ]
 }

@@ -29,14 +29,13 @@
     ],
     "default_credentials": {
         "username": null,
-        "password": null
+        "password":  null
     },
     "notes": [
         {
             "text": "Show login and database credentials: `cat partdb.creds`",
             "type": "info"
         }
-    ],
-    "status": "🚧"
+    ]
 }
 

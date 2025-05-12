@@ -24,8 +24,8 @@
           "hdd": 4,
           "os": "ubuntu",
           "version": "24.04"
+        }
       }
-    }
     ],
     "default_credentials": {
       "username": null,
@@ -36,7 +36,6 @@
             "text": "To get the token to access the Jupyter Notebook, run the following command: jupyter notebook list.",
             "type": "info"
         }
-    ],
-    "status": "🚧"
+    ]
 }
 

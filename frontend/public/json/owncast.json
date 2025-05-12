@@ -31,6 +31,5 @@
         "username": "admin",
         "password": "abc123"
     },
-    "notes": [],
-    "status": "✅"
+    "notes": []
 }

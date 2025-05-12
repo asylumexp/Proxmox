@@ -36,6 +36,6 @@
             "text": "Database credentials: `cat wavelog.creds`",
             "type": "info"
         }
-    ],
-    "status": "🚧"
+    ]
 }
+

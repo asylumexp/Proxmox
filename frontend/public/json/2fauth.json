@@ -24,11 +24,12 @@
           "hdd": 2,
           "os": "debian",
           "version": "12"
-        }}
+        }
+      }
     ],
     "default_credentials": {
-        "username": null,
-        "password": null
+      "username": null,
+      "password": null
     },
     "notes": [
       {

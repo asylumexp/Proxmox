@@ -35,8 +35,7 @@
       {
         "text": "After the installation cross-seed will fail to start with an empty configuration. To fix this, edit `~/.cross-seed/config.js` to properly configure cross-seed, then restart by running `systemctl restart cross-seed`.",
         "type": "info"
-    }
-  ],
-  "status": "✅"
+      }
+    ]
 }
 

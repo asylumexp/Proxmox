@@ -36,6 +36,5 @@
             "text": "Admin password and database encryption key: `cat ~/duplicati.creds`",
             "type": "info"
         }
-    ],
-    "status": "✅"
+    ]
 }

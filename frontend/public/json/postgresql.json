@@ -45,7 +45,6 @@
       "text": "Set a password after installation for postgres user by running `echo \"ALTER USER postgres with encrypted password 'your_password';\" | sudo -u postgres psql`",
       "type": "info"
     }
-  ],
-  "status": "✅"
+  ]
 }
 

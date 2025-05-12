@@ -42,11 +42,11 @@
         "username": "admin",
         "password": "admin"
     },
-    "notes": [
-        {
-            "text": "Wireguard and WGDashboard are not the same. More info: `https://donaldzou.github.io/WGDashboard-Documentation/what-is-wireguard-what-is-wgdashboard.html`",
-            "type": "info"
-        }
-    ],
-    "status": "✅"
+  "notes": [
+    {
+      "text": "Wireguard and WGDashboard are not the same. More info: `https://donaldzou.github.io/WGDashboard-Documentation/what-is-wireguard-what-is-wgdashboard.html`",
+      "type": "info"
+    }
+  ]
 }
+

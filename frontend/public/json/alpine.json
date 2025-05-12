@@ -47,7 +47,6 @@
             "text": "To Update Alpine: `apk update && apk upgrade`",
             "type": "info"
         }
-    ],
-    "status": "✅"
+    ]
 }
 

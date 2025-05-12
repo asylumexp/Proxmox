@@ -40,6 +40,5 @@
             "text": "Retrieve Password: `cat turnkey-name.creds`",
             "type": "info"
         }
-    ],
-    "status": "🚧"
+    ]
 }

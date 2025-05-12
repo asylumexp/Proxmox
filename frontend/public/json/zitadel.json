@@ -32,14 +32,14 @@
         "password": "Password1!"
     },
     "notes": [
-    {
-      "text": "Application credentials: `cat ~/zitadel.creds`",
-      "type": "info"
-    },
-    {
-      "text": "Change the ExternalDomain value in `/opt/zitadel/config.yaml` to your domain/hostname/IP and run `bash zitadel-rerun.sh`",
-      "type": "info"
-    }
-  ],
-  "status": "🚧"
+        {
+            "text": "Application credentials: `cat ~/zitadel.creds`",
+            "type": "info"
+        },
+        {
+            "text": "Change the ExternalDomain value in `/opt/zitadel/config.yaml` to your domain/hostname/IP and run `bash zitadel-rerun.sh`",
+            "type": "info"
+        }
+    ]
 }
+

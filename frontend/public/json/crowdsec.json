@@ -34,7 +34,6 @@
       "text": "Execute within an existing LXC Console. Debian only!",
       "type": "warning"
     }
-  ],
-  "status": "🚧"
+  ]
 }
 

@@ -36,6 +36,5 @@
             "text": "Blocky Configuration Path: `/opt/blocky/config.yml`",
             "type": "info"
         }
-    ],
-    "status": "✅"
+    ]
 }

@@ -24,8 +24,8 @@
           "hdd": 6,
           "os": "debian",
           "version": "12"
+        }
       }
-    }
     ],
     "default_credentials": {
       "username": null,
@@ -36,7 +36,6 @@
         "text": "Database credentials: `cat ~/dolibarr.creds`",
         "type": "info"
       }
-    ],
-    "status": "✅"
+    ]
   }
 

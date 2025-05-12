@@ -36,7 +36,6 @@
          "text":"FTP server credentials: `cat ~/ftp.creds`",
          "type":"info"
       }
-   ],
-   "status": "🚧"
+   ]
 }
 

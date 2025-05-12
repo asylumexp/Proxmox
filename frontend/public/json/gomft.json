@@ -36,6 +36,6 @@
       "text": "For additional configuration options, edit .env file here: `/opt/gomft/.env`. Check the documentation for more details.",
       "type": "info"
     }
-  ],
-  "status": "✅"
+  ]
 }
+

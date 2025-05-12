@@ -25,11 +25,11 @@
           "os": "debian",
           "version": "12"
         }
-    }
+      }
     ],
     "default_credentials": {
-        "username": null,
-        "password": null
+      "username": null,
+      "password": null
     },
     "notes": [
       {
@@ -40,7 +40,6 @@
         "text": "Proxmox Datacenter Manager is in an alpha stage of development. Use it cautiously, as bugs, incomplete features, and potential instabilities are expected.",
         "type": "warning"
       }
-    ],
-    "status": "❌"
+    ]
   }
 

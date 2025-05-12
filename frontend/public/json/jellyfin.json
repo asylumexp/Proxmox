@@ -40,6 +40,5 @@
             "text": "FFmpeg path: /usr/lib/jellyfin-ffmpeg/ffmpeg",
             "type": "info"
         }
-    ],
-    "status": "✅"
+    ]
 }

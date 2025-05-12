@@ -44,6 +44,6 @@
             "text": "Execute `~/domain.sh <FULL_DOMAIN_URL_WITH_HTTPS_OR_HTTP>` to enable access to Seafile via your domain. Example: ~/domain.sh https://seafile.example.com",
             "type": "info"
         }
-    ],
-    "status": "🚧"
+    ]
 }
+

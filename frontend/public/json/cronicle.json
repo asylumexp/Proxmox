@@ -36,6 +36,5 @@
             "text": "Configuration Path: `/opt/cronicle/conf/config.json` (Primary and Worker Private Keys Must Match)",
             "type": "info"
         }
-    ],
-    "status": "✅"
+    ]
 }

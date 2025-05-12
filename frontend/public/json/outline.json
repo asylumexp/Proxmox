@@ -40,6 +40,5 @@
             "text": "Configuration file is at: `/opt/outline/.env`. Modify to suit your environment.",
             "type": "info"
         }
-    ],
-    "status": "🚧"
+    ]
 }

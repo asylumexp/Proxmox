@@ -40,6 +40,6 @@
             "text": "Add additional allowed hosts to `/opt/homepage/.env`",
             "type": "info"
         }
-    ],
-    "status": "✅"
+    ]
 }
+

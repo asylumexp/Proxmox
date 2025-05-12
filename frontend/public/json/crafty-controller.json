@@ -24,8 +24,8 @@
           "hdd": 16,
           "os": "debian",
           "version": "12"
+        }
       }
-    }
     ],
     "default_credentials": {
       "username": "admin",
@@ -36,6 +36,5 @@
         "text": "Show password: `cat ~/crafty-controller.creds`",
         "type": "info"
       }
-    ],
-    "status": "✅"
+    ]
   }
