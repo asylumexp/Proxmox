@@ -213,7 +213,8 @@ EOF
 
   msg_info "Installing core dependencies"
   $STD apt-get update
-  $STD apt-get install -y sudo curl mc openssh-server wget
+  $STD apt-get install -y sudo curl mc gnupg2 openssh-server wget
+  source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/tools.func)
   msg_ok "Core dependencies installed"
 }
 

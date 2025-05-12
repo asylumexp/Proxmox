@@ -148,22 +148,6 @@ msg_error() {
   stop_spinner
   local msg="$1"
   printf "\r\e[2K%s %b\n" "${CROSS}" "${RD}${msg}${CL}" >&2
-  log_message "ERROR" "$msg"
-}
-
-log_message() {
-  local level="$1"
-  local message="$2"
-  local timestamp
-  local logdate
-  timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-  logdate=$(date '+%Y-%m-%d')
-
-  LOGDIR="/usr/local/community-scripts/logs"
-  mkdir -p "$LOGDIR"
-
-  LOGFILE="${LOGDIR}/${logdate}_${NSAPP}.log"
-  echo "$timestamp - $level: $message" >>"$LOGFILE"
 }
 
 # Check if the shell is using bash
@@ -492,7 +476,7 @@ advanced_settings() {
       echo -e "${CONTAINERID}${BOLD}${DGN}Container ID: ${BGN}$CT_ID${CL}"
     fi
   else
-    exit
+    exit_script
   fi
 
   if CT_NAME=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set Hostname" 8 58 "$NSAPP" --title "HOSTNAME" 3>&1 1>&2 2>&3); then
@@ -543,15 +527,17 @@ advanced_settings() {
     exit_script
   fi
 
-  if BRG=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a Bridge" 8 58 vmbr0 --title "BRIDGE" 3>&1 1>&2 2>&3); then
-    if [ -z "$BRG" ]; then
-      BRG="vmbr0"
-      echo -e "${BRIDGE}${BOLD}${DGN}Bridge: ${BGN}$BRG${CL}"
-    else
-      echo -e "${BRIDGE}${BOLD}${DGN}Bridge: ${BGN}$BRG${CL}"
-    fi
+  BRIDGES=$( ip link show | grep -oP '(?<=: )vmbr\d+' | sort)
+  if [[ -z "$BRIDGES" ]]; then
+    BRG="vmbr0"
+    echo -e "${BRIDGE}${BOLD}${DGN}Bridge: ${BGN}$BRG${CL}"
   else
-    exit_script
+    BRG=$(whiptail --backtitle "Proxmox VE Helper Scripts" --menu "Select network bridge:" 15 40 6 $(echo "$BRIDGES" | awk '{print $0, "Bridge"}') 3>&1 1>&2 2>&3)
+      if [ -z "$BRG" ]; then
+        exit_script
+      else
+        echo -e "${BRIDGE}${BOLD}${DGN}Bridge: ${BGN}$BRG${CL}"
+      fi
   fi
 
   while true; do
@@ -792,8 +778,6 @@ EOF
 
 config_file() {
 
-  whiptail --backtitle "Proxmox VE Helper Scripts" --msgbox --title "Default distribution for $APP" "${var_os} ${var_version} \n \nIf the default Linux distribution is not adhered to, script support will be discontinued. \n" 10 58
-
   CONFIG_FILE="/opt/community-scripts/.settings"
 
   if [[ -f "/opt/community-scripts/${NSAPP}.conf" ]]; then
@@ -810,66 +794,38 @@ config_file() {
       source "$CONFIG_FILE"
     fi
   fi
-
-  if [[ "$var_os" == "debian" ]]; then
-    echo -e "${OS}${BOLD}${DGN}Operating System: ${BGN}$var_os${CL}"
-    if [[ "$var_version" == "11" ]]; then
-      echo -e "${OSVERSION}${BOLD}${DGN}Version: ${BGN}$var_version${CL}"
-    elif [[ "$var_version" == "12" ]]; then
-      echo -e "${OSVERSION}${BOLD}${DGN}Version: ${BGN}$var_version${CL}"
-    else
-      msg_error "Unknown setting for var_version, should be 11 or 12, was ${var_version}"
-      exit
-    fi
-  elif [[ "$var_os" == "ubuntu" ]]; then
-    echo -e "${OS}${BOLD}${DGN}Operating System: ${BGN}$var_os${CL}"
-    if [[ "$var_version" == "20.04" ]]; then
-      echo -e "${OSVERSION}${BOLD}${DGN}Version: ${BGN}$var_version${CL}"
-    elif [[ "$var_version" == "22.04" ]]; then
-      echo -e "${OSVERSION}${BOLD}${DGN}Version: ${BGN}$var_version${CL}"
-    elif [[ "$var_version" == "24.04" ]]; then
-      echo -e "${OSVERSION}${BOLD}${DGN}Version: ${BGN}$var_version${CL}"
-    elif [[ "$var_version" == "24.10" ]]; then
-      echo -e "${OSVERSION}${BOLD}${DGN}Version: ${BGN}$var_version${CL}"
-    else
-      msg_error "Unknown setting for var_version, should be 20.04, 22.04, 24.04 or 24.10, was ${var_version}"
-      exit
-    fi
-  else
-    msg_error "Unknown setting for var_os! should be debian or ubuntu, was ${var_os}"
-    exit
-  fi
-
   if [[ -n "$CT_ID" ]]; then
-
     if [[ "$CT_ID" =~ ^([0-9]{3,4})-([0-9]{3,4})$ ]]; then
       MIN_ID=${BASH_REMATCH[1]}
       MAX_ID=${BASH_REMATCH[2]}
-
       if ((MIN_ID >= MAX_ID)); then
         msg_error "Invalid Container ID range. The first number must be smaller than the second number, was ${CT_ID}"
         exit
       fi
 
-      LIST_OF_IDS=$(pvesh get /cluster/resources --type vm --output-format json | grep -oP '"vmid":\s*\K\d+')
-
-      for ((ID = MIN_ID; ID <= MAX_ID; ID++)); do
-        if ! grep -q "^$ID$" <<<"$LIST_OF_IDS"; then
-          CT_ID=$ID
-          break
-        fi
-      done
-
+      LIST_OF_IDS=$(pvesh get /cluster/resources --type vm --output-format json 2>/dev/null | grep -oP '"vmid":\s*\K\d+') || true
+      if [[ -n "$LIST_OF_IDS" ]]; then
+        for ((ID = MIN_ID; ID <= MAX_ID; ID++)); do
+          if ! grep -q "^$ID$" <<<"$LIST_OF_IDS"; then
+            CT_ID=$ID
+            break
+          fi
+        done
+      fi
       echo -e "${CONTAINERID}${BOLD}${DGN}Container ID: ${BGN}$CT_ID${CL}"
 
     elif [[ "$CT_ID" =~ ^[0-9]+$ ]]; then
+      LIST_OF_IDS=$(pvesh get /cluster/resources --type vm --output-format json 2>/dev/null | grep -oP '"vmid":\s*\K\d+') || true
+      if [[ -n "$LIST_OF_IDS" ]]; then
 
-      LIST_OF_IDS=$(pvesh get /cluster/resources --type vm --output-format json | grep -oP '"vmid":\s*\K\d+')
-      if ! grep -q "^$CT_ID$" <<<"$LIST_OF_IDS"; then
-        echo -e "${CONTAINERID}${BOLD}${DGN}Container ID: ${BGN}$CT_ID${CL}"
+        if ! grep -q "^$CT_ID$" <<<"$LIST_OF_IDS"; then
+          echo -e "${CONTAINERID}${BOLD}${DGN}Container ID: ${BGN}$CT_ID${CL}"
+        else
+          msg_error "Container ID $CT_ID already exists"
+          exit
+        fi
       else
-        msg_error "Container ID $CT_ID already exists"
-        exit
+        echo -e "${CONTAINERID}${BOLD}${DGN}Container ID: ${BGN}$CT_ID${CL}"
       fi
     else
       msg_error "Invalid Container ID format. Needs to be 0000-9999 or 0-9999, was ${CT_ID}"
@@ -967,27 +923,26 @@ config_file() {
     if [ "$NET" == "dhcp" ]; then
       echo -e "${NETWORK}${BOLD}${DGN}IP Address: ${BGN}DHCP${CL}"
       echo -e "${GATEWAY}${BOLD}${DGN}Gateway IP Address: ${BGN}Default${CL}"
-    elif
-      [[ "$NET" =~ $ip_cidr_regex ]]
-    then
+    elif [[ "$NET" =~ $ip_cidr_regex ]]; then
       echo -e "${NETWORK}${BOLD}${DGN}IP Address: ${BGN}$NET${CL}"
+      if [ ! -z "$GATE" ]; then
+        if [[ "$GATE" =~ $ip_regex ]]; then
+          echo -e "${GATEWAY}${BOLD}${DGN}Gateway IP Address: ${BGN}$GATE${CL}"
+          GATE=",gw=$GATE"
+        else
+          msg_error "Invalid IP Address format for Gateway. Needs to be 0.0.0.0, was ${GATE}"
+          exit
+      fi
+  else
+    msg_error "Gateway IP Address cannot be empty"
+    exit
+  fi
     else
       msg_error "Invalid IP Address format. Needs to be 0.0.0.0/0, was ${NET}"
       exit
     fi
   fi
-  if [ ! -z "$GATE" ]; then
-    if [[ "$GATE" =~ $ip_regex ]]; then
-      echo -e "${GATEWAY}${BOLD}${DGN}Gateway IP Address: ${BGN}$GATE${CL}"
-      GATE=",gw=$GATE"
-    else
-      msg_error "Invalid IP Address format for Gateway. Needs to be 0.0.0.0, was ${GATE}"
-      exit
-    fi
-  else
-    msg_error "Gateway IP Address cannot be empty"
-    exit
-  fi
+
 
   if [[ ! -z "$APT_CACHER_IP" ]]; then
     if [[ "$APT_CACHER_IP" =~ $ip_regex ]]; then
@@ -1118,7 +1073,7 @@ install_script() {
   while true; do
 
     CHOICE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "SETTINGS" --menu "Choose an option:" \
-      14 50 5 \
+      18 60 6 \
       "1" "Default Settings" \
       "2" "Default Settings (with verbose)" \
       "3" "Advanced Settings" \
@@ -1235,9 +1190,7 @@ check_container_storage() {
 }
 
 start() {
-  LOGDIR="/usr/local/community-scripts/logs"
-  mkdir -p "$LOGDIR"
-
+  source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/tools.func)
   if command -v pveversion >/dev/null 2>&1; then
     if ! (whiptail --backtitle "Proxmox VE Helper Scripts" --title "${APP} LXC" --yesno "This will create a New ${APP} LXC. Proceed?" 10 58); then
       clear
@@ -1265,16 +1218,13 @@ start() {
     1)
       VERB="no"
       set_std_mode
-      log_message "INFO" "Update started (Silent Mode)"
       ;;
     2)
       VERB="yes"
       set_std_mode
-      log_message "INFO" "Update started (Verbose Mode)"
       ;;
     3)
       clear
-      log_message "INFO" "Update aborted."
       exit_script
       exit
       ;;
@@ -1459,13 +1409,13 @@ set_std_mode() {
 # Silent execution function
 silent() {
   if [ "$VERB" = "no" ]; then
-    "$@" >>"$LOGFILE" 2>&1
+    "$@" >/dev/null 2>&1 || return 1
   else
-    "$@" 2>&1 | tee -a "$LOGFILE"
+    "$@" || return 1
   fi
 }
 
-exit_script() {
+api_exit_script() {
   exit_code=$? # Capture the exit status of the last executed command
   #200 exit codes indicate error in create_lxc.sh
   #100 exit codes indicate error in install.func
@@ -1489,7 +1439,7 @@ exit_script() {
   fi
 }
 
-trap 'exit_script' EXIT
+trap 'api_exit_script' EXIT
 trap 'post_update_to_api "failed" "$BASH_COMMAND"' ERR
 trap 'post_update_to_api "failed" "INTERRUPTED"' SIGINT
 trap 'post_update_to_api "failed" "TERMINATED"' SIGTERM
