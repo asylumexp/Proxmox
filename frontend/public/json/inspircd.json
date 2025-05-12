@@ -12,6 +12,7 @@
     "documentation": "https://docs.inspircd.org/",
     "website": "https://www.inspircd.org/",
     "logo": "https://avatars.githubusercontent.com/u/1560750?s=200&v=4",
+    "config_path": "/etc/inspircd/inspircd.conf",
     "description": "InspIRCd is a modular C++ Internet Relay Chat (IRC) server for UNIX-like and Windows systems.",
     "install_methods": [
         {
@@ -30,9 +31,7 @@
         "username": null,
         "password": null
     },
-    "notes": [{
-        "text": "No ARM64 package available",
-        "type": "warning"
-    }],
+    "notes": [],
     "status": "❌"
-}
+  }
+

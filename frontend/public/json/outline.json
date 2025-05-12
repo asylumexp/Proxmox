@@ -12,6 +12,7 @@
     "documentation": "https://docs.getoutline.com/s/hosting/",
     "website": "https://www.getoutline.com",
     "logo": "https://raw.githubusercontent.com/selfhst/icons/refs/heads/main/svg/outline.svg",
+    "config_path": "/opt/outline/.env",
     "description": "The fastest knowledge base for growing teams. Beautiful, realtime collaborative, feature packed, and markdown compatible. It’s time to get your team’s knowledge organized.",
     "install_methods": [
         {
@@ -31,10 +32,14 @@
         "password": null
     },
     "notes": [
-    {
-      "text": "Configuration file is at: `/opt/outline/.env`. Modify to suit your environment.",
-      "type": "info"
-    }
-  ],
-  "status": "🚧"
+        {
+            "text": "After installation finishes, application will do a database migration so web UI might be unavailable for a minute or two. Also you need to manually add authentication and/or enable HTTPS.",
+            "type": "info"
+        },
+        {
+            "text": "Configuration file is at: `/opt/outline/.env`. Modify to suit your environment.",
+            "type": "info"
+        }
+    ],
+    "status": "🚧"
 }

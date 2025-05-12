@@ -14,6 +14,74 @@ Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit 
 All LXC instances created using this repository come pre-installed with Midnight Commander, which is a command-line tool (`mc`) that offers a user-friendly file and directory management interface for the terminal environment.
 
 
+## 2025-04-24
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Element Synapse: Fix Admin UI install and update procedure [@tremor021](https://github.com/tremor021) ([#4041](https://github.com/community-scripts/ProxmoxVE/pull/4041))
+    - SLSKD: always check for soularr update [@vhsdream](https://github.com/vhsdream) ([#4012](https://github.com/community-scripts/ProxmoxVE/pull/4012))
+
+  - #### ✨ New Features
+
+    - Element Synapse: Add Synapse-Admin web UI to manage Matrix [@tremor021](https://github.com/tremor021) ([#4010](https://github.com/community-scripts/ProxmoxVE/pull/4010))
+    - Pi-Hole: Fix Unbound update [@CrazyWolf13](https://github.com/CrazyWolf13) ([#4026](https://github.com/community-scripts/ProxmoxVE/pull/4026))
+
+### 🌐 Website
+
+  - #### ✨ New Features
+
+    - Feat: Add config path to website [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#4005](https://github.com/community-scripts/ProxmoxVE/pull/4005))
+
+  - #### 📝 Script Information
+
+    - Jellyfin: Mark as updateable [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#4029](https://github.com/community-scripts/ProxmoxVE/pull/4029))
+    - Prepare JSON files for new website feature [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#4004](https://github.com/community-scripts/ProxmoxVE/pull/4004))
+
+## 2025-04-23
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Zipline: Add new ENV Variable and Change Update [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#3997](https://github.com/community-scripts/ProxmoxVE/pull/3997))
+    - karakeep: use nightly channel for yt-dlp [@vhsdream](https://github.com/vhsdream) ([#3992](https://github.com/community-scripts/ProxmoxVE/pull/3992))
+
+### 🧰 Maintenance
+
+  - #### 📂 Github
+
+    - Fix Workflow to close discussions [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#3999](https://github.com/community-scripts/ProxmoxVE/pull/3999))
+
+## 2025-04-22
+
+### 🆕 New Scripts
+
+  - reactive-resume ([#3980](https://github.com/community-scripts/ProxmoxVE/pull/3980))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - wger: Fix a bug in update procedure and general code maintenance [@tremor021](https://github.com/tremor021) ([#3974](https://github.com/community-scripts/ProxmoxVE/pull/3974))
+
+### 🧰 Maintenance
+
+  - #### 📂 Github
+
+    - Add workflow to close ttek Repo relatate issues [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#3981](https://github.com/community-scripts/ProxmoxVE/pull/3981))
+
+### 🌐 Website
+
+  - #### 🐞 Bug Fixes
+
+    - Fix Turnkey Source Link in Button Component [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#3978](https://github.com/community-scripts/ProxmoxVE/pull/3978))
+
+  - #### 📝 Script Information
+
+    - qBittorrent: Update web page [@tremor021](https://github.com/tremor021) ([#3969](https://github.com/community-scripts/ProxmoxVE/pull/3969))
+
 ## 2025-04-19
 
 ### 🆕 New Scripts
