@@ -44,6 +44,7 @@ $STD apt-get install -y \
   python3-dev \
   python3-setuptools \
   python3-wheel
+rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Setup Python3"
 
 msg_info "Installing OCR Dependencies (Patience)"
