@@ -27,7 +27,7 @@ echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.co
 echo "YES" | /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh &>/dev/null
 $STD apt-get install -y postgresql-16 nodejs
 cd /tmp
-curl -fsSL https://dl.min.io/server/minio/release/linux-amd64/minio.deb -o minio.deb
+curl -fsSL https://dl.min.io/server/minio/release/linux-arm64/minio.deb -o minio.deb
 $STD dpkg -i minio.deb
 
 msg_info "Setting up Database"

@@ -55,7 +55,7 @@ function update_script() {
         msg_info "Updating Minio"
         systemctl stop minio
         cd /tmp
-        curl -fsSL https://dl.min.io/server/minio/release/linux-amd64/minio.deb -o minio.deb
+        curl -fsSL https://dl.min.io/server/minio/release/linux-arm64/minio.deb -o minio.deb
         $STD dpkg -i minio.deb
         msg_ok "Updated Minio"
 
