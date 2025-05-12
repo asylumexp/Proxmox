@@ -7,10 +7,11 @@ console.log('Current directory: ' + process.cwd());
 const jsonDir = "public/json";
 const metadataFileName = "metadata.json";
 const versionsFileName = "versions.json";
+const statusesFileName = "statuses.json";
 const encoding = "utf-8";
 
 const fileNames = (await fs.readdir(jsonDir))
-  .filter((fileName) => fileName !== metadataFileName && fileName !== versionsFileName);
+  .filter((fileName) => fileName !== metadataFileName && fileName !== versionsFileName && fileName !== statusesFileName);
 
 describe.each(fileNames)("%s", async (fileName) => {
   let script: Script;
