@@ -26,13 +26,14 @@ msg_info "Installing Hardware Acceleration"
 $STD apt-get -y install {va-driver-all,ocl-icd-libopencl1,vainfo}
 msg_ok "Installed and Set Up Hardware Acceleration"
 
-msg_info "Installing ASP.NET Core Runtime"
-curl -fsSL https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -o packages-microsoft-prod.deb
-$STD dpkg -i packages-microsoft-prod.deb
-rm -rf packages-microsoft-prod.deb
-$STD apt-get update
-$STD apt-get install -y aspnetcore-runtime-8.0
-msg_ok "Installed ASP.NET Core Runtime"
+msg_info "Installing ASP.NET Core 7 SDK"
+curl -SL -o aspnet.tar.gz https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/8.0.16/aspnetcore-runtime-8.0.16-linux-arm64.tar.gz
+$STD mkdir -p /usr/share/dotnet
+$STD tar -zxf aspnet.tar.gz -C /usr/share/dotnet
+ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+$STD rm -f aspnet.tar.gz
+msg_ok "Installed ASP.NET Core 7 SDK"
+
 
 msg_info "Setup ${APPLICATION}"
 $STD ln -svf /usr/bin/ffmpeg /usr/local/bin/ffmpeg

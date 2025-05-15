@@ -26,6 +26,7 @@ $STD apt-get install -y \
   jq \
   python3 \
   python3-bcrypt
+rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Installed Dependencies"
 
 NODE_VERSION="22" NODE_MODULE="turbo@1.9.3" install_node_and_modules
