@@ -14,11 +14,82 @@ Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit 
 All LXC instances created using this repository come pre-installed with Midnight Commander, which is a command-line tool (`mc`) that offers a user-friendly file and directory management interface for the terminal environment.
 
 
+## 2025-05-15
+
+## 2025-05-14
+
+### 🆕 New Scripts
+
+  - odoo ([#4477](https://github.com/community-scripts/ProxmoxVE/pull/4477))
+- asterisk ([#4468](https://github.com/community-scripts/ProxmoxVE/pull/4468))
+
+### 🚀 Updated Scripts
+
+  - fix: fetch_release_and_deploy function [@CrazyWolf13](https://github.com/CrazyWolf13) ([#4478](https://github.com/community-scripts/ProxmoxVE/pull/4478))
+- Website: re-add documenso & some little bugfixes [@MickLesk](https://github.com/MickLesk) ([#4456](https://github.com/community-scripts/ProxmoxVE/pull/4456))
+
+  - #### 🐞 Bug Fixes
+
+    - Add make installation dependency to Actual Budget script [@maciejmatczak](https://github.com/maciejmatczak) ([#4485](https://github.com/community-scripts/ProxmoxVE/pull/4485))
+    - Bookstack: fix copy of themes/uploads/storage [@MickLesk](https://github.com/MickLesk) ([#4457](https://github.com/community-scripts/ProxmoxVE/pull/4457))
+    - Alpine-Rclone: Fix location of passwords file [@tremor021](https://github.com/tremor021) ([#4465](https://github.com/community-scripts/ProxmoxVE/pull/4465))
+
+  - #### ✨ New Features
+
+    - monitor-all: improvements - tag based filtering [@grizmin](https://github.com/grizmin) ([#4437](https://github.com/community-scripts/ProxmoxVE/pull/4437))
+
+### 🧰 Maintenance
+
+  - #### 📂 Github
+
+    - Add Github app for auto PR merge [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#4461](https://github.com/community-scripts/ProxmoxVE/pull/4461))
+
+## 2025-05-13
+
+### 🆕 New Scripts
+
+  - gatus ([#4443](https://github.com/community-scripts/ProxmoxVE/pull/4443))
+- alpine-gatus ([#4442](https://github.com/community-scripts/ProxmoxVE/pull/4442))
+
+### 🚀 Updated Scripts
+
+  - update some improvements from dev (tools.func) [@MickLesk](https://github.com/MickLesk) ([#4430](https://github.com/community-scripts/ProxmoxVE/pull/4430))
+
+  - #### 🐞 Bug Fixes
+
+    - openhab: use zulu17-jdk [@moodyblue](https://github.com/moodyblue) ([#4438](https://github.com/community-scripts/ProxmoxVE/pull/4438))
+
+  - #### 🔧 Refactor
+
+    - openhab. correct some typos [@moodyblue](https://github.com/moodyblue) ([#4448](https://github.com/community-scripts/ProxmoxVE/pull/4448))
+
+### 🧰 Maintenance
+
+  - #### 💾 Core
+
+    - fix: improve bridge detection in all network interface configuration files [@filippolauria](https://github.com/filippolauria) ([#4413](https://github.com/community-scripts/ProxmoxVE/pull/4413))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - Jellyfin Media Server: Update configuration path [@tremor021](https://github.com/tremor021) ([#4434](https://github.com/community-scripts/ProxmoxVE/pull/4434))
+    - Pingvin Share: Added explanation on how to add/edit environment variables [@tremor021](https://github.com/tremor021) ([#4432](https://github.com/community-scripts/ProxmoxVE/pull/4432))
+    - pingvin.json: fix typo [@warmbo](https://github.com/warmbo) ([#4426](https://github.com/community-scripts/ProxmoxVE/pull/4426))
+
 ## 2025-05-12
+
+### 🆕 New Scripts
+
+  - Alpine-Traefik [@MickLesk](https://github.com/MickLesk) ([#4412](https://github.com/community-scripts/ProxmoxVE/pull/4412))
 
 ### 🚀 Updated Scripts
 
   - Alpine: Use onliner for updates [@tremor021](https://github.com/tremor021) ([#4414](https://github.com/community-scripts/ProxmoxVE/pull/4414))
+
+  - #### 🐞 Bug Fixes
+
+    - homarr: fetch versions dynamically from source repo [@CrazyWolf13](https://github.com/CrazyWolf13) ([#4409](https://github.com/community-scripts/ProxmoxVE/pull/4409))
 
   - #### ✨ New Features
 

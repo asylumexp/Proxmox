@@ -5,7 +5,7 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://homarr.dev/
 
-APP="Homarr"
+APP="homarr"
 var_tags="${var_tags:-arr;dashboard}"
 var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-4096}"
@@ -117,11 +117,12 @@ node apps/nextjs/server.js & PID=$!
 wait $PID
 EOF
     chmod +x /opt/run_homarr.sh
-curl -fsSL "https://github.com/homarr-labs/homarr/archive/refs/tags/v${RELEASE}.zip" -o $(basename "https://github.com/homarr-labs/homarr/archive/refs/tags/v${RELEASE}.zip")
-    unzip -q v${RELEASE}.zip
-    rm -rf v${RELEASE}.zip
+    $STD command -v jq || $STD apt-get update && $STD apt-get install -y jq
+    NODE_VERSION=$(curl -s https://raw.githubusercontent.com/homarr-labs/homarr/dev/package.json | jq -r '.engines.node | split(">=")[1] | split(".")[0]')
+    NODE_MODULE="pnpm@$(curl -s https://raw.githubusercontent.com/homarr-labs/homarr/dev/package.json | jq -r '.packageManager | split("@")[1]')"
+    install_node_and_modules
     rm -rf /opt/homarr
-    mv homarr-${RELEASE} /opt/homarr
+    fetch_and_deploy_gh_release "homarr-labs/homarr"
     mv /opt/homarr-data-backup/.env /opt/homarr/.env
     cd /opt/homarr
     $STD pnpm install
