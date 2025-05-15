@@ -17,6 +17,7 @@ msg_info "Installing Dependencies"
 $STD apt-get install -y \
     python3 \
     python3-pip
+rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Jupyter Notebook"
