@@ -19,16 +19,7 @@ $STD apt-get install -y \
   gnupg
 msg_ok "Installed Dependencies"
 
-msg_info "Setup Golang"
-set +o pipefail
-temp_file=$(mktemp)
-golang_tarball=$(curl -fsSL https://go.dev/dl/ | grep -oP 'go[\d\.]+\.linux-amd64\.tar\.gz' | head -n 1)
-curl -fsSL "https://golang.org/dl/${golang_tarball}" -o "$temp_file"
-tar -C /usr/local -xzf "$temp_file"
-ln -sf /usr/local/go/bin/go /usr/local/bin/go
-rm -f "$temp_file"
-set -o pipefail
-msg_ok "Setup Golang"
+install_go
 
 msg_info "Setup Node.js"
 mkdir -p /etc/apt/keyrings
