@@ -14,7 +14,64 @@ Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit 
 All LXC instances created using this repository come pre-installed with Midnight Commander, which is a command-line tool (`mc`) that offers a user-friendly file and directory management interface for the terminal environment.
 
 
+## 2025-05-19
+
+## 2025-05-18
+
+### 🚀 Updated Scripts
+
+  - tools.func - Add function to create self-signed certificates [@tremor021](https://github.com/tremor021) ([#4562](https://github.com/community-scripts/ProxmoxVE/pull/4562))
+
+  - #### 🐞 Bug Fixes
+
+    - Homarr: fix the build [@CrazyWolf13](https://github.com/CrazyWolf13) ([#4569](https://github.com/community-scripts/ProxmoxVE/pull/4569))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - Fix Dashy Config Path on Frontend [@CrazyWolf13](https://github.com/CrazyWolf13) ([#4570](https://github.com/community-scripts/ProxmoxVE/pull/4570))
+
+## 2025-05-17
+
+## 2025-05-16
+
+### 🧰 Maintenance
+
+  - #### 💾 Core
+
+    - [core] Refactor Config File function [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#4528](https://github.com/community-scripts/ProxmoxVE/pull/4528))
+    - [core] Fix Bridge detection in Advanced Mode [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#4522](https://github.com/community-scripts/ProxmoxVE/pull/4522))
+    - [core] Enable SSH_KEY and SSH without password [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#4523](https://github.com/community-scripts/ProxmoxVE/pull/4523))
+
+  - #### 📂 Github
+
+    - Updates to contributor docs/guide [@tremor021](https://github.com/tremor021) ([#4518](https://github.com/community-scripts/ProxmoxVE/pull/4518))
+
+### 🌐 Website
+
+  - Remove bolt.diy script [@tremor021](https://github.com/tremor021) ([#4541](https://github.com/community-scripts/ProxmoxVE/pull/4541))
+
 ## 2025-05-15
+
+### 🆕 New Scripts
+
+  - bitmagnet ([#4493](https://github.com/community-scripts/ProxmoxVE/pull/4493))
+
+### 🚀 Updated Scripts
+
+  - core: Add TAB3 formatting var to core [@tremor021](https://github.com/tremor021) ([#4496](https://github.com/community-scripts/ProxmoxVE/pull/4496))
+- Update scripts that use "read -p" to properly indent text [@tremor021](https://github.com/tremor021) ([#4498](https://github.com/community-scripts/ProxmoxVE/pull/4498))
+
+  - #### ✨ New Features
+
+    - tools.func: fix some things & add ruby default function [@MickLesk](https://github.com/MickLesk) ([#4507](https://github.com/community-scripts/ProxmoxVE/pull/4507))
+
+### 🧰 Maintenance
+
+  - #### 💾 Core
+
+    - core: fix bridge detection for OVS  [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#4495](https://github.com/community-scripts/ProxmoxVE/pull/4495))
 
 ## 2025-05-14
 

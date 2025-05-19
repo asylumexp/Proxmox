@@ -67,6 +67,7 @@ Example:
 >
 > - Add your username
 > - When updating/reworking scripts, add "| Co-Author [YourUserName]"
+> - Source is a URL of github repo containting source files of the application you're installing (not URL of your homepage or a blog)
 
 ### 1.3 **Variables and function import**
 
@@ -110,11 +111,8 @@ Example:
 
 ```bash
 $STD apt-get install -y \
-  curl \
   composer \
   git \
-  sudo \
-  mc \
   nginx 
 ```
 
@@ -154,7 +152,7 @@ Example for a git release:
 
 ```bash
 RELEASE=$(curl -fsSL https://api.github.com/repos/snipe/snipe-it/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
-wget -q "https://github.com/snipe/snipe-it/archive/refs/tags/v${RELEASE}.zip"
+curl -fsSL "https://github.com/snipe/snipe-it/archive/refs/tags/v${RELEASE}.zip" -o "v${RELEASE}.zip"
 ```
 
 ### 5.2 **Save the version for update checks**
@@ -165,7 +163,7 @@ wget -q "https://github.com/snipe/snipe-it/archive/refs/tags/v${RELEASE}.zip"
 Example:
 
 ```bash
-echo "${RELEASE}" >"/opt/AppName_version.txt"
+echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
 ```
 
 ---
@@ -177,6 +175,7 @@ echo "${RELEASE}" >"/opt/AppName_version.txt"
 - Use standard functions like `msg_info`, `msg_ok` or `msg_error` to print status messages.
 - Each `msg_info` must be followed with a `msg_ok` before any other output is made.
 - Display meaningful progress messages at key stages.
+- Taking user input with `read -p` must be outside of `msg_info`...`msg_ok` code block
 
 Example:
 
@@ -184,6 +183,8 @@ Example:
 msg_info "Installing Dependencies"
 $STD apt-get install -y ...
 msg_ok "Installed Dependencies"
+
+read -p "${TAB3}Do you wish to enable HTTPS mode? (y/N): " httpschoice
 ```
 
 ### 6.2 **Verbosity**

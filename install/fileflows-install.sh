@@ -21,7 +21,6 @@ $STD apt-get install -y \
   imagemagick
 msg_ok "Installed Dependencies"
 
-
 msg_info "Installing Hardware Acceleration"
 $STD apt-get -y install {va-driver-all,ocl-icd-libopencl1,vainfo}
 msg_ok "Installed and Set Up Hardware Acceleration"
