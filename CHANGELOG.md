@@ -14,7 +14,133 @@ Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit 
 All LXC instances created using this repository come pre-installed with Midnight Commander, which is a command-line tool (`mc`) that offers a user-friendly file and directory management interface for the terminal environment.
 
 
+## 2025-05-27
+
+## 2025-05-26
+
+### 🆕 New Scripts
+
+  - Argus ([#4717](https://github.com/community-scripts/ProxmoxVE/pull/4717))
+- Kasm ([#4716](https://github.com/community-scripts/ProxmoxVE/pull/4716))
+
+### 🚀 Updated Scripts
+
+  - Excalidraw: increase HDD to 10GB [@MickLesk](https://github.com/MickLesk) ([#4718](https://github.com/community-scripts/ProxmoxVE/pull/4718))
+
+  - #### 🐞 Bug Fixes
+
+    - BREAKING CHANGE: Fix PocketID for v1.0.0 [@vhsdream](https://github.com/vhsdream) ([#4711](https://github.com/community-scripts/ProxmoxVE/pull/4711))
+    - InspIRCd: Fix release name in release url [@tremor021](https://github.com/tremor021) ([#4720](https://github.com/community-scripts/ProxmoxVE/pull/4720))
+
+## 2025-05-25
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Pelican-panel: back-up database if using sqlite [@bvdberg01](https://github.com/bvdberg01) ([#4700](https://github.com/community-scripts/ProxmoxVE/pull/4700))
+
+  - #### 🔧 Refactor
+
+    - Pterodactyl panel read typo [@bvdberg01](https://github.com/bvdberg01) ([#4701](https://github.com/community-scripts/ProxmoxVE/pull/4701))
+
+## 2025-05-24
+
+## 2025-05-23
+
+### 🚀 Updated Scripts
+
+  - #### 🔧 Refactor
+
+    - TYPO: Fix nexcloud to nextcloud (VM) [@Stoufiler](https://github.com/Stoufiler) ([#4670](https://github.com/community-scripts/ProxmoxVE/pull/4670))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - Update Icons to selfhst/icons (FreePBX & Configarr) [@MickLesk](https://github.com/MickLesk) ([#4680](https://github.com/community-scripts/ProxmoxVE/pull/4680))
+
+### 💥 Breaking Changes
+
+  - Remove rtsptoweb (deprecated) [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#4686](https://github.com/community-scripts/ProxmoxVE/pull/4686))
+
+## 2025-05-22
+
+### 🆕 New Scripts
+
+  - FreePBX ([#4648](https://github.com/community-scripts/ProxmoxVE/pull/4648))
+- cloudflare-ddns ([#4647](https://github.com/community-scripts/ProxmoxVE/pull/4647))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - slskd: fix #4649 [@vhsdream](https://github.com/vhsdream) ([#4651](https://github.com/community-scripts/ProxmoxVE/pull/4651))
+
+  - #### ✨ New Features
+
+    - Paperless-AI: Add RAG chat [@tremor021](https://github.com/tremor021) ([#4635](https://github.com/community-scripts/ProxmoxVE/pull/4635))
+
+### 🧰 Maintenance
+
+  - #### 📂 Github
+
+    - [gh]: Feature: Header-Generation for vm | tools | addon [@MickLesk](https://github.com/MickLesk) ([#4643](https://github.com/community-scripts/ProxmoxVE/pull/4643))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - Commafeed: move to Documents category [@diemade](https://github.com/diemade) ([#4665](https://github.com/community-scripts/ProxmoxVE/pull/4665))
+
+## 2025-05-21
+
+### 🆕 New Scripts
+
+  - configarr ([#4620](https://github.com/community-scripts/ProxmoxVE/pull/4620))
+- babybuddy ([#4619](https://github.com/community-scripts/ProxmoxVE/pull/4619))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Alpine-Node-RED: Update Service File [@MickLesk](https://github.com/MickLesk) ([#4628](https://github.com/community-scripts/ProxmoxVE/pull/4628))
+    - RustDesk Server: Fix update for older installs [@tremor021](https://github.com/tremor021) ([#4612](https://github.com/community-scripts/ProxmoxVE/pull/4612))
+
+  - #### ✨ New Features
+
+    - Tandoor Recipes: Capture version information when installing [@jbolla](https://github.com/jbolla) ([#4633](https://github.com/community-scripts/ProxmoxVE/pull/4633))
+
+## 2025-05-20
+
+### 🚀 Updated Scripts
+
+  - [tools.func]: Update fetch_and_deploy_gh_release function [@tremor021](https://github.com/tremor021) ([#4605](https://github.com/community-scripts/ProxmoxVE/pull/4605))
+- [core] New Features for Config File function [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#4601](https://github.com/community-scripts/ProxmoxVE/pull/4601))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - Website: harmonize all Logos | use jsDelivr CDN links for icons from selfhst/icons repo [@MickLesk](https://github.com/MickLesk) ([#4603](https://github.com/community-scripts/ProxmoxVE/pull/4603))
+
 ## 2025-05-19
+
+### 🆕 New Scripts
+
+  - rclone ([#4579](https://github.com/community-scripts/ProxmoxVE/pull/4579))
+
+### 🚀 Updated Scripts
+
+  - increase ressources of Homarr (3 vCPU / 6GB RAM) [@MickLesk](https://github.com/MickLesk) ([#4583](https://github.com/community-scripts/ProxmoxVE/pull/4583))
+
+  - #### 🐞 Bug Fixes
+
+    - Various unrelated fixes to kimai update script [@jamezpolley](https://github.com/jamezpolley) ([#4549](https://github.com/community-scripts/ProxmoxVE/pull/4549))
+
+  - #### ✨ New Features
+
+    - RustDesk Server: Add WebUI [@tremor021](https://github.com/tremor021) ([#4590](https://github.com/community-scripts/ProxmoxVE/pull/4590))
 
 ## 2025-05-18
 
