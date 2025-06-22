@@ -26,6 +26,9 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
+  if ! command -v jq &>/dev/null; then
+    $STD apt-get install -y jq
+  fi
   if ! command -v node >/dev/null || [[ "$(/usr/bin/env node -v | grep -oP '^v\K[0-9]+')" != "22" ]]; then
     msg_info "Installing Node.js 22"
     $STD apt-get purge -y nodejs
@@ -50,7 +53,7 @@ function update_script() {
     cp /opt/tianji/src/server/.env /opt/.env
     mv /opt/tianji /opt/tianji_bak
     curl -fsSL "https://github.com/msgbyte/tianji/archive/refs/tags/v${RELEASE}.zip" -o $(basename "https://github.com/msgbyte/tianji/archive/refs/tags/v${RELEASE}.zip")
-    unzip -q v${RELEASE}.zip
+    $STD unzip v${RELEASE}.zip
     mv tianji-${RELEASE} /opt/tianji
     cd tianji
     export NODE_OPTIONS="--max_old_space_size=4096"

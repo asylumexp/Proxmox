@@ -15,8 +15,7 @@ update_os
 
 msg_info "Installing dependencies"
 $STD apk add --no-cache \
-  unzip \
-  apache2-utils
+  apache2-utils fuse3
 msg_ok "Installed dependencies"
 
 msg_info "Installing rclone"

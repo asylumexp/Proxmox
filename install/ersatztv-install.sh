@@ -19,7 +19,7 @@ msg_ok "Installed Dependencies"
 
 msg_info "Installing FFmpeg (Patience)"
 cd /usr/local/bin
-curl -fsSL "https://johnvansickle.com/ffmpeg/releasesffmpeg/-release-arm64-static.tar.xz" -o $(basename "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz")
+curl -fsSL "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz" -o "ffmpeg-release-arm64-static.tar.xz"
 $STD tar -xvf ffmpeg-release-arm64-static.tar.xz
 rm -f ffmpeg-*.tar.xz
 cd ffmpeg-*

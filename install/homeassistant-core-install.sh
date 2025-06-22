@@ -19,7 +19,6 @@ $STD curl -O http://ports.ubuntu.com/pool/main/t/tiff/libtiff6_4.5.1+git230720-4
 $STD apt --fix-broken install -y
 $STD apt-get install -y \
   git \
-  gnupg \
   ca-certificates \
   bluez \
   tzdata \

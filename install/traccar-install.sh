@@ -15,7 +15,7 @@ update_os
 
 RELEASE=$(curl -fsSL https://api.github.com/repos/traccar/traccar/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 msg_info "Installing Traccar v${RELEASE}"
-curl -fsSL "https://github.com/traccar/traccar/releases/download/v${RELEASE}/traccar-linux-arm-${RELEASE}.zip" -o $(basename "https://github.com/traccar/traccar/releases/download/v${RELEASE}/traccar-linux-arm-${RELEASE}.zip")
+curl -fsSL "https://github.com/traccar/traccar/releases/download/v${RELEASE}/traccar-linux-arm-${RELEASE}.zip" -o "traccar-linux-arm-${RELEASE}.zip"
 $STD unzip traccar-linux-arm-${RELEASE}.zip
 $STD ./traccar.run
 systemctl enable -q --now traccar

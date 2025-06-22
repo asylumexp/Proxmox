@@ -18,7 +18,6 @@ $STD apt-get install -y \
   g++ \
   build-essential \
   git \
-  gnupg \
   ca-certificates \
   chromium/stable \
   chromium-common/stable \
@@ -49,20 +48,14 @@ sed -i \
   /etc/meilisearch.toml
 msg_ok "Installed Meilisearch"
 
-msg_info "Installing Node.js"
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" >/etc/apt/sources.list.d/nodesource.list
-$STD apt-get update
-$STD apt-get install -y nodejs
+NODE_VERSION="22" NODE_MODULE="yarn@latest" install_node_and_modules
 $STD npm install -g corepack@0.31.0
-msg_ok "Installed Node.js"
 
 msg_info "Installing karakeep"
 cd /opt
 RELEASE=$(curl -fsSL https://api.github.com/repos/karakeep-app/karakeep/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 curl -fsSL "https://github.com/karakeep-app/karakeep/archive/refs/tags/v${RELEASE}.zip" -o "v${RELEASE}.zip"
-unzip -q "v${RELEASE}.zip"
+$STD unzip "v${RELEASE}.zip"
 mv karakeep-"${RELEASE}" /opt/karakeep
 cd /opt/karakeep
 corepack enable
@@ -98,10 +91,26 @@ BROWSER_WEB_URL="http://127.0.0.1:9222"
 
 # If you're planning to use ollama for tagging, uncomment the following lines:
 # OLLAMA_BASE_URL="<OLLAMA_ADDR>"
+# OLLAMA_KEEP_ALIVE="5m"
 
 # You can change the models used by uncommenting the following lines, and changing them according to your needs:
 # INFERENCE_TEXT_MODEL="gpt-4o-mini"
 # INFERENCE_IMAGE_MODEL="gpt-4o-mini" 
+
+# Additional inference defaults
+# INFERENCE_CONTEXT_LENGTH="2048"
+# INFERENCE_ENABLE_AUTO_TAGGING=true
+# INFERENCE_ENABLE_AUTO_SUMMARIZATION=false
+
+# Crawler defaults
+# CRAWLER_NUM_WORKERS="1"
+# CRAWLER_DOWNLOAD_BANNER_IMAGE=true
+# CRAWLER_STORE_SCREENSHOT=true
+# CRAWLER_FULL_PAGE_SCREENSHOT=false
+# CRAWLER_FULL_PAGE_ARCHIVE=false
+# CRAWLER_VIDEO_DOWNLOAD=false
+# CRAWLER_VIDEO_DOWNLOAD_MAX_SIZE="50"
+# CRAWLER_ENABLE_ADBLOCKER=true
 EOF
 echo "${RELEASE}" >"/opt/${APPLICATION}_version.txt"
 msg_ok "Installed karakeep"

@@ -24,31 +24,13 @@ msg_ok "Installed Traefik"
 read -p "${TAB3}Enable Traefik WebUI (Port 8080)? [y/N]: " enable_webui
 if [[ "$enable_webui" =~ ^[Yy]$ ]]; then
   msg_info "Configuring Traefik WebUI"
-  mkdir -p /etc/traefik/config
-  cat <<EOF >/etc/traefik/traefik.yml
-entryPoints:
-  web:
-    address: ":80"
-  traefik:
-    address: ":8080"
-
-api:
-  dashboard: true
-  insecure: true
-
-log:
-  level: INFO
-
-providers:
-  file:
-    directory: /etc/traefik/config
-    watch: true
-EOF
+  sed -i 's/localhost//g' /etc/traefik/traefik.yaml
   msg_ok "Configured Traefik WebUI"
 fi
 
 msg_info "Enabling and starting Traefik service"
 $STD rc-update add traefik default
+sed -i '/^command=.*/i directory="/etc/traefik"' /etc/init.d/traefik
 $STD rc-service traefik start
 msg_ok "Traefik service started"
 

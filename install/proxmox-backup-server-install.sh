@@ -14,16 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
-    curl \
-    sudo \
-    gpg \
-    mc \
-    wget \
-    openssh-server \
-    git \
-    dpkg-dev
-msg_ok "Installed Dependencies"
+$STD apt-get install -y git
 
 msg_info "Installing Proxmox Backup Server (Patience)"
 export DEBIAN_FRONTEND=noninteractive

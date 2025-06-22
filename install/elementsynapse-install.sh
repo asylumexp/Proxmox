@@ -17,21 +17,10 @@ msg_info "Installing Dependencies"
 $STD apt-get install -y \
   lsb-release \
   apt-transport-https \
-  debconf-utils \
-  gpg
+  debconf-utils
 msg_ok "Installed Dependencies"
 
-msg_info "Setting up Node.js Repository"
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" >/etc/apt/sources.list.d/nodesource.list
-msg_ok "Set up Node.js Repository"
-
-msg_info "Installing Node.js"
-$STD apt-get update
-$STD apt-get install -y nodejs
-$STD npm install -g yarn
-msg_ok "Installed Node.js"
+NODE_VERSION="22" NODE_MODULE="yarn@latest" install_node_and_modules
 
 read -p "${TAB3}Please enter the name for your server: " servername
 
@@ -65,7 +54,12 @@ RELEASE=$(curl -fsSL https://api.github.com/repos/etkecc/synapse-admin/releases/
 curl -fsSL "https://github.com/etkecc/synapse-admin/archive/refs/tags/v${RELEASE}.tar.gz" -o "$temp_file"
 tar xzf "$temp_file" -C /opt/synapse-admin --strip-components=1
 cd /opt/synapse-admin
+$STD yarn global add serve
 $STD yarn install --ignore-engines
+$STD yarn build
+mv ./dist ../ && \
+  rm -rf * && \
+  mv ../dist ./
 msg_ok "Installed Element Synapse"
 
 msg_info "Creating Service"
@@ -78,7 +72,7 @@ Requires=matrix-synapse.service
 [Service]
 Type=simple
 WorkingDirectory=/opt/synapse-admin
-ExecStart=/usr/bin/yarn start --host
+ExecStart=/usr/local/bin/serve -s dist -l 5173
 Restart=always
 
 [Install]

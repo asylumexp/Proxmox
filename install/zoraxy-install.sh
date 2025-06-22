@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+f#!/usr/bin/env bash
 
 # Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
@@ -15,7 +15,7 @@ update_os
 
 msg_info "Installing Zoraxy (Patience)"
 RELEASE=$(curl -fsSL https://api.github.com/repos/tobychui/zoraxy/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
-curl -fsSL "https://github.com/tobychui/zoraxy/releases/download/${RELEASE}/zoraxy_linux_arm64" -o $(basename "https://github.com/tobychui/zoraxy/releases/download/${RELEASE}/zoraxy_linux_arm64")
+curl -fsSL "https://github.com/tobychui/zoraxy/releases/download/${RELEASE}/zoraxy_linux_arm64" -o zoraxy_linux_arm64
 mkdir -p /opt/zoraxy
 mv zoraxy_linux_arm64 /opt/zoraxy/zoraxy
 chmod +x /opt/zoraxy/zoraxy

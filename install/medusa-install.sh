@@ -15,9 +15,10 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y gpg
-$STD apt-get install -y git-core
-$STD apt-get install -y mediainfo
+$STD apt-get install -y \
+  git-core \
+  mediainfo
+
 cat <<EOF >/etc/apt/sources.list.d/non-free.list
 deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
 EOF

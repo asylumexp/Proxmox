@@ -14,12 +14,6 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt-get install -y gpg
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
-msg_ok "Installed Dependencies"
-
 msg_info "Installing lldap"
 source /etc/os-release
 os=$ID

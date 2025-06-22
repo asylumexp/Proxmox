@@ -18,8 +18,8 @@ curl -fsSL https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg | 
 echo "deb [signed-by=/etc/apt/keyrings/proxmox-release-bookworm.gpg] http://download.proxmox.com/debian/pdm bookworm pdm-test  " >/etc/apt/sources.list.d/proxmox-release-bookworm.list
 $STD apt-get update
 $STD apt-get install -y \
-    proxmox-datacenter-manager \
-    proxmox-datacenter-manager-ui
+  proxmox-datacenter-manager \
+  proxmox-datacenter-manager-ui
 msg_ok "Installed Proxmox Datacenter Manager"
 
 motd_ssh

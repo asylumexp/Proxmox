@@ -378,13 +378,13 @@ write_config() {
 
 CT_TYPE="${CT_TYPE}"
 DISK_SIZE="${DISK_SIZE}"
-CORE_COUNT="${DISK_SIZE}"
+CORE_COUNT="${CORE_COUNT}"
 RAM_SIZE="${RAM_SIZE}"
 HN="${HN}"
 BRG="${BRG}"
 APT_CACHER_IP="${APT_CACHER_IP:-none}"
 DISABLEIP6="${DISABLEIP6}"
-PW="${PW:-none}"
+PW='${PW:-none}'
 SSH="${SSH}"
 SSH_AUTHORIZED_KEY="${SSH_AUTHORIZED_KEY}"
 VERBOSE="${VERBOSE}"
@@ -396,6 +396,7 @@ SD="${SD:-none}"
 MAC="${MAC:-none}"
 NS="${NS:-none}"
 NET="${NET}"
+FUSE="${ENABLE_FUSE}"
 
 EOF
       echo -e "${INFO}${BOLD}${GN}Writing configuration to ${FILEPATH}${CL}"
@@ -409,13 +410,13 @@ EOF
 
 CT_TYPE="${CT_TYPE}"
 DISK_SIZE="${DISK_SIZE}"
-CORE_COUNT="${DISK_SIZE}"
+CORE_COUNT="${CORE_COUNT}"
 RAM_SIZE="${RAM_SIZE}"
 HN="${HN}"
 BRG="${BRG}"
 APT_CACHER_IP="${APT_CACHER_IP:-none}"
 DISABLEIP6="${DISABLEIP6}"
-PW="${PW:-none}"
+PW='${PW:-none}'
 SSH="${SSH}"
 SSH_AUTHORIZED_KEY="${SSH_AUTHORIZED_KEY}"
 VERBOSE="${VERBOSE}"
@@ -427,6 +428,7 @@ SD="${SD:-none}"
 MAC="${MAC:-none}"
 NS="${NS:-none}"
 NET="${NET}"
+FUSE="${ENABLE_FUSE}"
 
 EOF
         echo -e "${INFO}${BOLD}${GN}Writing configuration to ${FILEPATH}${CL}"
@@ -794,7 +796,7 @@ advanced_settings() {
     echo -e "${ROOTSSH}${BOLD}${DGN}Root SSH Access: ${BGN}$SSH${CL}"
   fi
 
-  if (whiptail --backtitle "[dev] Proxmox VE Helper Scripts" --defaultno --title "FUSE Support" --yesno "Enable FUSE support?\nRequired for tools like rclone, mergerfs, AppImage, etc." 10 58); then
+  if (whiptail --backtitle "Proxmox VE Helper Scripts" --defaultno --title "FUSE Support" --yesno "Enable FUSE support?\nRequired for tools like rclone, mergerfs, AppImage, etc." 10 58); then
     ENABLE_FUSE="yes"
   else
     ENABLE_FUSE="no"
@@ -1091,6 +1093,8 @@ build_container() {
   else
     export FUNCTIONS_FILE_PATH="$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/install.func)"
   fi
+
+  export DIAGNOSTICS="$DIAGNOSTICS"
   export RANDOM_UUID="$RANDOM_UUID"
   export CACHER="$APT_CACHER"
   export CACHER_IP="$APT_CACHER_IP"
@@ -1142,7 +1146,7 @@ EOF
   fi
 
   if [ "$CT_TYPE" == "0" ]; then
-    if [[ "$APP" == "Channels" || "$APP" == "Emby" || "$APP" == "ErsatzTV" || "$APP" == "Frigate" || "$APP" == "Jellyfin" || "$APP" == "Plex" || "$APP" == "Scrypted" || "$APP" == "Tdarr" || "$APP" == "Unmanic" || "$APP" == "Ollama" || "$APP" == "FileFlows" ]]; then
+    if [[ "$APP" == "Channels" || "$APP" == "Emby" || "$APP" == "ErsatzTV" || "$APP" == "Frigate" || "$APP" == "Jellyfin" || "$APP" == "Plex" || "$APP" == "immich" || "$APP" == "Tdarr" || "$APP" == "Open WebUI" || "$APP" == "Unmanic" || "$APP" == "Ollama" || "$APP" == "FileFlows" ]]; then
       cat <<EOF >>"$LXC_CONFIG"
 # VAAPI hardware transcoding
 lxc.cgroup2.devices.allow: c 226:0 rwm
@@ -1154,7 +1158,7 @@ lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,creat
 EOF
     fi
   else
-    if [[ "$APP" == "Channels" || "$APP" == "Emby" || "$APP" == "ErsatzTV" || "$APP" == "Frigate" || "$APP" == "Jellyfin" || "$APP" == "Plex" || "$APP" == "Scrypted" || "$APP" == "Tdarr" || "$APP" == "Unmanic" || "$APP" == "Ollama" || "$APP" == "FileFlows" ]]; then
+    if [[ "$APP" == "Channels" || "$APP" == "Emby" || "$APP" == "ErsatzTV" || "$APP" == "Frigate" || "$APP" == "Jellyfin" || "$APP" == "Plex" || "$APP" == "immich" || "$APP" == "Tdarr" || "$APP" == "Open WebUI" || "$APP" == "Unmanic" || "$APP" == "Ollama" || "$APP" == "FileFlows" ]]; then
       if [[ -e "/dev/dri/renderD128" ]]; then
         if [[ -e "/dev/dri/card0" ]]; then
           cat <<EOF >>"$LXC_CONFIG"

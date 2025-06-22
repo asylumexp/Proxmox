@@ -15,7 +15,6 @@ update_os
 
 msg_info "Installing Dependencies"
 $STD apk add --no-cache \
-  gpg \
   git \
   nodejs \
   npm
@@ -45,16 +44,17 @@ command="/usr/local/bin/node-red"
 command_args="--max-old-space-size=128 -v"
 command_user="nodered"
 pidfile="/var/run/nodered.pid"
+command_background="yes"
 
 depend() {
     use net
 }' >$service_path
 
 chmod +x $service_path
-$STD rc-update add nodered default
 msg_ok "Created Node-RED Service"
 
 msg_info "Starting Node-RED"
+$STD rc-update add nodered
 $STD rc-service nodered start
 msg_ok "Started Node-RED"
 
