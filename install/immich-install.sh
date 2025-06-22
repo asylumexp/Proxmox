@@ -13,6 +13,8 @@ setting_up_container
 network_check
 update_os
 
+setup_uv
+
 msg_info "Configuring apt and installing dependencies"
 echo "deb http://deb.debian.org/debian testing main contrib" >/etc/apt/sources.list.d/immich.list
 cat <<EOF >/etc/apt/preferences.d/immich
@@ -27,7 +29,6 @@ $STD apt-get install --no-install-recommends -y \
   redis \
   autoconf \
   build-essential \
-  python3-venv \
   python3-dev \
   cmake \
   jq \
@@ -63,6 +64,7 @@ $STD apt-get install --no-install-recommends -y \
   mesa-utils \
   mesa-va-drivers \
   mesa-vulkan-drivers \
+  ocl-icd-libopencl1 \
   tini \
   zlib1g
 $STD apt-get install -y \
@@ -84,21 +86,17 @@ ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin/ffmpeg
 ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin/ffprobe
 msg_ok "Dependencies Installed"
 
-NODE_VERSION="22" install_node_and_modules
-PG_VERSION="16" install_postgresql
-
-read -r -p "${TAB3}Install OpenVINO dependencies for Intel HW-accelerated machine-learning? " prompt
+read -r -p "Install OpenVINO dependencies for Intel HW-accelerated machine-learning? y/N " prompt
 if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
   msg_info "Installing OpenVINO dependencies"
   touch ~/.openvino
-  $STD apt-get -y install --no-install-recommends ocl-icd-libopencl1
   tmp_dir=$(mktemp -d)
   $STD pushd "$tmp_dir"
-  curl -fsSL https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17384.11/intel-igc-core_1.0.17384.11_amd64.deb -O
-  curl -fsSL https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17384.11/intel-igc-opencl_1.0.17384.11_amd64.deb -O
-  curl -fsSL https://github.com/intel/compute-runtime/releases/download/24.31.30508.7/intel-opencl-icd_24.31.30508.7_amd64.deb -O
-  curl -fsSL https://github.com/intel/compute-runtime/releases/download/24.31.30508.7/libigdgmm12_22.4.1_amd64.deb -O
-  $STD dpkg -i ./*.deb
+  curl -fsSLO https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17384.11/intel-igc-core_1.0.17384.11_amd64.deb
+  curl -fsSLO https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17384.11/intel-igc-opencl_1.0.17384.11_amd64.deb
+  curl -fsSLO https://github.com/intel/compute-runtime/releases/download/24.31.30508.7/intel-opencl-icd_24.31.30508.7_amd64.deb
+  curl -fsSLO https://github.com/intel/compute-runtime/releases/download/24.31.30508.7/libigdgmm12_22.4.1_amd64.deb
+  $STD apt install -y ./*.deb
   $STD popd
   rm -rf "$tmp_dir"
   dpkg -l | grep "intel-opencl-icd" | awk '{print $3}' >~/.intel_version
@@ -112,11 +110,15 @@ if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
   msg_ok "Installed OpenVINO dependencies"
 fi
 
+NODE_VERSION="22" setup_nodejs
+PG_VERSION="16" PG_MODULES="pgvector" setup_postgresql
+
 msg_info "Setting up Postgresql Database"
-$STD apt-get install postgresql-16-pgvector
-curl -fsSL https://github.com/tensorchord/VectorChord/releases/download/0.3.0/postgresql-16-vchord_0.3.0-1_amd64.deb -o vchord.deb
-$STD dpkg -i vchord.deb
+VCHORD_RELEASE="$(curl -fsSL https://api.github.com/repos/tensorchord/vectorchord/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')"
+curl -fsSL "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_RELEASE}/postgresql-16-vchord_${VCHORD_RELEASE}-1_amd64.deb" -o vchord.deb
+$STD apt install -y ./vchord.deb
 rm vchord.deb
+echo "$VCHORD_RELEASE" >~/.vchord_version
 DB_NAME="immich"
 DB_USER="immich"
 DB_PASS=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9' | head -c18)
@@ -271,11 +273,6 @@ rm -rf "$SOURCE"/build
 } >~/.immich_library_revisions
 msg_ok "Custom Photo-processing Library Compiled"
 
-msg_info "Installing ${APPLICATION} (more patience please)"
-tmp_file=$(mktemp)
-RELEASE=$(curl -s https://api.github.com/repos/immich-app/immich/releases?per_page=1 | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
-curl -fsSL "https://github.com/immich-app/immich/archive/refs/tags/v${RELEASE}.zip" -o "$tmp_file"
-unzip -q "$tmp_file"
 INSTALL_DIR="/opt/${APPLICATION}"
 UPLOAD_DIR="${INSTALL_DIR}/upload"
 SRC_DIR="${INSTALL_DIR}/source"
@@ -283,8 +280,11 @@ APP_DIR="${INSTALL_DIR}/app"
 ML_DIR="${APP_DIR}/machine-learning"
 GEO_DIR="${INSTALL_DIR}/geodata"
 mkdir -p "$INSTALL_DIR"
-mv "$APPLICATION-$RELEASE"/ "$SRC_DIR"
 mkdir -p {"${APP_DIR}","${UPLOAD_DIR}","${GEO_DIR}","${ML_DIR}","${INSTALL_DIR}"/cache}
+
+fetch_and_deploy_gh_release "immich" "immich-app/immich" "tarball" "v1.135.0" "$SRC_DIR"
+
+msg_info "Installing ${APPLICATION} (more patience please)"
 
 cd "$SRC_DIR"/server
 $STD npm install -g node-gyp node-pre-gyp
@@ -304,23 +304,16 @@ cp LICENSE "$APP_DIR"
 msg_ok "Installed Immich Web Components"
 
 cd "$SRC_DIR"/machine-learning
-$STD python3 -m venv "$ML_DIR/ml-venv"
+export VIRTUAL_ENV="${ML_DIR}/ml-venv"
+$STD uv venv "$VIRTUAL_ENV"
 if [[ -f ~/.openvino ]]; then
   msg_info "Installing HW-accelerated machine-learning"
-  (
-    source "$ML_DIR"/ml-venv/bin/activate
-    $STD pip3 install uv
-    uv -q sync --extra openvino --no-cache --active
-  )
-  patchelf --clear-execstack "$ML_DIR"/ml-venv/lib/python3.11/site-packages/onnxruntime/capi/onnxruntime_pybind11_state.cpython-311-x86_64-linux-gnu.so
+  uv -q sync --extra openvino --no-cache --active
+  patchelf --clear-execstack "${VIRTUAL_ENV}/lib/python3.11/site-packages/onnxruntime/capi/onnxruntime_pybind11_state.cpython-311-x86_64-linux-gnu.so"
   msg_ok "Installed HW-accelerated machine-learning"
 else
   msg_info "Installing machine-learning"
-  (
-    source "$ML_DIR"/ml-venv/bin/activate
-    $STD pip3 install uv
-    uv -q sync --extra cpu --no-cache --active
-  )
+  uv -q sync --extra cpu --no-cache --active
   msg_ok "Installed machine-learning"
 fi
 cd "$SRC_DIR"
@@ -351,7 +344,9 @@ URL_LIST=(
   https://download.geonames.org/export/dump/cities500.zip
   https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_0_countries.geojson
 )
-echo "${URL_LIST[@]}" | xargs -n1 -P 8 wget -q
+for geo in "${URL_LIST[@]}"; do
+  curl -fsSLO "$geo"
+done
 unzip -q cities500.zip
 date --iso-8601=seconds | tr -d "\n" >geodata-date.txt
 rm cities500.zip
@@ -361,7 +356,6 @@ msg_ok "Installed GeoNames data"
 
 mkdir -p /var/log/immich
 touch /var/log/immich/{web.log,ml.log}
-echo "$RELEASE" >/opt/"${APPLICATION}"_version.txt
 msg_ok "Installed ${APPLICATION}"
 
 msg_info "Creating user, env file, scripts & services"
@@ -390,13 +384,13 @@ cat <<EOF >"${ML_DIR}"/ml_start.sh
 #!/usr/bin/env bash
 
 cd ${ML_DIR}
-. ml-venv/bin/activate
+. ${VIRTUAL_ENV}/bin/activate
 
 set -a
 . ${INSTALL_DIR}/.env
 set +a
 
-python -m immich_ml
+python3 -m immich_ml
 EOF
 chmod +x "$ML_DIR"/ml_start.sh
 cat <<EOF >/etc/systemd/system/"${APPLICATION}"-web.service
@@ -453,7 +447,6 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-rm -f "$tmp_file"
 $STD apt-get -y autoremove
 $STD apt-get -y autoclean
 msg_ok "Cleaned"

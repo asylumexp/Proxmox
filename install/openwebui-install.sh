@@ -27,7 +27,7 @@ $STD apt-get install -y --no-install-recommends \
 rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Setup Python3"
 
-NODE_VERSION="22" install_node_and_modules
+NODE_VERSION="22" setup_nodejs
 
 msg_info "Installing Open WebUI (Patience)"
 $STD git clone https://github.com/open-webui/open-webui.git /opt/open-webui

@@ -24,7 +24,7 @@ rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 $STD pip install --upgrade pip
 msg_ok "Setup Python3"
 
-NODE_VERSION="22" install_node_and_modules
+NODE_VERSION="22" setup_nodejs
 
 msg_info "Installing go2rtc"
 mkdir -p /usr/local/go2rtc/bin
