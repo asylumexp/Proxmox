@@ -1,5 +1,5 @@
 # Copyright (c) 2021-2025 community-scripts ORG
-# License: MIT | https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/LICENSE
+# License: MIT | https://raw.githubusercontent.com/asylumexp/Proxmox/main/LICENSE
 
 # if ! declare -f wait_for >/dev/null; then
 #   echo "[DEBUG] Undefined function 'wait_for' used from: ${BASH_SOURCE[*]}" >&2
@@ -228,7 +228,7 @@ silent() {
 get_header() {
   local app_name=$(echo "${APP,,}" | tr -d ' ')
   local app_type=${APP_TYPE:-ct} # Default 'ct'
-  local header_url="https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/${app_type}/headers/${app_name}"
+  local header_url="https://raw.githubusercontent.com/asylumexp/Proxmox/main/${app_type}/headers/${app_name}"
   local local_header_path="/usr/local/community-scripts/headers/${app_type}/${app_name}"
 
   mkdir -p "$(dirname "$local_header_path")"

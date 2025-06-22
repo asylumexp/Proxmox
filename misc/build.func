@@ -911,6 +911,7 @@ start() {
 			apt-get install -y whiptail &>/dev/null
 		elif [ -f /etc/alpine-release ]; then
 			apk add --no-cache whiptail &>/dev/null
+		fi
 	fi
 	
   if command -v pveversion >/dev/null 2>&1; then

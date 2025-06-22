@@ -8,7 +8,7 @@ if ! command -v curl >/dev/null 2>&1; then
   apt-get update >/dev/null 2>&1
   apt-get install -y curl >/dev/null 2>&1
 fi
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/core.func)
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/core.func)
 load_functions
 # This function enables IPv6 if it's not disabled and sets verbose mode
 verb_ip6() {
@@ -28,7 +28,7 @@ catch_errors() {
 
 # This function handles errors
 error_handler() {
-  source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func)
+  source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/api.func)
   printf "\e[?25h"
   local exit_code="$?"
   local line_number="$1"
@@ -146,7 +146,7 @@ EOF
   $STD apt-get update
   $STD apt-get install -y sudo curl mc gnupg2 openssh-server wget
 
-  source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/tools.func)
+  source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/tools.func)
 }
 
 # This function modifies the message of the day (motd) and SSH settings
