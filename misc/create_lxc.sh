@@ -2,8 +2,7 @@
 
 # Copyright (c) 2021-2025 tteck
 # Author: tteck (tteckster)
-# Co-Author: MickLesk
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 
 # This sets verbose mode if the global variable is set to "yes"
 # if [ "$VERBOSE" == "yes" ]; then set -x; fi
@@ -165,38 +164,64 @@ fi
 $STD msg_ok "LXC Template List Updated"
 
 # Get LXC template string
-TEMPLATE_SEARCH="${PCT_OSTYPE}-${PCT_OSVERSION:-}"
-mapfile -t TEMPLATES < <(pveam available -section system | sed -n "s/.*\($TEMPLATE_SEARCH.*\)/\1/p" | sort -t - -k 2 -V)
-
-if [ ${#TEMPLATES[@]} -eq 0 ]; then
-  msg_error "No matching LXC template found for '${TEMPLATE_SEARCH}'. Make sure your host can reach the Proxmox template repository."
-  exit 207
+if [ $PCT_OSTYPE = debian ]; then
+  if [ $PCT_OSVERSION = 11 ]; then
+    TEMPLATE_VARIENT=bullseye
+  else
+    TEMPLATE_VARIENT=bookworm
+  fi
+elif [ $PCT_OSTYPE = alpine ]; then
+  TEMPLATE_VARIENT=3.19
+else
+  if [ $PCT_OSVERSION = 20.04 ]; then
+    TEMPLATE_VARIENT=focal
+  elif [ $PCT_OSVERSION = 24.04 ]; then
+    TEMPLATE_VARIENT=noble
+  elif [ $PCT_OSVERSION = 24.10 ]; then
+    TEMPLATE_VARIENT=oracular
+  else
+    TEMPLATE_VARIENT=jammy
+  fi
 fi
 
-TEMPLATE="${TEMPLATES[-1]}"
-TEMPLATE_PATH="$(pvesm path $TEMPLATE_STORAGE:vztmpl/$TEMPLATE 2>/dev/null || echo "/var/lib/vz/template/cache/$TEMPLATE")"
-
-# Check if template exists and is valid
-if ! pveam list "$TEMPLATE_STORAGE" | grep -q "$TEMPLATE" || ! zstdcat "$TEMPLATE_PATH" | tar -tf - >/dev/null 2>&1; then
-  msg_warn "Template $TEMPLATE not found or appears to be corrupted. Re-downloading."
-
-  [[ -f "$TEMPLATE_PATH" ]] && rm -f "$TEMPLATE_PATH"
-  for attempt in {1..3}; do
-    msg_info "Attempt $attempt: Downloading LXC template..."
-
-    if timeout 120 pveam download "$TEMPLATE_STORAGE" "$TEMPLATE" >/dev/null 2>&1; then
-      msg_ok "Template download successful."
-      break
+if [ -d "/var/lib/vz/template/cache" ]; then 
+  TEMPLATE=$PCT_OSTYPE-$TEMPLATE_VARIENT-rootfs.tar.xz
+  # Download template if needed
+  if [ ! -f "/var/lib/vz/template/cache/$TEMPLATE" ]; then
+    if [ $PCT_OSTYPE = debian ]; then
+      msg_info "Downloading LXC Template"
+      wget -q $(curl -s https://api.github.com/repos/asylumexp/debian-ifupdown2-lxc/releases/latest | grep download | grep debian-$TEMPLATE_VARIENT-arm64-rootfs.tar.xz | cut -d\" -f4) -O /var/lib/vz/template/cache/$TEMPLATE -q || exit "A problem occured while downloading the LXC template."
+      msg_ok "Downloaded LXC Template"
+    else
+      templateurl="https://jenkins.linuxcontainers.org/job/image-$PCT_OSTYPE/architecture=arm64,release=$TEMPLATE_VARIENT,variant=default/lastStableBuild/artifact/rootfs.tar.xz"
+      msg_info "Downloading LXC Template"
+      wget $templateurl -O /var/lib/vz/template/cache/$TEMPLATE -q || exit "A problem occured while downloading the LXC template."
+      msg_ok "Downloaded LXC Template"
     fi
+  fi
+else
+  # Update LXC template list
+  msg_info "Updating LXC Template List"
+  pveam update >/dev/null
+  msg_ok "Updated LXC Template List"
+  if [ $PCT_OSTYPE = debian ]; then
+    msg_error "Debian unsupported with this download method. Exiting."
+  elif [ $PCT_OSTYPE = alpine]; then
+    $TEMPLATE_VARIENT = 3.18
+  fi
 
-    if [ $attempt -eq 3 ]; then
-      msg_error "Failed after 3 attempts. Please check your Proxmox host’s internet access or manually run:\n  pveam download $TEMPLATE_STORAGE $TEMPLATE"
-      exit 208
-    fi
+  TEMPLATE="$(pveam available | grep -E "arm64.*$PCT_OSTYPE-$TEMPLATE_VARIENT" | sed 's/arm64[[:space:]]*//')"
 
-    sleep $((attempt * 5))
-  done
+  # Download LXC template if needed
+  if ! pveam list $TEMPLATE_STORAGE | grep -F $TEMPLATE > /dev/null; then
+    msg_info "Downloading LXC Template"
+    pveam download $TEMPLATE_STORAGE $TEMPLATE >/dev/null ||
+      exit "A problem occured while downloading the LXC template."
+    msg_ok "Downloaded LXC Template"
+  fi
 fi
+msg_ok "LXC Template is ready to use."
+
 
 msg_ok "LXC Template '$TEMPLATE' is ready to use."
 # Check and fix subuid/subgid
