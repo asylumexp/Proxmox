@@ -14,7 +14,63 @@ Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit 
 All LXC instances created using this repository come pre-installed with Midnight Commander, which is a command-line tool (`mc`) that offers a user-friendly file and directory management interface for the terminal environment.
 
 
+## 2025-06-24
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Update all Alpine Scripts to atleast 1GB HDD [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#5418](https://github.com/community-scripts/ProxmoxVE/pull/5418))
+
+  - #### ✨ New Features
+
+    - [core]: Improve GitHub release fetch robustness with split timeouts and retry logic [@MickLesk](https://github.com/MickLesk) ([#5422](https://github.com/community-scripts/ProxmoxVE/pull/5422))
+    - Minio: use latest version or latest feature rich version [@MickLesk](https://github.com/MickLesk) ([#5423](https://github.com/community-scripts/ProxmoxVE/pull/5423))
+
+  - #### 🔧 Refactor
+
+    - Refactor: MeTube to uv based install [@MickLesk](https://github.com/MickLesk) ([#5411](https://github.com/community-scripts/ProxmoxVE/pull/5411))
+    - Refactor: Prometheus PVE Exporter to uv based install [@MickLesk](https://github.com/MickLesk) ([#5412](https://github.com/community-scripts/ProxmoxVE/pull/5412))
+    - Refactor: ESPHome to uv based install [@MickLesk](https://github.com/MickLesk) ([#5413](https://github.com/community-scripts/ProxmoxVE/pull/5413))
+
+## 2025-06-23
+
+### 🆕 New Scripts
+
+  - Alpine-Forgejo by @Johann3s-H [@MickLesk](https://github.com/MickLesk) ([#5396](https://github.com/community-scripts/ProxmoxVE/pull/5396))
+
+### 🚀 Updated Scripts
+
+  - [core]: tools.func -> autoupdate npm to newest version on install [@MickLesk](https://github.com/MickLesk) ([#5397](https://github.com/community-scripts/ProxmoxVE/pull/5397))
+
+  - #### 🐞 Bug Fixes
+
+    - PLANKA: Fix the update procedure [@tremor021](https://github.com/tremor021) ([#5391](https://github.com/community-scripts/ProxmoxVE/pull/5391))
+    - changed trilium github repo [@miggi92](https://github.com/miggi92) ([#5390](https://github.com/community-scripts/ProxmoxVE/pull/5390))
+    - changedetection: fix: hermetic msedge [@CrazyWolf13](https://github.com/CrazyWolf13) ([#5388](https://github.com/community-scripts/ProxmoxVE/pull/5388))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - MariaDB: Add information about Adminer on website [@tremor021](https://github.com/tremor021) ([#5400](https://github.com/community-scripts/ProxmoxVE/pull/5400))
+
 ## 2025-06-22
+
+### 🚀 Updated Scripts
+
+  - [core]: fix timing issues while template update & timezone setup at create new LXC [@MickLesk](https://github.com/MickLesk) ([#5358](https://github.com/community-scripts/ProxmoxVE/pull/5358))
+- alpine: increase hdd to 1gb [@MickLesk](https://github.com/MickLesk) ([#5377](https://github.com/community-scripts/ProxmoxVE/pull/5377))
+
+  - #### 🐞 Bug Fixes
+
+    - fix: casing and naming error after #5254 [@GoetzGoerisch](https://github.com/GoetzGoerisch) ([#5380](https://github.com/community-scripts/ProxmoxVE/pull/5380))
+    - fix: install_adminer > setup_adminer [@MickLesk](https://github.com/MickLesk) ([#5356](https://github.com/community-scripts/ProxmoxVE/pull/5356))
+    - gitea: Update gitea.sh to stop update failures [@tystuyfzand](https://github.com/tystuyfzand) ([#5361](https://github.com/community-scripts/ProxmoxVE/pull/5361))
+
+  - #### 🔧 Refactor
+
+    - Immich: unpin release; use fetch & deploy function for update [@vhsdream](https://github.com/vhsdream) ([#5355](https://github.com/community-scripts/ProxmoxVE/pull/5355))
 
 ## 2025-06-21
 
