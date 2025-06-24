@@ -3,7 +3,7 @@
 # Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # Co-Author: michelroegl-brunner
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://stonith404.github.io/pingvin-share/introduction
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"

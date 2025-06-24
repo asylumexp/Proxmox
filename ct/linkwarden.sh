@@ -2,7 +2,7 @@
 source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/build.func)
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: MickLesk (CanbiZ)
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://linkwarden.app/
 
 APP="Linkwarden"

@@ -2,7 +2,7 @@
 source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/build.func)
 # Copyright (c) community-scripts ORG
 # Author: Michelle Zitzerman (Sinofage)
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://beszel.dev/
 
 APP="Beszel"

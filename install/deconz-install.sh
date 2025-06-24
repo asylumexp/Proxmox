@@ -2,7 +2,7 @@
 
 # Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://www.phoscon.de/en/conbee2/software#deconz
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"

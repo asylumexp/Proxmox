@@ -2,7 +2,7 @@
 
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: thost96 (thost96)
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://www.proxmox.com/en/products/proxmox-mail-gateway
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"

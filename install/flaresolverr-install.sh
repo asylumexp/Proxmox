@@ -3,7 +3,7 @@
 # Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # Co-Author: remz1337
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://github.com/FlareSolverr/FlareSolverr
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
