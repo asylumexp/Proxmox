@@ -638,7 +638,7 @@ function setup_mongodb() {
 
   case "$DISTRO_ID" in
   ubuntu) MONGO_BASE_URL="https://repo.mongodb.org/apt/ubuntu" ;;
-  debian) MONGO_BASE_URL="https://repo.mongodb.org/apt/debian" ;;
+  debian) MONGO_BASE_URL="https://repo.mongodb.org/apt/ubuntu" ;;
   *)
     msg_error "Unsupported distribution: $DISTRO_ID"
     return 1
@@ -670,11 +670,11 @@ function setup_mongodb() {
   fi
 
   curl -fsSL "https://pgp.mongodb.com/server-${MONGO_VERSION}.asc" | gpg --dearmor -o "/etc/apt/trusted.gpg.d/mongodb-${MONGO_VERSION}.gpg"
-  echo "deb [signed-by=/etc/apt/trusted.gpg.d/mongodb-${MONGO_VERSION}.gpg] ${MONGO_BASE_URL} ${DISTRO_CODENAME}/mongodb-org/${MONGO_VERSION} main" \
+  echo "deb [signed-by=/etc/apt/trusted.gpg.d/mongodb-${MONGO_VERSION}.gpg] ${MONGO_BASE_URL} jammy/mongodb-org/${MONGO_VERSION} multiverse" \
     >"$REPO_LIST"
 
   $STD apt-get update || {
-    msg_error "APT update failed — invalid MongoDB repo for ${DISTRO_ID}-${DISTRO_CODENAME}?"
+    msg_error "APT update failed — invalid MongoDB repo for ${DISTRO_ID}-jammy?"
     return 1
   }
 
