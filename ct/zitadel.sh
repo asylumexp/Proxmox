@@ -35,8 +35,8 @@ function update_script() {
 
     msg_info "Updating $APP to ${RELEASE}"
     cd /tmp
-    curl -fsSL "https://github.com/zitadel/zitadel/releases/download/v$RELEASE/zitadel-linux-amd64.tar.gz" | tar -xz
-    mv zitadel-linux-amd64/zitadel /usr/local/bin
+    curl -fsSL "https://github.com/zitadel/zitadel/releases/download/v$RELEASE/zitadel-linux-arm64.tar.gz" | tar -xz
+    mv zitadel-linux-arm64/zitadel /usr/local/bin
     $STD zitadel setup --masterkeyFile /opt/zitadel/.masterkey --config /opt/zitadel/config.yaml --init-projections=true
     echo "${RELEASE}" >/opt/${APP}_version.txt
     msg_ok "Updated $APP to ${RELEASE}"
@@ -46,7 +46,7 @@ function update_script() {
     msg_ok "Started $APP"
 
     msg_info "Cleaning Up"
-    rm -rf /tmp/zitadel-linux-amd64
+    rm -rf /tmp/zitadel-linux-arm64
     msg_ok "Cleanup Completed"
     msg_ok "Update Successful"
   else

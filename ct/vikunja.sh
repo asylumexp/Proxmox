@@ -36,9 +36,9 @@ function update_script() {
     msg_info "Updating ${APP} to ${RELEASE}"
     cd /opt
     rm -rf /opt/vikunja/vikunja
-    curl -fsSL "https://dl.vikunja.io/vikunja/$RELEASE/vikunja-$RELEASE-amd64.deb" -o $(basename "https://dl.vikunja.io/vikunja/$RELEASE/vikunja-$RELEASE-amd64.deb")
+    curl -fsSL "https://dl.vikunja.io/vikunja/$RELEASE/vikunja-$RELEASE-arm64.deb" -o $(basename "https://dl.vikunja.io/vikunja/$RELEASE/vikunja-$RELEASE-arm64.deb")
     export DEBIAN_FRONTEND=noninteractive
-    $STD dpkg -i vikunja-$RELEASE-amd64.deb
+    $STD dpkg -i vikunja-$RELEASE-arm64.deb
     echo "${RELEASE}" >/opt/${APP}_version.txt
     msg_ok "Updated ${APP}"
 
@@ -47,7 +47,7 @@ function update_script() {
     msg_ok "Started ${APP}"
 
     msg_info "Cleaning Up"
-    rm -rf /opt/vikunja-$RELEASE-amd64.deb
+    rm -rf /opt/vikunja-$RELEASE-arm64.deb
     msg_ok "Cleaned"
     msg_ok "Updated Successfully"
   else

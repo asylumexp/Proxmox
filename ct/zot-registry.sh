@@ -36,7 +36,7 @@ function update_script() {
     msg_ok "Stopped Zot service"
 
     msg_info "Updating Zot to ${RELEASE}"
-    curl -fsSL "https://github.com/project-zot/zot/releases/download/${RELEASE}/zot-linux-amd64" -o /usr/bin/zot
+    curl -fsSL "https://github.com/project-zot/zot/releases/download/${RELEASE}/zot-linux-arm64" -o /usr/bin/zot
     chmod +x /usr/bin/zot
     chown root:root /usr/bin/zot
     echo "${RELEASE}" >~/.${APP}

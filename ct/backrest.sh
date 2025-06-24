@@ -36,7 +36,7 @@ function update_script() {
     msg_info "Updating ${APP} to ${RELEASE}"
     temp_file=$(mktemp)
     rm -f /opt/backrest/bin/backrest
-    curl -fsSL "https://github.com/garethgeorge/backrest/releases/download/v${RELEASE}/backrest_Linux_x86_64.tar.gz" -o "$temp_file"
+    curl -fsSL "https://github.com/garethgeorge/backrest/releases/download/v${RELEASE}/backrest_Linux_arm64.tar.gz" -o "$temp_file"
     tar xzf $temp_file -C /opt/backrest/bin
     chmod +x /opt/backrest/bin/backrest
     echo "${RELEASE}" >/opt/${APP}_version.txt

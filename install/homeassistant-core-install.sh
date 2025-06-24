@@ -53,7 +53,6 @@ $STD apt-get install -y \
   python3.13 \
   python3.13-dev \
   python3.13-venv
-rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 ln -sf /usr/bin/python3.13 /usr/bin/python3
 msg_ok "Setup Python3"
 

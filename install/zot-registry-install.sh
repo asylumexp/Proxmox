@@ -19,7 +19,7 @@ msg_ok "Installed Dependencies"
 
 msg_info "Installing Zot Registry"
 RELEASE=$(curl -fsSL https://api.github.com/repos/project-zot/zot/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
-curl -fsSL "https://github.com/project-zot/zot/releases/download/${RELEASE}/zot-linux-amd64" -o /usr/bin/zot
+curl -fsSL "https://github.com/project-zot/zot/releases/download/${RELEASE}/zot-linux-arm64" -o /usr/bin/zot
 chmod +x /usr/bin/zot
 chown root:root /usr/bin/zot
 mkdir -p /etc/zot

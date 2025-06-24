@@ -37,7 +37,7 @@ function update_script() {
 
     msg_info "Updating $APP to v${RELEASE}"
     tmp_file=$(mktemp)
-    curl -fsSL "https://github.com/slskd/slskd/releases/download/${RELEASE}/slskd-${RELEASE}-linux-x64.zip" -o $tmp_file
+    curl -fsSL "https://github.com/slskd/slskd/releases/download/${RELEASE}/slskd-${RELEASE}-linux-arm64.zip" -o $tmp_file
     $STD unzip -oj $tmp_file slskd -d /opt/${APP}
     echo "${RELEASE}" >/opt/${APP}_version.txt
     msg_ok "Updated $APP to v${RELEASE}"
