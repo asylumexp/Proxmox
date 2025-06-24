@@ -33,7 +33,7 @@ function update_script() {
   if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
     msg_info "Updating $APP to ${RELEASE}"
     rm -f /opt/argus/Argus
-    curl -fsSL "https://github.com/release-argus/Argus/releases/download/${RELEASE}/Argus-${RELEASE}.linux-amd64" -o /opt/argus/Argus
+    curl -fsSL "https://github.com/release-argus/Argus/releases/download/${RELEASE}/Argus-${RELEASE}.linux-arm64" -o /opt/argus/Argus
     chmod +x /opt/argus/Argus
     systemctl restart argus
     echo "${RELEASE}" >/opt/${APP}_version.txt

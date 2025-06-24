@@ -21,7 +21,7 @@ msg_ok "Installed Dependencies"
 msg_info "Setup Argus"
 RELEASE=$(curl -fsSL https://api.github.com/repos/release-argus/Argus/releases/latest | jq -r .tag_name | sed 's/^v//')
 mkdir -p /opt/argus
-curl -fsSL "https://github.com/release-argus/Argus/releases/download/${RELEASE}/Argus-${RELEASE}.linux-amd64" -o /opt/argus/Argus
+curl -fsSL "https://github.com/release-argus/Argus/releases/download/${RELEASE}/Argus-${RELEASE}.linux-arm64" -o /opt/argus/Argus
 chmod +x /opt/argus/Argus
 msg_ok "Setup Argus"
 
