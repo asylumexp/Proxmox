@@ -60,6 +60,7 @@ on_error() {
   *) msg_error "Script failed at line $lineno with exit code $exit_code" ;;
   esac
 
+	msg_error "Please make an issue on GitHub if you believe this is a script bug."
   exit "$exit_code"
 }
 
