@@ -14,18 +14,116 @@ Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit 
 All LXC instances created using this repository come pre-installed with Midnight Commander, which is a command-line tool (`mc`) that offers a user-friendly file and directory management interface for the terminal environment.
 
 
-## 2025-06-24
+## 2025-06-29
+
+## 2025-06-28
 
 ### 🚀 Updated Scripts
 
   - #### 🐞 Bug Fixes
 
+    - Ollama: Clean up old Ollama files before running update [@tremor021](https://github.com/tremor021) ([#5534](https://github.com/community-scripts/ProxmoxVE/pull/5534))
+    - ONLYOFFICE: Update install script to manually create RabbitMQ user [@tremor021](https://github.com/tremor021) ([#5535](https://github.com/community-scripts/ProxmoxVE/pull/5535))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - Booklore: Correct documentation and website  [@pieman3000](https://github.com/pieman3000) ([#5528](https://github.com/community-scripts/ProxmoxVE/pull/5528))
+
+## 2025-06-27
+
+### 🆕 New Scripts
+
+  - BookLore ([#5524](https://github.com/community-scripts/ProxmoxVE/pull/5524))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - wizarr: remove unneeded tmp file [@MickLesk](https://github.com/MickLesk) ([#5517](https://github.com/community-scripts/ProxmoxVE/pull/5517))
+
+### 🧰 Maintenance
+
+  - #### 🐞 Bug Fixes
+
+    - Remove npm legacy errors, created single source of truth for ESlint. updated analytics url. updated script background [@BramSuurdje](https://github.com/BramSuurdje) ([#5498](https://github.com/community-scripts/ProxmoxVE/pull/5498))
+
+  - #### 📂 Github
+
+    - New workflow to push to gitea and change links to gitea [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#5510](https://github.com/community-scripts/ProxmoxVE/pull/5510))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - Wireguard, Update Link to Documentation. [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#5514](https://github.com/community-scripts/ProxmoxVE/pull/5514))
+
+## 2025-06-26
+
+### 🆕 New Scripts
+
+  - ConvertX ([#5484](https://github.com/community-scripts/ProxmoxVE/pull/5484))
+
+### 🚀 Updated Scripts
+
+  - [tools] Update setup_nodejs function [@tremor021](https://github.com/tremor021) ([#5488](https://github.com/community-scripts/ProxmoxVE/pull/5488))
+- [tools] Fix setup_mongodb function [@tremor021](https://github.com/tremor021) ([#5486](https://github.com/community-scripts/ProxmoxVE/pull/5486))
+
+## 2025-06-25
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Docmost: Increase resources [@tremor021](https://github.com/tremor021) ([#5458](https://github.com/community-scripts/ProxmoxVE/pull/5458))
+
+  - #### ✨ New Features
+
+    - tools.func: new helper for imagemagick [@MickLesk](https://github.com/MickLesk) ([#5452](https://github.com/community-scripts/ProxmoxVE/pull/5452))
+    - YunoHost: add Update-Function [@MickLesk](https://github.com/MickLesk) ([#5450](https://github.com/community-scripts/ProxmoxVE/pull/5450))
+
+  - #### 🔧 Refactor
+
+    - Refactor: Tailscale  [@MickLesk](https://github.com/MickLesk) ([#5454](https://github.com/community-scripts/ProxmoxVE/pull/5454))
+
+### 🌐 Website
+
+  - #### 🐞 Bug Fixes
+
+    - Update Tooltips component to conditionally display updateable status based on item type [@BramSuurdje](https://github.com/BramSuurdje) ([#5461](https://github.com/community-scripts/ProxmoxVE/pull/5461))
+    - Refactor CommandMenu to prevent duplicate scripts across categories [@BramSuurdje](https://github.com/BramSuurdje) ([#5463](https://github.com/community-scripts/ProxmoxVE/pull/5463))
+
+  - #### ✨ New Features
+
+    - Enhance InstallCommand component to support Gitea as an alternative source for installation scripts. [@BramSuurdje](https://github.com/BramSuurdje) ([#5464](https://github.com/community-scripts/ProxmoxVE/pull/5464))
+
+  - #### 📝 Script Information
+
+    - Website: mark VM's and "OS"-LXC's as updatable [@MickLesk](https://github.com/MickLesk) ([#5453](https://github.com/community-scripts/ProxmoxVE/pull/5453))
+
+## 2025-06-24
+
+### 🆕 New Scripts
+
+  - ONLYOFFICE Docs ([#5420](https://github.com/community-scripts/ProxmoxVE/pull/5420))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - GoMFT: tmpl bugfix to work with current version until a new release pushed [@MickLesk](https://github.com/MickLesk) ([#5435](https://github.com/community-scripts/ProxmoxVE/pull/5435))
     - Update all Alpine Scripts to atleast 1GB HDD [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#5418](https://github.com/community-scripts/ProxmoxVE/pull/5418))
 
   - #### ✨ New Features
 
-    - [core]: Improve GitHub release fetch robustness with split timeouts and retry logic [@MickLesk](https://github.com/MickLesk) ([#5422](https://github.com/community-scripts/ProxmoxVE/pull/5422))
+    - general: update all alpine scripts to version 3.22 [@MickLesk](https://github.com/MickLesk) ([#5428](https://github.com/community-scripts/ProxmoxVE/pull/5428))
     - Minio: use latest version or latest feature rich version [@MickLesk](https://github.com/MickLesk) ([#5423](https://github.com/community-scripts/ProxmoxVE/pull/5423))
+    - [core]: Improve GitHub release fetch robustness with split timeouts and retry logic [@MickLesk](https://github.com/MickLesk) ([#5422](https://github.com/community-scripts/ProxmoxVE/pull/5422))
+
+  - #### 💥 Breaking Changes
+
+    - bump scripts (Installer) from Ubuntu 22.04 to Ubuntu 24.04 (agentdvr, emby, jellyfin, plex, shinobi) [@MickLesk](https://github.com/MickLesk) ([#5434](https://github.com/community-scripts/ProxmoxVE/pull/5434))
 
   - #### 🔧 Refactor
 
