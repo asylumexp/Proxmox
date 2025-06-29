@@ -1,4 +1,4 @@
-					"use client";
+"use client";
 import { ArrowRightIcon, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FaGithub } from "react-icons/fa";
@@ -18,7 +18,6 @@ import { Separator } from "@/components/ui/separator";
 import { CardFooter } from "@/components/ui/card";
 import Particles from "@/components/ui/particles";
 import { Button } from "@/components/ui/button";
-import { basePath } from "@/config/site-config";
 import FAQ from "@/components/faq";
 import { cn } from "@/lib/utils";
 
@@ -82,7 +81,6 @@ export default function Page() {
                       className="flex items-center justify-center"
                     >
                       <FaGithub className="mr-2 h-4 w-4" />
-                      {" "}
                       Tteck&apos;s GitHub
                     </a>
                   </Button>
@@ -94,19 +92,17 @@ export default function Page() {
                       className="flex items-center justify-center"
                     >
                       <ExternalLink className="mr-2 h-4 w-4" />
-                      {" "}
                       Upstream - Proxmox Helper Scripts
                     </a>
                   </Button>
-									<Button className="w-full" asChild>
+                  <Button className="w-full" asChild>
                     <a
-                      href={`https://github.com/asylumexp/Proxmox`}
+                      href="https://github.com/asylumexp/Proxmox"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center"
                     >
                       <ExternalLink className="mr-2 h-4 w-4" />
-                      {" "}
                       Proxmox Helper Scripts ARM64
                     </a>
                   </Button>

@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { basePath } from "@/config/site-config";
 
 function generateInstallSourceUrl(slug: string) {
   const baseUrl = `https://raw.githubusercontent.com/asylumexp/Proxmox/main`;
