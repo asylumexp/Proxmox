@@ -332,7 +332,7 @@ function START_SCRIPT() {
     advanced_settings
   fi
 }
-ARCH_CHECK
+
 START_SCRIPT
 post_to_api_vm
 while read -r line; do
