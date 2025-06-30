@@ -10,8 +10,8 @@ import { getDisplayValueFromType } from "../script-info-blocks";
 
 function getInstallCommand(scriptPath = "", isAlpine = false, useGitea = false) {
   const githubUrl = `https://raw.githubusercontent.com/asylumexp/Proxmox/main/${scriptPath}`;
-  const giteaUrl = `https://git.community-scripts.org/asylumexp/Proxmox/raw/branch/main/${scriptPath}`;
-  const url = useGitea ? giteaUrl : githubUrl;
+  // const giteaUrl = `https://git.community-scripts.org/asylumexp/Proxmox/raw/branch/main/${scriptPath}`;
+  const url = useGitea ? githubUrl : githubUrl;
   return isAlpine ? `bash -c "$(curl -fsSL ${url})"` : `bash -c "$(curl -fsSL ${url})"`;
 }
 
@@ -91,9 +91,8 @@ export default function InstallCommand({ item }: { item: Script }) {
       <AlertDescription className="text-sm">
         <strong>When to use Gitea:</strong>
         {" "}
-        GitHub may have issues including slow connections, delayed updates after bug
-        fixes, no IPv6 support, API rate limits (60/hour). Use our Gitea mirror as a reliable alternative when
-        experiencing these issues.
+        Gitea is not supported, as this is a mirror specifically of the upstream repo.
+				I have left the option here in case this changes in the future.
       </AlertDescription>
     </Alert>
   );
