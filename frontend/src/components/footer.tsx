@@ -11,10 +11,9 @@ export default function Footer() {
       <div className="mx-6 w-full flex justify-between text-xs sm:text-sm text-muted-foreground">
         <div className="flex items-center">
           <p>
-            Website built by the community. The source code is available on
-            {" "}
+            Website built by the community. The source code is available on{" "}
             <Link
-              href={`https://github.com/asylumexp/Proxmox/tree/main/frontend`}
+              href="https://github.com/asylumexp/Proxmox/tree/main/frontend"
               target="_blank"
               rel="noreferrer"
               className="font-semibold underline-offset-2 duration-300 hover:underline"
@@ -30,17 +29,13 @@ export default function Footer() {
             href="/json-editor"
             className={cn(buttonVariants({ variant: "link" }), "text-muted-foreground flex items-center gap-2")}
           >
-            <FileJson className="h-4 w-4" />
-            {" "}
-            JSON Editor
+            <FileJson className="h-4 w-4" /> JSON Editor
           </Link>
           <Link
             href="/data"
             className={cn(buttonVariants({ variant: "link" }), "text-muted-foreground flex items-center gap-2")}
           >
-            <Server className="h-4 w-4" />
-            {" "}
-            API Data
+            <Server className="h-4 w-4" /> API Data
           </Link>
         </div>
       </div>
