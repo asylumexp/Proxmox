@@ -92,7 +92,7 @@ export default function InstallCommand({ item }: { item: Script }) {
         <strong>When to use Gitea:</strong>
         {" "}
         Gitea is not supported, as this is a mirror specifically of the upstream repo.
-				I have left the option here in case this changes in the future.
+        I have left the option here in case this changes in the future.
       </AlertDescription>
     </Alert>
   );
