@@ -1,7 +1,6 @@
 import { FileJson, Server } from "lucide-react";
 import Link from "next/link";
 
-import { basePath } from "@/config/site-config";
 import { cn } from "@/lib/utils";
 
 import { buttonVariants } from "./ui/button";

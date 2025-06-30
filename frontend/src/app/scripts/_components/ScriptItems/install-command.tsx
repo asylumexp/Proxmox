@@ -5,7 +5,6 @@ import type { Script } from "@/lib/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import CodeCopyButton from "@/components/ui/code-copy-button";
-import { basePath } from "@/config/site-config";
 
 import { getDisplayValueFromType } from "../script-info-blocks";
 
