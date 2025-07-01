@@ -120,7 +120,7 @@ if [[ -f "$INSTALL_PATH" ]]; then
   read -r update_prompt
   if [[ "${update_prompt,,}" =~ ^(y|yes)$ ]]; then
     msg_info "Updating ${APP}"
-    curl -fsSL https://github.com/gtsteffaniak/filebrowser/releases/latest/download/linux-amd64-filebrowser -o "$INSTALL_PATH"
+    curl -fsSL https://github.com/gtsteffaniak/filebrowser/releases/latest/download/linux-arm64-filebrowser -o "$INSTALL_PATH"
     chmod +x "$INSTALL_PATH"
     msg_ok "Updated ${APP}"
     exit 0
@@ -140,7 +140,7 @@ read -r install_prompt
 if [[ "${install_prompt,,}" =~ ^(y|yes)$ ]]; then
   msg_info "Installing ${APP} on ${OS}"
   $PKG_MANAGER curl ffmpeg &>/dev/null
-  curl -fsSL https://github.com/gtsteffaniak/filebrowser/releases/latest/download/linux-amd64-filebrowser -o "$INSTALL_PATH"
+  curl -fsSL https://github.com/gtsteffaniak/filebrowser/releases/latest/download/linux-arm64-filebrowser -o "$INSTALL_PATH"
   chmod +x "$INSTALL_PATH"
   msg_ok "Installed ${APP}"
 

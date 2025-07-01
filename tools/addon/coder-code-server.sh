@@ -84,9 +84,9 @@ VERSION=$(curl -fsSL https://api.github.com/repos/coder/code-server/releases/lat
   awk '{print substr($2, 3, length($2)-4) }')
 
 msg_info "Installing Code-Server v${VERSION}"
-curl -fOL https://github.com/coder/code-server/releases/download/v"$VERSION"/code-server_"${VERSION}"_amd64.deb &>/dev/null
-dpkg -i code-server_"${VERSION}"_amd64.deb &>/dev/null
-rm -rf code-server_"${VERSION}"_amd64.deb
+curl -fOL https://github.com/coder/code-server/releases/download/v"$VERSION"/code-server_"${VERSION}"_arm64.deb &>/dev/null
+dpkg -i code-server_"${VERSION}"_arm64.deb &>/dev/null
+rm -rf code-server_"${VERSION}"_arm64.deb
 mkdir -p ~/.config/code-server/
 systemctl enable -q --now code-server@"$USER"
 cat <<EOF >~/.config/code-server/config.yaml
