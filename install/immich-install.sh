@@ -84,6 +84,13 @@ $STD apt-get update
 $STD apt-get install -y jellyfin-ffmpeg7
 ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin/ffmpeg
 ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin/ffprobe
+if [[ "$CTTYPE" == "0" ]]; then
+  chgrp video /dev/dri
+  chmod 755 /dev/dri
+  chmod 660 /dev/dri/*
+  $STD adduser "$(id -u -n)" video
+  $STD adduser "$(id -u -n)" render
+fi
 msg_ok "Dependencies Installed"
 
 NODE_VERSION="22" setup_nodejs
@@ -329,9 +336,8 @@ msg_ok "Installed ${APPLICATION}"
 
 msg_info "Creating user, env file, scripts & services"
 $STD useradd -U -s /usr/sbin/nologin -r -M -d "$INSTALL_DIR" immich
-if [[ -f ~/.openvino ]]; then
-  usermod -aG video,render immich
-fi
+usermod -aG video,render immich
+
 cat <<EOF >"${INSTALL_DIR}"/.env
 TZ=$(cat /etc/timezone)
 IMMICH_VERSION=release

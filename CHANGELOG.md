@@ -14,7 +14,54 @@ Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit 
 All LXC instances created using this repository come pre-installed with Midnight Commander, which is a command-line tool (`mc`) that offers a user-friendly file and directory management interface for the terminal environment.
 
 
+## 2025-07-01
+
+## 2025-06-30
+
+### 🆕 New Scripts
+
+  - Alpine Syncthing [@MickLesk](https://github.com/MickLesk) ([#5586](https://github.com/community-scripts/ProxmoxVE/pull/5586))
+- Kapowarr ([#5584](https://github.com/community-scripts/ProxmoxVE/pull/5584))
+
+### 🚀 Updated Scripts
+
+  - Fixing Cloudflare DDNS - lack of resources [@meszolym](https://github.com/meszolym) ([#5600](https://github.com/community-scripts/ProxmoxVE/pull/5600))
+
+  - #### 🐞 Bug Fixes
+
+    - Immich: make changes to automatically enable QuickSync [@vhsdream](https://github.com/vhsdream) ([#5560](https://github.com/community-scripts/ProxmoxVE/pull/5560))
+    - Apache Guacamole: Install auth-jdbc component that matches release version [@tremor021](https://github.com/tremor021) ([#5563](https://github.com/community-scripts/ProxmoxVE/pull/5563))
+
+  - #### ✨ New Features
+
+    - tools.func: optimize binary installs with fetch_and_deploy helper [@MickLesk](https://github.com/MickLesk) ([#5588](https://github.com/community-scripts/ProxmoxVE/pull/5588))
+    - [core]: add ipv6 configuration support [@MickLesk](https://github.com/MickLesk) ([#5575](https://github.com/community-scripts/ProxmoxVE/pull/5575))
+
 ## 2025-06-29
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Linkwarden: Add backing up of data folder to the update function [@tremor021](https://github.com/tremor021) ([#5548](https://github.com/community-scripts/ProxmoxVE/pull/5548))
+
+  - #### ✨ New Features
+
+    - Add cron-job api-key env variable to homarr script [@Meierschlumpf](https://github.com/Meierschlumpf) ([#5204](https://github.com/community-scripts/ProxmoxVE/pull/5204))
+
+### 🧰 Maintenance
+
+  - #### 📝 Documentation
+
+    - update readme with valid discord link. other one expired [@BramSuurdje](https://github.com/BramSuurdje) ([#5567](https://github.com/community-scripts/ProxmoxVE/pull/5567))
+
+### 🌐 Website
+
+  - Update script-item.tsx [@ape364](https://github.com/ape364) ([#5549](https://github.com/community-scripts/ProxmoxVE/pull/5549))
+
+  - #### 🐞 Bug Fixes
+
+    - fix bug in tooltip that would always render 'updateable' [@BramSuurdje](https://github.com/BramSuurdje) ([#5552](https://github.com/community-scripts/ProxmoxVE/pull/5552))
 
 ## 2025-06-28
 
