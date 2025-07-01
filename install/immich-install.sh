@@ -86,36 +86,12 @@ ln -s /usr/lib/jellyfin-ffmpeg/ffmpeg /usr/bin/ffmpeg
 ln -s /usr/lib/jellyfin-ffmpeg/ffprobe /usr/bin/ffprobe
 msg_ok "Dependencies Installed"
 
-read -r -p "Install OpenVINO dependencies for Intel HW-accelerated machine-learning? y/N " prompt
-if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
-  msg_info "Installing OpenVINO dependencies"
-  touch ~/.openvino
-  tmp_dir=$(mktemp -d)
-  $STD pushd "$tmp_dir"
-  curl -fsSLO https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17384.11/intel-igc-core_1.0.17384.11_amd64.deb
-  curl -fsSLO https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17384.11/intel-igc-opencl_1.0.17384.11_amd64.deb
-  curl -fsSLO https://github.com/intel/compute-runtime/releases/download/24.31.30508.7/intel-opencl-icd_24.31.30508.7_amd64.deb
-  curl -fsSLO https://github.com/intel/compute-runtime/releases/download/24.31.30508.7/libigdgmm12_22.4.1_amd64.deb
-  $STD apt install -y ./*.deb
-  $STD popd
-  rm -rf "$tmp_dir"
-  dpkg -l | grep "intel-opencl-icd" | awk '{print $3}' >~/.intel_version
-  if [[ "$CTTYPE" == "0" ]]; then
-    chgrp video /dev/dri
-    chmod 755 /dev/dri
-    chmod 660 /dev/dri/*
-    $STD adduser "$(id -u -n)" video
-    $STD adduser "$(id -u -n)" render
-  fi
-  msg_ok "Installed OpenVINO dependencies"
-fi
-
 NODE_VERSION="22" setup_nodejs
 PG_VERSION="16" PG_MODULES="pgvector" setup_postgresql
 
 msg_info "Setting up Postgresql Database"
 VCHORD_RELEASE="$(curl -fsSL https://api.github.com/repos/tensorchord/vectorchord/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')"
-curl -fsSL "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_RELEASE}/postgresql-16-vchord_${VCHORD_RELEASE}-1_amd64.deb" -o vchord.deb
+curl -fsSL "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_RELEASE}/postgresql-16-vchord_${VCHORD_RELEASE}-1_arm64.deb" -o vchord.deb
 $STD apt install -y ./vchord.deb
 rm vchord.deb
 echo "$VCHORD_RELEASE" >~/.vchord_version
@@ -306,16 +282,9 @@ msg_ok "Installed Immich Web Components"
 cd "$SRC_DIR"/machine-learning
 export VIRTUAL_ENV="${ML_DIR}/ml-venv"
 $STD uv venv "$VIRTUAL_ENV"
-if [[ -f ~/.openvino ]]; then
-  msg_info "Installing HW-accelerated machine-learning"
-  uv -q sync --extra openvino --no-cache --active
-  patchelf --clear-execstack "${VIRTUAL_ENV}/lib/python3.11/site-packages/onnxruntime/capi/onnxruntime_pybind11_state.cpython-311-x86_64-linux-gnu.so"
-  msg_ok "Installed HW-accelerated machine-learning"
-else
-  msg_info "Installing machine-learning"
-  uv -q sync --extra cpu --no-cache --active
-  msg_ok "Installed machine-learning"
-fi
+msg_info "Installing machine-learning"
+uv -q sync --extra cpu --no-cache --active
+msg_ok "Installed machine-learning"
 cd "$SRC_DIR"
 cp -a machine-learning/{ann,immich_ml} "$ML_DIR"
 if [[ -f ~/.openvino ]]; then
@@ -332,7 +301,7 @@ ln -s "$UPLOAD_DIR" "$ML_DIR"/upload
 
 msg_info "Installing Immich CLI"
 $STD npm install --build-from-source sharp
-rm -rf "$APP_DIR"/node_modules/@img/sharp-{libvips*,linuxmusl-x64}
+rm -rf "$APP_DIR"/node_modules/@img/sharp-{libvips*,linuxmusl-aarch64}
 $STD npm i -g @immich/cli
 msg_ok "Installed Immich CLI"
 

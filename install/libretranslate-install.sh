@@ -26,6 +26,7 @@ $STD apt-get install -y \
   python3-pip \
   python3-dev \
   python3-icu
+rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Setup Python3"
 
 setup_uv
