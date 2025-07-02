@@ -4,7 +4,7 @@
 # Author: MickLesk (CanbiZ)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 
-source /dev/stdin <<<$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func)
+source /dev/stdin <<<$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/api.func)
 
 function header_info {
   clear
@@ -404,7 +404,6 @@ function start_script() {
 }
 
 check_root
-arch_check
 pve_check
 ssh_check
 start_script
