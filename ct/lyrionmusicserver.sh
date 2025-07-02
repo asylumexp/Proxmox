@@ -30,9 +30,9 @@ function update_script() {
     exit
   fi
 
-  DEB_URL=$(curl -s 'https://lyrion.org/getting-started/' | grep -oP '<a\s[^>]*href="\K[^"]*amd64\.deb(?="[^>]*>)' | head -n 1)
-  RELEASE=$(echo "$DEB_URL" | grep -oP 'lyrionmusicserver_\K[0-9.]+(?=_amd64\.deb)')
-  DEB_FILE="/tmp/lyrionmusicserver_${RELEASE}_amd64.deb"
+  DEB_URL=$(curl -s 'https://lyrion.org/getting-started/' | grep -oP '<a\s[^>]*href="\K[^"]*arm\.deb(?="[^>]*>)' | head -n 1)
+  RELEASE=$(echo "$DEB_URL" | grep -oP 'lyrionmusicserver_\K[0-9.]+(?=_arm\.deb)')
+  DEB_FILE="/tmp/lyrionmusicserver_${RELEASE}_arm.deb"
   if [[ ! -f /opt/lyrion_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/lyrion_version.txt)" ]]; then
     msg_info "Updating $APP to ${RELEASE}"
     curl -fsSL -o "$DEB_FILE" "$DEB_URL"

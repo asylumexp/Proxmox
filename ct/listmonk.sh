@@ -38,8 +38,8 @@ function update_script() {
     cd /opt
     mv /opt/listmonk/ /opt/listmonk-backup
     mkdir /opt/listmonk/
-    curl -fsSL "https://github.com/knadh/listmonk/releases/download/v${RELEASE}/listmonk_${RELEASE}_linux_amd64.tar.gz" -o $(basename "https://github.com/knadh/listmonk/releases/download/v${RELEASE}/listmonk_${RELEASE}_linux_amd64.tar.gz")
-    tar -xzf "listmonk_${RELEASE}_linux_amd64.tar.gz" -C /opt/listmonk
+    curl -fsSL "https://github.com/knadh/listmonk/releases/download/v${RELEASE}/listmonk_${RELEASE}_linux_arm64.tar.gz" -o $(basename "https://github.com/knadh/listmonk/releases/download/v${RELEASE}/listmonk_${RELEASE}_linux_arm64.tar.gz")
+    tar -xzf "listmonk_${RELEASE}_linux_arm64.tar.gz" -C /opt/listmonk
     mv /opt/listmonk-backup/config.toml /opt/listmonk/config.toml
     mv /opt/listmonk-backup/uploads /opt/listmonk/uploads
     $STD /opt/listmonk/listmonk --upgrade --yes --config /opt/listmonk/config.toml
@@ -51,7 +51,7 @@ function update_script() {
     msg_ok "Started ${APP}"
 
     msg_info "Cleaning up"
-    rm -rf "/opt/listmonk_${RELEASE}_linux_amd64.tar.gz"
+    rm -rf "/opt/listmonk_${RELEASE}_linux_arm64.tar.gz"
     rm -rf /opt/listmonk-backup/
     msg_ok "Cleaned"
 

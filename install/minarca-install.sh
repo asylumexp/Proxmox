@@ -22,7 +22,7 @@ msg_ok "Installed Dependencies"
 
 msg_info "Installing Minarca"
 curl -fsSL https://www.ikus-soft.com/archive/minarca/public.key | gpg --dearmor >/usr/share/keyrings/minarca-keyring.gpg
-echo "deb [arch=amd64 signed-by=/usr/share/keyrings/minarca-keyring.gpg] https://nexus.ikus-soft.com/repository/apt-release-$(lsb_release -sc)/ $(lsb_release -sc) main" >/etc/apt/sources.list.d/minarca.list
+echo "deb [arch=arm64 signed-by=/usr/share/keyrings/minarca-keyring.gpg] https://nexus.ikus-soft.com/repository/apt-release-$(lsb_release -sc)/ $(lsb_release -sc) main" >/etc/apt/sources.list.d/minarca.list
 $STD apt-get update
 $STD apt-get install -y minarca-server
 msg_ok "Installed Minarca"

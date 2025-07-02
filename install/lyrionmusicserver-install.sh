@@ -14,9 +14,9 @@ network_check
 update_os
 
 msg_info "Setup Lyrion Music Server"
-DEB_URL=$(curl -fsSL 'https://lyrion.org/getting-started/' | grep -oP '<a\s[^>]*href="\K[^"]*amd64\.deb(?="[^>]*>)' | head -n 1)
-RELEASE=$(echo "$DEB_URL" | grep -oP 'lyrionmusicserver_\K[0-9.]+(?=_amd64\.deb)')
-DEB_FILE="/tmp/lyrionmusicserver_${RELEASE}_amd64.deb"
+DEB_URL=$(curl -fsSL 'https://lyrion.org/getting-started/' | grep -oP '<a\s[^>]*href="\K[^"]*arm\.deb(?="[^>]*>)' | head -n 1)
+RELEASE=$(echo "$DEB_URL" | grep -oP 'lyrionmusicserver_\K[0-9.]+(?=_arm\.deb)')
+DEB_FILE="/tmp/lyrionmusicserver_${RELEASE}_arm.deb"
 curl -fsSL -o "$DEB_FILE" "$DEB_URL"
 $STD apt install "$DEB_FILE" -y
 echo "${RELEASE}" >"/opt/lyrion_version.txt"

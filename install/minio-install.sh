@@ -35,10 +35,10 @@ fi
 msg_info "Setting up MinIO"
 if [[ "$USE_LATEST" == "true" ]]; then
   RELEASE=$(curl -fsSL https://api.github.com/repos/minio/minio/releases/latest | grep '"tag_name"' | awk -F '"' '{print $4}')
-  DOWNLOAD_URL="https://dl.min.io/server/minio/release/linux-amd64/minio"
+  DOWNLOAD_URL="https://dl.min.io/server/minio/release/linux-arm64/minio"
 else
   RELEASE="$FEATURE_RICH_VERSION"
-  DOWNLOAD_URL="https://dl.min.io/server/minio/release/linux-amd64/archive/minio.RELEASE.${FEATURE_RICH_VERSION}"
+  DOWNLOAD_URL="https://dl.min.io/server/minio/release/linux-arm64/archive/minio.RELEASE.${FEATURE_RICH_VERSION}"
 fi
 
 curl -fsSL "$DOWNLOAD_URL" -o /usr/local/bin/minio
