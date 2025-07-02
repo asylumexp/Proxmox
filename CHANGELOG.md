@@ -14,7 +14,30 @@ Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit 
 All LXC instances created using this repository come pre-installed with Midnight Commander, which is a command-line tool (`mc`) that offers a user-friendly file and directory management interface for the terminal environment.
 
 
+## 2025-07-02
+
 ## 2025-07-01
+
+### 🆕 New Scripts
+
+  - Librespeed Rust ([#5614](https://github.com/community-scripts/ProxmoxVE/pull/5614))
+- ITSM-NG ([#5615](https://github.com/community-scripts/ProxmoxVE/pull/5615))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Open WebUI: Fix Ollama update procedure [@tremor021](https://github.com/tremor021) ([#5601](https://github.com/community-scripts/ProxmoxVE/pull/5601))
+
+  - #### ✨ New Features
+
+    - [tools]: increase fetch_and_deploy with dns pre check [@MickLesk](https://github.com/MickLesk) ([#5608](https://github.com/community-scripts/ProxmoxVE/pull/5608))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - Jellyfin GPU Passthrough NVIDIA Note [@austinpilz](https://github.com/austinpilz) ([#5625](https://github.com/community-scripts/ProxmoxVE/pull/5625))
 
 ## 2025-06-30
 
