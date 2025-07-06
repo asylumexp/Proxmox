@@ -197,12 +197,12 @@ if [ -d "/var/lib/vz/template/cache" ]; then
   if [ ! -f "$TEMPLATE_PATH" ]; then
     if [ $PCT_OSTYPE = debian ]; then
       msg_info "Downloading LXC Template"
-      wget -q $(curl -s https://api.github.com/repos/asylumexp/debian-ifupdown2-lxc/releases/latest | grep download | grep debian-$TEMPLATE_VARIENT-arm64-rootfs.tar.xz | cut -d\" -f4) -O "$TEMPLATE_PATH" -q || exit "A problem occured while downloading the LXC template."
+      wget -q $(curl -s https://api.github.com/repos/asylumexp/debian-ifupdown2-lxc/releases/latest | grep download | grep debian-$TEMPLATE_VARIENT-arm64-rootfs.tar.xz | cut -d\" -f4) -O "$TEMPLATE_PATH" -q || exit "A problem occurred while downloading the LXC template."
       msg_ok "Downloaded LXC Template"
     else
       templateurl="https://jenkins.linuxcontainers.org/job/image-$PCT_OSTYPE/architecture=arm64,release=$TEMPLATE_VARIENT,variant=default/lastStableBuild/artifact/rootfs.tar.xz"
       msg_info "Downloading LXC Template"
-      wget $templateurl -O /var/lib/vz/template/cache/$TEMPLATE -q || exit "A problem occured while downloading the LXC template."
+      wget $templateurl -O "$TEMPLATE_PATH" -q || exit "A problem occurred while downloading the LXC template."
       msg_ok "Downloaded LXC Template"
     fi
   fi
@@ -224,7 +224,7 @@ else
   if ! pveam list $TEMPLATE_STORAGE | grep -F $TEMPLATE > /dev/null; then
     msg_info "Downloading LXC Template"
     pveam download $TEMPLATE_STORAGE $TEMPLATE >/dev/null ||
-      exit "A problem occured while downloading the LXC template."
+      exit "A problem occurred while downloading the LXC template."
     msg_ok "Downloaded LXC Template"
   fi
 fi
