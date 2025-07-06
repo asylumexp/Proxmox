@@ -192,11 +192,12 @@ fi
 
 if [ -d "/var/lib/vz/template/cache" ]; then 
   TEMPLATE=$PCT_OSTYPE-$TEMPLATE_VARIENT-rootfs.tar.xz
+  TEMPLATE_PATH="$(pvesm path "${TEMPLATE_STORAGE}:vztmpl/${TEMPLATE}" 2>/dev/null || echo "/var/lib/vz/template/cache/${TEMPLATE}")"
   # Download template if needed
-  if [ ! -f "/var/lib/vz/template/cache/$TEMPLATE" ]; then
+  if [ ! -f "$TEMPLATE_PATH" ]; then
     if [ $PCT_OSTYPE = debian ]; then
       msg_info "Downloading LXC Template"
-      wget -q $(curl -s https://api.github.com/repos/asylumexp/debian-ifupdown2-lxc/releases/latest | grep download | grep debian-$TEMPLATE_VARIENT-arm64-rootfs.tar.xz | cut -d\" -f4) -O /var/lib/vz/template/cache/$TEMPLATE -q || exit "A problem occured while downloading the LXC template."
+      wget -q $(curl -s https://api.github.com/repos/asylumexp/debian-ifupdown2-lxc/releases/latest | grep download | grep debian-$TEMPLATE_VARIENT-arm64-rootfs.tar.xz | cut -d\" -f4) -O "$TEMPLATE_PATH" -q || exit "A problem occured while downloading the LXC template."
       msg_ok "Downloaded LXC Template"
     else
       templateurl="https://jenkins.linuxcontainers.org/job/image-$PCT_OSTYPE/architecture=arm64,release=$TEMPLATE_VARIENT,variant=default/lastStableBuild/artifact/rootfs.tar.xz"
@@ -217,6 +218,7 @@ else
   fi
 
   TEMPLATE="$(pveam available | grep -E "arm64.*$PCT_OSTYPE-$TEMPLATE_VARIENT" | sed 's/arm64[[:space:]]*//')"
+  TEMPLATE_PATH="$(pvesm path "${TEMPLATE_STORAGE}:vztmpl/${TEMPLATE}" 2>/dev/null || echo "/var/lib/vz/template/cache/${TEMPLATE}")"
 
   # Download LXC template if needed
   if ! pveam list $TEMPLATE_STORAGE | grep -F $TEMPLATE > /dev/null; then
