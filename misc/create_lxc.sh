@@ -213,7 +213,7 @@ else
   msg_ok "Updated LXC Template List"
   if [ $PCT_OSTYPE = debian ]; then
     msg_error "Debian unsupported with this download method. Exiting."
-  elif [ $PCT_OSTYPE = alpine]; then
+  elif [ $PCT_OSTYPE = alpine ]; then
     $TEMPLATE_VARIENT = 3.18
   fi
 
