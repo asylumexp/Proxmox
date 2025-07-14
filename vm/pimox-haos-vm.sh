@@ -235,10 +235,10 @@ function advanced_settings() {
       if [ $exitstatus = 0 ]; then echo -e "${DGN}Virtual Machine ID: ${BGN}$VMID${CL}"; fi
     fi
   fi
-  VM_NAME=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set Hostname" 8 58 haos${BRANCH} --title "HOSTNAME" --cancel-button Exit-Script 3>&1 1>&2 2>&3)
+  VM_NAME=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set Hostname" 8 58 haosStable --title "HOSTNAME" --cancel-button Exit-Script 3>&1 1>&2 2>&3)
   exitstatus=$?
   if [ -z $VM_NAME ]; then
-    HN="haos${BRANCH}"
+    HN="haosStable"
     echo -e "${DGN}Using Hostname: ${BGN}$HN${CL}"
   else
     if [ $exitstatus = 0 ]; then
@@ -310,7 +310,7 @@ function advanced_settings() {
     echo -e "${DGN}Start VM when completed: ${BGN}no${CL}"
     START_VM="no"
   fi
-  if (whiptail --backtitle "Proxmox VE Helper Scripts" --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create HAOS ${BRANCH} VM?" --no-button Do-Over 10 58); then
+  if (whiptail --backtitle "Proxmox VE Helper Scripts" --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create HAOS Stable VM?" --no-button Do-Over 10 58); then
     echo -e "${RD}Creating a HAOS VM using the above advanced settings${CL}"
   else
     clear
@@ -361,14 +361,14 @@ else
 fi
 msg_ok "Using ${CL}${BL}$STORAGE${CL} ${GN}for Storage Location."
 msg_ok "Virtual Machine ID is ${CL}${BL}$VMID${CL}."
-msg_info "Getting URL for Home Assistant ${BRANCH} Disk Image"
-URL=https://github.com/home-assistant/operating-system/releases/download/${BRANCH}/haos_generic-aarch64-${BRANCH}.qcow2.xz
+msg_info "Getting URL for Home Assistant Stable Disk Image"
+URL=https://github.com/home-assistant/operating-system/releases/download/Stable/haos_generic-aarch64-Stable.qcow2.xz
 sleep 2
 msg_ok "${CL}${BL}${URL}${CL}"
 curl -f#SL -o "$(basename "$URL")" "$URL"
 echo -en "\e[1A\e[0K"
 FILE=$(basename $URL)
-msg_ok "Downloaded ${CL}${BL}haos_generic-aarch64-${BRANCH}.qcow2.xz${CL}"
+msg_ok "Downloaded ${CL}${BL}haos_generic-aarch64-Stable.qcow2.xz${CL}"
 msg_info "Extracting Disk Image"
 unxz $FILE
 STORAGE_TYPE=$(pvesm status -storage $STORAGE | awk 'NR>1 {print $2}')
