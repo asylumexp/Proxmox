@@ -1,7 +1,9 @@
 <div align="center">
-  <a href="#">
-    <img src="https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/images/logo.png" height="100px" />
- </a>
+  <p align="center">
+    <a href="#">
+      <img src="https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/images/logo.png" height="100px" />
+    </a>
+  </p>
 </div>
 <h1 align="center">Proxmox arm64 Install Scripts</h1>
 <h3 align="center">a port of the Promox VE Helper-Scripts to arm64!</h3>

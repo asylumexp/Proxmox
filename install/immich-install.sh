@@ -66,6 +66,7 @@ $STD apt-get install --no-install-recommends -y \
   mesa-vulkan-drivers \
   ocl-icd-libopencl1 \
   tini \
+  libaom-dev \
   zlib1g
 $STD apt-get install -y \
   libgdk-pixbuf-2.0-dev librsvg2-dev libtool
@@ -136,7 +137,6 @@ if [[ -f ~/.openvino ]]; then
 fi
 msg_ok "Packages from Testing Repo Installed"
 
-# Fix default DB collation issue after libc update
 $STD sudo -u postgres psql -c "ALTER DATABASE postgres REFRESH COLLATION VERSION;"
 $STD sudo -u postgres psql -c "ALTER DATABASE $DB_NAME REFRESH COLLATION VERSION;"
 
@@ -201,7 +201,7 @@ $STD cmake --preset=release-noplugins \
   -DWITH_LIBSHARPYUV=ON \
   -DWITH_LIBDE265=ON \
   -DWITH_AOM_DECODER=OFF \
-  -DWITH_AOM_ENCODER=OFF \
+  -DWITH_AOM_ENCODER=ON \
   -DWITH_X265=OFF \
   -DWITH_EXAMPLES=OFF \
   ..
@@ -237,7 +237,8 @@ $STD make clean
 cd "$STAGING_DIR"
 
 SOURCE=$SOURCE_DIR/libvips
-: "${LIBVIPS_REVISION:=$(jq -cr '.revision' $BASE_DIR/server/sources/libvips.json)}"
+# : "${LIBVIPS_REVISION:=$(jq -cr '.revision' $BASE_DIR/server/sources/libvips.json)}"
+: "${LIBVIPS_REVISION:=8fa37a64547e392d3808eed8d72adab7e02b3d00}"
 $STD git clone https://github.com/libvips/libvips.git "$SOURCE"
 cd "$SOURCE"
 $STD git reset --hard "$LIBVIPS_REVISION"
@@ -284,6 +285,10 @@ cd "$SRC_DIR"
 cp -a server/{node_modules,dist,bin,resources,package.json,package-lock.json,start*.sh} "$APP_DIR"/
 cp -a web/build "$APP_DIR"/www
 cp LICENSE "$APP_DIR"
+cd "$APP_DIR"
+export SHARP_FORCE_GLOBAL_LIBVIPS=true
+$STD npm install sharp
+rm -rf "$APP_DIR"/node_modules/@img/sharp-{libvips*,linuxmusl-x64}
 msg_ok "Installed Immich Web Components"
 
 cd "$SRC_DIR"/machine-learning
@@ -307,8 +312,6 @@ ln -s "$UPLOAD_DIR" "$APP_DIR"/upload
 ln -s "$UPLOAD_DIR" "$ML_DIR"/upload
 
 msg_info "Installing Immich CLI"
-$STD npm install --build-from-source sharp
-rm -rf "$APP_DIR"/node_modules/@img/sharp-{libvips*,linuxmusl-aarch64}
 $STD npm i -g @immich/cli
 msg_ok "Installed Immich CLI"
 

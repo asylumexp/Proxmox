@@ -54,9 +54,14 @@ function setup_nodejs() {
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_VERSION}.x nodistro main" \
       >/etc/apt/sources.list.d/nodesource.list
 
+    sleep 2
     if ! apt-get update >/dev/null 2>&1; then
-      msg_error "Failed to update APT repositories after adding NodeSource"
-      exit 1
+      msg_warn "APT update failed – retrying in 5s"
+      sleep 5
+      if ! apt-get update >/dev/null 2>&1; then
+        msg_error "Failed to update APT repositories after adding NodeSource"
+        exit 1
+      fi
     fi
 
     if ! apt-get install -y nodejs >/dev/null 2>&1; then
@@ -239,10 +244,14 @@ setup_mariadb() {
   DISTRO_CODENAME="$(awk -F= '/^VERSION_CODENAME=/{print $2}' /etc/os-release)"
   CURRENT_OS="$(awk -F= '/^ID=/{print $2}' /etc/os-release)"
 
+  if ! curl -fsI http://mirror.mariadb.org/repo/ >/dev/null; then
+    msg_error "MariaDB mirror not reachable"
+    return 1
+  fi
+
   msg_info "Setting up MariaDB $MARIADB_VERSION"
   # grab dynamic latest LTS version
   if [[ "$MARIADB_VERSION" == "latest" ]]; then
-    $STD msg_info "Resolving latest GA MariaDB version"
     MARIADB_VERSION=$(curl -fsSL http://mirror.mariadb.org/repo/ |
       grep -Eo '[0-9]+\.[0-9]+\.[0-9]+/' |
       grep -vE 'rc/|rolling/' |
@@ -253,7 +262,6 @@ setup_mariadb() {
       msg_error "Could not determine latest GA MariaDB version"
       return 1
     fi
-    $STD msg_ok "Latest GA MariaDB version is $MARIADB_VERSION"
   fi
 
   local CURRENT_VERSION=""
@@ -278,7 +286,6 @@ setup_mariadb() {
     $STD msg_info "Setup MariaDB $MARIADB_VERSION"
   fi
 
-  $STD msg_info "Setting up MariaDB Repository"
   curl -fsSL "https://mariadb.org/mariadb_release_signing_key.asc" |
     gpg --dearmor -o /etc/apt/trusted.gpg.d/mariadb.gpg
 
@@ -366,25 +373,6 @@ function setup_mysql() {
 #   PHP_MAX_EXECUTION_TIME     - (default: 300)
 # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-# Installs PHP with selected modules and configures Apache/FPM support.
-#
-# Description:
-#   - Adds Sury PHP repo if needed
-#   - Installs default and user-defined modules
-#   - Patches php.ini for CLI, Apache, and FPM as needed
-#
-# Variables:
-#   PHP_VERSION                - PHP version to install (default: 8.4)
-#   PHP_MODULE                 - Additional comma-separated modules
-#   PHP_APACHE                 - Set YES to enable PHP with Apache
-#   PHP_FPM                    - Set YES to enable PHP-FPM
-#   PHP_MEMORY_LIMIT           - (default: 512M)
-#   PHP_UPLOAD_MAX_FILESIZE    - (default: 128M)
-#   PHP_POST_MAX_SIZE          - (default: 128M)
-#   PHP_MAX_EXECUTION_TIME     - (default: 300)
-# ------------------------------------------------------------------------------
-
 function setup_php() {
   local PHP_VERSION="${PHP_VERSION:-8.4}"
   local PHP_MODULE="${PHP_MODULE:-}"
@@ -433,6 +421,13 @@ function setup_php() {
   fi
 
   local MODULE_LIST="php${PHP_VERSION}"
+  for pkg in $MODULE_LIST; do
+    if ! apt-cache show "$pkg" >/dev/null 2>&1; then
+      msg_error "Package not found: $pkg"
+      exit 1
+    fi
+  done
+
   IFS=',' read -ra MODULES <<<"$COMBINED_MODULES"
   for mod in "${MODULES[@]}"; do
     MODULE_LIST+=" php${PHP_VERSION}-${mod}"
@@ -441,11 +436,17 @@ function setup_php() {
   if [[ "$PHP_FPM" == "YES" ]]; then
     MODULE_LIST+=" php${PHP_VERSION}-fpm"
   fi
+  if [[ "$PHP_APACHE" == "YES" ]]; then
+    $STD apt-get install -y apache2 libapache2-mod-php${PHP_VERSION}
+    $STD systemctl restart apache2 || true
+  fi
 
   if [[ "$PHP_APACHE" == "YES" ]] && [[ -n "$CURRENT_PHP" ]]; then
     if [[ -f /etc/apache2/mods-enabled/php${CURRENT_PHP}.load ]]; then
       $STD a2dismod php${CURRENT_PHP} || true
     fi
+    $STD a2enmod php${PHP_VERSION}
+    $STD systemctl restart apache2 || true
   fi
 
   if [[ "$PHP_FPM" == "YES" ]] && [[ -n "$CURRENT_PHP" ]]; then
@@ -455,10 +456,6 @@ function setup_php() {
 
   $STD apt-get install -y $MODULE_LIST
   msg_ok "Setup PHP $PHP_VERSION"
-
-  if [[ "$PHP_APACHE" == "YES" ]]; then
-    $STD systemctl restart apache2 || true
-  fi
 
   if [[ "$PHP_FPM" == "YES" ]]; then
     $STD systemctl enable php${PHP_VERSION}-fpm
@@ -649,6 +646,15 @@ function setup_mongodb() {
   DISTRO_ID=$(awk -F= '/^ID=/{ gsub(/"/,"",$2); print $2 }' /etc/os-release)
   DISTRO_CODENAME=$(awk -F= '/^VERSION_CODENAME=/{ print $2 }' /etc/os-release)
 
+  # Check AVX support
+  if ! grep -qm1 'avx[^ ]*' /proc/cpuinfo; then
+    local major="${MONGO_VERSION%%.*}"
+    if ((major > 5)); then
+      msg_error "MongoDB ${MONGO_VERSION} requires AVX support, which is not available on this system."
+      return 1
+    fi
+  fi
+
   case "$DISTRO_ID" in
   ubuntu) MONGO_BASE_URL="https://repo.mongodb.org/apt/ubuntu" ;;
   debian) MONGO_BASE_URL="https://repo.mongodb.org/apt/ubuntu" ;;
@@ -751,6 +757,7 @@ function fetch_and_deploy_gh_release() {
   local mode="${3:-tarball}" # tarball | binary | prebuild | singlefile
   local version="${4:-latest}"
   local target="${5:-/opt/$app}"
+  local asset_pattern="${6:-}"
 
   local app_lc=$(echo "${app,,}" | tr -d ' ')
   local version_file="$HOME/.${app_lc}"
@@ -813,6 +820,7 @@ function fetch_and_deploy_gh_release() {
 
   msg_info "Fetching GitHub release: $app ($version)"
 
+  ### Tarball Mode ###
   if [[ "$mode" == "tarball" || "$mode" == "source" ]]; then
     url=$(echo "$json" | jq -r '.tarball_url // empty')
     [[ -z "$url" ]] && url="https://github.com/$repo/archive/refs/tags/v$version.tar.gz"
@@ -833,6 +841,7 @@ function fetch_and_deploy_gh_release() {
     cp -r "$unpack_dir"/* "$target/"
     shopt -u dotglob nullglob
 
+    ### Binary Mode ###
   elif [[ "$mode" == "binary" ]]; then
     local arch
     arch=$(dpkg --print-architecture 2>/dev/null || uname -m)
@@ -842,12 +851,14 @@ function fetch_and_deploy_gh_release() {
     local assets url_match=""
     assets=$(echo "$json" | jq -r '.assets[].browser_download_url')
 
-    if [[ -n "$6" ]]; then
+    # If explicit filename pattern is provided (param $6), match that first
+    if [[ -n "$asset_pattern" ]]; then
       for u in $assets; do
-        [[ "$u" =~ $6 || "$u" == *"$6" ]] && url_match="$u" && break
+        [[ "$u" =~ $asset_pattern || "$u" == *"$asset_pattern" ]] && url_match="$u" && break
       done
     fi
 
+    # If no match via explicit pattern, fall back to architecture heuristic
     if [[ -z "$url_match" ]]; then
       for u in $assets; do
         if [[ "$u" =~ ($arch|amd64|x86_64|aarch64|arm64).*\.deb$ ]]; then
@@ -857,6 +868,7 @@ function fetch_and_deploy_gh_release() {
       done
     fi
 
+    # Fallback: any .deb file
     if [[ -z "$url_match" ]]; then
       for u in $assets; do
         [[ "$u" =~ \.deb$ ]] && url_match="$u" && break
@@ -885,8 +897,10 @@ function fetch_and_deploy_gh_release() {
       }
     }
 
+  ### Prebuild Mode ###
   elif [[ "$mode" == "prebuild" ]]; then
-    local pattern="$6"
+    local pattern="${6%\"}"
+    pattern="${pattern#\"}"
     [[ -z "$pattern" ]] && {
       msg_error "Mode 'prebuild' requires 6th parameter (asset filename pattern)"
       rm -rf "$tmpdir"
@@ -895,7 +909,13 @@ function fetch_and_deploy_gh_release() {
 
     local asset_url=""
     for u in $(echo "$json" | jq -r '.assets[].browser_download_url'); do
-      [[ "$u" =~ $pattern || "$u" == *"$pattern" ]] && asset_url="$u" && break
+      filename_candidate="${u##*/}"
+      case "$filename_candidate" in
+      $pattern)
+        asset_url="$u"
+        break
+        ;;
+      esac
     done
 
     [[ -z "$asset_url" ]] && {
@@ -911,22 +931,46 @@ function fetch_and_deploy_gh_release() {
       return 1
     }
 
+    local unpack_tmp
+    unpack_tmp=$(mktemp -d)
     mkdir -p "$target"
+
     if [[ "$filename" == *.zip ]]; then
       if ! command -v unzip &>/dev/null; then
         $STD apt-get install -y unzip
       fi
-      $STD unzip "$tmpdir/$filename" -d "$target"
-    elif [[ "$filename" == *.tar.gz ]]; then
-      tar -xzf "$tmpdir/$filename" -C "$target"
+      unzip -q "$tmpdir/$filename" -d "$unpack_tmp"
+    elif [[ "$filename" == *.tar.* ]]; then
+      tar -xf "$tmpdir/$filename" -C "$unpack_tmp"
     else
       msg_error "Unsupported archive format: $filename"
-      rm -rf "$tmpdir"
+      rm -rf "$tmpdir" "$unpack_tmp"
       return 1
     fi
 
+    local top_dirs
+    top_dirs=$(find "$unpack_tmp" -mindepth 1 -maxdepth 1 -type d | wc -l)
+
+    if [[ "$top_dirs" -eq 1 ]]; then
+      # Strip leading folder
+      local inner_dir
+      inner_dir=$(find "$unpack_tmp" -mindepth 1 -maxdepth 1 -type d)
+      shopt -s dotglob nullglob
+      cp -r "$inner_dir"/* "$target/"
+      shopt -u dotglob nullglob
+    else
+      # Copy all contents
+      shopt -s dotglob nullglob
+      cp -r "$unpack_tmp"/* "$target/"
+      shopt -u dotglob nullglob
+    fi
+
+    rm -rf "$unpack_tmp"
+
+    ### Singlefile Mode ###
   elif [[ "$mode" == "singlefile" ]]; then
-    local pattern="$6"
+    local pattern="${6%\"}"
+    pattern="${pattern#\"}"
     [[ -z "$pattern" ]] && {
       msg_error "Mode 'singlefile' requires 6th parameter (asset filename pattern)"
       rm -rf "$tmpdir"
@@ -935,7 +979,13 @@ function fetch_and_deploy_gh_release() {
 
     local asset_url=""
     for u in $(echo "$json" | jq -r '.assets[].browser_download_url'); do
-      [[ "$u" =~ $pattern || "$u" == *"$pattern" ]] && asset_url="$u" && break
+      filename_candidate="${u##*/}"
+      case "$filename_candidate" in
+      $pattern)
+        asset_url="$u"
+        break
+        ;;
+      esac
     done
 
     [[ -z "$asset_url" ]] && {
@@ -946,13 +996,20 @@ function fetch_and_deploy_gh_release() {
 
     filename="${asset_url##*/}"
     mkdir -p "$target"
-    curl $download_timeout -fsSL -o "$target/$app" "$asset_url" || {
+
+    local use_filename="${USE_ORIGINAL_FILENAME:-false}"
+    local target_file="$app"
+    [[ "$use_filename" == "true" ]] && target_file="$filename"
+
+    curl $download_timeout -fsSL -o "$target/$target_file" "$asset_url" || {
       msg_error "Download failed: $asset_url"
       rm -rf "$tmpdir"
       return 1
     }
 
-    chmod +x "$target/$app"
+    if [[ "$target_file" != *.jar && -f "$target/$target_file" ]]; then
+      chmod +x "$target/$target_file"
+    fi
 
   else
     msg_error "Unknown mode: $mode"
@@ -1630,4 +1687,155 @@ function setup_imagemagick() {
   rm -rf "$TMP_DIR"
   ensure_usr_local_bin_persist
   msg_ok "Setup ImageMagick $VERSION"
+}
+
+# ------------------------------------------------------------------------------
+# Installs FFmpeg from source or prebuilt binary (Debian/Ubuntu only).
+#
+# Description:
+#   - Downloads and builds FFmpeg from GitHub (https://github.com/FFmpeg/FFmpeg)
+#   - Supports specific version override via FFMPEG_VERSION (e.g. n7.1.1)
+#   - Supports build profile via FFMPEG_TYPE:
+#       - minimal : x264, vpx, mp3 only
+#       - medium  : adds subtitles, fonts, opus, vorbis
+#       - full    : adds dav1d, svt-av1, zlib, numa
+#       - binary  : downloads static build (johnvansickle.com)
+#   - Defaults to latest stable version and full feature set
+#
+# Notes:
+#   - Requires: curl, jq, build-essential, and matching codec libraries
+#   - Result is installed to /usr/local/bin/ffmpeg
+# ------------------------------------------------------------------------------
+
+function setup_ffmpeg() {
+  local TMP_DIR
+  TMP_DIR=$(mktemp -d)
+  local GITHUB_REPO="FFmpeg/FFmpeg"
+  local VERSION="${FFMPEG_VERSION:-latest}"
+  local TYPE="${FFMPEG_TYPE:-full}"
+  local BIN_PATH="/usr/local/bin/ffmpeg"
+
+  # Binary fallback mode
+  if [[ "$TYPE" == "binary" ]]; then
+    msg_info "Installing FFmpeg (static binary)"
+    curl -fsSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o "$TMP_DIR/ffmpeg.tar.xz"
+    tar -xf "$TMP_DIR/ffmpeg.tar.xz" -C "$TMP_DIR"
+    local EXTRACTED_DIR
+    EXTRACTED_DIR=$(find "$TMP_DIR" -maxdepth 1 -type d -name "ffmpeg-*")
+    cp "$EXTRACTED_DIR/ffmpeg" "$BIN_PATH"
+    cp "$EXTRACTED_DIR/ffprobe" /usr/local/bin/ffprobe
+    chmod +x "$BIN_PATH" /usr/local/bin/ffprobe
+    rm -rf "$TMP_DIR"
+    msg_ok "Installed FFmpeg binary ($($BIN_PATH -version | head -n1))"
+    return
+  fi
+
+  if ! command -v jq &>/dev/null; then
+    $STD apt-get update
+    $STD apt-get install -y jq
+  fi
+
+  # Auto-detect latest stable version if none specified
+  if [[ "$VERSION" == "latest" || -z "$VERSION" ]]; then
+    msg_info "Resolving latest FFmpeg tag"
+    VERSION=$(curl -fsSL "https://api.github.com/repos/${GITHUB_REPO}/tags" |
+      jq -r '.[].name' |
+      grep -E '^n[0-9]+\.[0-9]+\.[0-9]+$' |
+      sort -V | tail -n1)
+  fi
+
+  if [[ -z "$VERSION" ]]; then
+    msg_error "Could not determine FFmpeg version"
+    rm -rf "$TMP_DIR"
+    return 1
+  fi
+
+  msg_info "Installing FFmpeg ${VERSION} ($TYPE)"
+
+  # Dependency selection
+  local DEPS=(build-essential yasm nasm pkg-config)
+  case "$TYPE" in
+  minimal)
+    DEPS+=(libx264-dev libvpx-dev libmp3lame-dev)
+    ;;
+  medium)
+    DEPS+=(libx264-dev libvpx-dev libmp3lame-dev libfreetype6-dev libass-dev libopus-dev libvorbis-dev)
+    ;;
+  full)
+    DEPS+=(
+      libx264-dev libx265-dev libvpx-dev libmp3lame-dev
+      libfreetype6-dev libass-dev libopus-dev libvorbis-dev
+      libdav1d-dev libsvtav1-dev zlib1g-dev libnuma-dev
+    )
+    ;;
+  *)
+    msg_error "Invalid FFMPEG_TYPE: $TYPE"
+    rm -rf "$TMP_DIR"
+    return 1
+    ;;
+  esac
+
+  $STD apt-get update
+  $STD apt-get install -y "${DEPS[@]}"
+
+  curl -fsSL "https://github.com/${GITHUB_REPO}/archive/refs/tags/${VERSION}.tar.gz" -o "$TMP_DIR/ffmpeg.tar.gz"
+  tar -xzf "$TMP_DIR/ffmpeg.tar.gz" -C "$TMP_DIR"
+  cd "$TMP_DIR/FFmpeg-"* || {
+    msg_error "Source extraction failed"
+    rm -rf "$TMP_DIR"
+    return 1
+  }
+
+  local args=(
+    --enable-gpl
+    --enable-shared
+    --enable-nonfree
+    --disable-static
+    --enable-libx264
+    --enable-libvpx
+    --enable-libmp3lame
+  )
+
+  if [[ "$TYPE" != "minimal" ]]; then
+    args+=(--enable-libfreetype --enable-libass --enable-libopus --enable-libvorbis)
+  fi
+
+  if [[ "$TYPE" == "full" ]]; then
+    args+=(--enable-libx265 --enable-libdav1d --enable-zlib)
+  fi
+
+  if [[ ${#args[@]} -eq 0 ]]; then
+    msg_error "FFmpeg configure args array is empty – aborting."
+    rm -rf "$TMP_DIR"
+    return 1
+  fi
+
+  ./configure "${args[@]}" >"$TMP_DIR/configure.log" 2>&1 || {
+    msg_error "FFmpeg ./configure failed (see $TMP_DIR/configure.log)"
+    cat "$TMP_DIR/configure.log" | tail -n 20
+    rm -rf "$TMP_DIR"
+    return 1
+  }
+
+  $STD make -j"$(nproc)"
+  $STD make install
+  echo "/usr/local/lib" >/etc/ld.so.conf.d/ffmpeg.conf
+  ldconfig
+
+  ldconfig -p | grep libavdevice >/dev/null || {
+    msg_error "libavdevice not registered with dynamic linker"
+    return 1
+  }
+
+  if ! command -v ffmpeg &>/dev/null; then
+    msg_error "FFmpeg installation failed"
+    rm -rf "$TMP_DIR"
+    return 1
+  fi
+
+  local FINAL_VERSION
+  FINAL_VERSION=$(ffmpeg -version | head -n1 | awk '{print $3}')
+  rm -rf "$TMP_DIR"
+  ensure_usr_local_bin_persist
+  msg_ok "Setup FFmpeg $FINAL_VERSION"
 }
