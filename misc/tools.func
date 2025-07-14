@@ -1597,7 +1597,7 @@ function setup_yq() {
   fi
 
   msg_info "Setup yq ($LATEST_VERSION)"
-  curl -fsSL "https://github.com/${GITHUB_REPO}/releases/download/v${LATEST_VERSION}/yq_linux_amd64" -o "$TMP_DIR/yq"
+  curl -fsSL "https://github.com/${GITHUB_REPO}/releases/download/v${LATEST_VERSION}/yq_linux_arm64" -o "$TMP_DIR/yq"
   chmod +x "$TMP_DIR/yq"
   mv "$TMP_DIR/yq" "$BINARY_PATH"
 
@@ -1718,7 +1718,7 @@ function setup_ffmpeg() {
   # Binary fallback mode
   if [[ "$TYPE" == "binary" ]]; then
     msg_info "Installing FFmpeg (static binary)"
-    curl -fsSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o "$TMP_DIR/ffmpeg.tar.xz"
+    curl -fsSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz -o "$TMP_DIR/ffmpeg.tar.xz"
     tar -xf "$TMP_DIR/ffmpeg.tar.xz" -C "$TMP_DIR"
     local EXTRACTED_DIR
     EXTRACTED_DIR=$(find "$TMP_DIR" -maxdepth 1 -type d -name "ffmpeg-*")
