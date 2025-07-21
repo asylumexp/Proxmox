@@ -37,7 +37,7 @@ function update_script() {
     msg_info "Updating ${APP} to v${RELEASE}"
     temp_file=$(mktemp)
     rm -rf /opt/rclone/*
-    curl -fsSL "https://github.com/rclone/rclone/releases/download/v${RELEASE}/rclone-v${RELEASE}-linux-amd64.zip" -o "$temp_file"
+    curl -fsSL "https://github.com/rclone/rclone/releases/download/v${RELEASE}/rclone-v${RELEASE}-linux-arm64.zip" -o "$temp_file"
     $STD unzip -j "$temp_file" '*/**' -d /opt/rclone
     echo "${RELEASE}" >/opt/${APP}_version.txt
     msg_ok "Updated $APP to v${RELEASE}"

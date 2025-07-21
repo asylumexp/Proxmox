@@ -36,8 +36,8 @@ function update_script() {
 
     msg_info "Updating ${APP} to v${RELEASE}"
     cd /opt
-    curl -fsSL "https://github.com/semaphoreui/semaphore/releases/download/v${RELEASE}/semaphore_${RELEASE}_linux_amd64.deb" -o $(basename "https://github.com/semaphoreui/semaphore/releases/download/v${RELEASE}/semaphore_${RELEASE}_linux_amd64.deb")
-    $STD dpkg -i semaphore_${RELEASE}_linux_amd64.deb
+    curl -fsSL "https://github.com/semaphoreui/semaphore/releases/download/v${RELEASE}/semaphore_${RELEASE}_linux_arm64.deb" -o $(basename "https://github.com/semaphoreui/semaphore/releases/download/v${RELEASE}/semaphore_${RELEASE}_linux_arm64.deb")
+    $STD dpkg -i semaphore_${RELEASE}_linux_arm64.deb
     echo "${RELEASE}" >"/opt/${APP}_version.txt"
     msg_ok "Updated ${APP} to v${RELEASE}"
 
@@ -46,7 +46,7 @@ function update_script() {
     msg_ok "Started Service"
 
     msg_info "Cleaning up"
-    rm -rf /opt/semaphore_${RELEASE}_linux_amd64.deb
+    rm -rf /opt/semaphore_${RELEASE}_linux_arm64.deb
     msg_ok "Cleaned"
     msg_ok "Updated Successfully"
   else
