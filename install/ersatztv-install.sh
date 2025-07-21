@@ -13,8 +13,6 @@ setting_up_container
 network_check
 update_os
 
-FFMPEG_VERSION="latest" FFMPEG_TYPE="medium" setup_ffmpeg
-
 msg_info "Setting Up Hardware Acceleration"
 $STD apt-get -y install {va-driver-all,ocl-icd-libopencl1,intel-opencl-icd,vainfo,intel-gpu-tools}
 if [[ "$CTTYPE" == "0" ]]; then
@@ -27,6 +25,14 @@ fi
 msg_ok "Set Up Hardware Acceleration"
 
 fetch_and_deploy_gh_release "ersatztv" "ErsatzTV/ErsatzTV" "prebuild" "latest" "/opt/ErsatzTV" "*linux-arm64.tar.gz"
+fetch_and_deploy_gh_release "ersatztv-ffmpeg" "ErsatzTV/ErsatzTV-ffmpeg" "prebuild" "latest" "/opt/ErsatzTV-ffmpeg" "*-linuxarm64-gpl-7.1.tar.xz"
+
+msg_info "Set ErsatzTV-ffmpeg links"
+chmod +x /opt/ErsatzTV-ffmpeg/bin/*
+ln -sf /opt/ErsatzTV-ffmpeg/bin/ffmpeg /usr/local/bin/ffmpeg
+ln -sf /opt/ErsatzTV-ffmpeg/bin/ffplay /usr/local/bin/ffplay
+ln -sf /opt/ErsatzTV-ffmpeg/bin/ffprobe /usr/local/bin/ffprobe
+msg_ok "ffmpeg links set"
 
 msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/ersatzTV.service

@@ -28,33 +28,33 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -s https://api.github.com/repos/plankanban/planka/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
+  RELEASE=$(curl -s https://api.github.com/repos/plankanban/planka/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ "${RELEASE}" != "$(cat ~/.planka 2>/dev/null)" ]] || [[ ! -f ~/.planka ]]; then
     msg_info "Stopping $APP"
     systemctl stop planka
     msg_ok "Stopped $APP"
 
-    msg_info "Updating $APP to ${RELEASE}"
-    mkdir -p /opt/planka-backup
-    mkdir -p /opt/planka-backup/favicons
-    mkdir -p /opt/planka-backup/user-avatars
-    mkdir -p /opt/planka-backup/background-images
-    mkdir -p /opt/planka-backup/attachments
+    msg_info "Backing up data"
+    mkdir -p /opt/planka-backup/{favicons,user-avatars,background-images,attachments}
     mv /opt/planka/.env /opt/planka-backup
-    [ -n "$(ls -A /opt/planka/public/favicons 2>/dev/null)" ] && mv /opt/planka/public/favicons/* /opt/planka-backup/favicons/
-    [ -n "$(ls -A /opt/planka/public/user-avatars 2>/dev/null)" ] && mv /opt/planka/public/user-avatars/* /opt/planka-backup/user-avatars/
-    [ -n "$(ls -A /opt/planka/public/background-images 2>/dev/null)" ] && mv /opt/planka/public/background-images/* /opt/planka-backup/background-images/
-    [ -n "$(ls -A /opt/planka/private/attachments 2>/dev/null)" ] && mv /opt/planka/private/attachments/* /opt/planka-backup/attachments/
+    [ -d /opt/planka/public/favicons ] && find /opt/planka/public/favicons -maxdepth 1 -type f -exec mv -t /opt/planka-backup/favicons {} +
+    [ -d /opt/planka/public/user-avatars ] && find /opt/planka/public/user-avatars -maxdepth 1 -type f -exec mv -t /opt/planka-backup/user-avatars {} +
+    [ -d /opt/planka/public/background-images ] && find /opt/planka/public/background-images -maxdepth 1 -type f -exec mv -t /opt/planka-backup/background-images {} +
+    [ -d /opt/planka/private/attachments ] && find /opt/planka/private/attachments -maxdepth 1 -type f -exec mv -t /opt/planka-backup/attachments {} +
     rm -rf /opt/planka
+    msg_ok "Backed up data"
+
     fetch_and_deploy_gh_release "planka" "plankanban/planka" "prebuild" "latest" "/opt/planka" "planka-prebuild.zip"
     cd /opt/planka
     $STD npm install
+    
+    msg_info "Restoring data"
     mv /opt/planka-backup/.env /opt/planka/
-    [ -n "$(ls -A /opt/planka-backup/favicons 2>/dev/null)" ] && mv /opt/planka-backup/favicons/* /opt/planka/public/favicons/
-    [ -n "$(ls -A /opt/planka-backup/user-avatars 2>/dev/null)" ] && mv /opt/planka-backup/user-avatars/* /opt/planka/public/user-avatars/
-    [ -n "$(ls -A /opt/planka-backup/background-images 2>/dev/null)" ] && mv /opt/planka-backup/background-images/* /opt/planka/public/background-images/
-    [ -n "$(ls -A /opt/planka-backup/attachments 2>/dev/null)" ] && mv /opt/planka-backup/attachments/* /opt/planka/private/attachments/
-    msg_ok "Updated $APP to ${RELEASE}"
+    [ -d /opt/planka-backup/favicons ] && find /opt/planka-backup/favicons -maxdepth 1 -type f -exec mv -t /opt/planka/public/favicons {} +
+    [ -d /opt/planka-backup/user-avatars ] && find /opt/planka-backup/user-avatars -maxdepth 1 -type f -exec mv -t /opt/planka/public/user-avatars {} +
+    [ -d /opt/planka-backup/background-images ] && find /opt/planka-backup/background-images -maxdepth 1 -type f -exec mv -t /opt/planka/public/background-images {} +
+    [ -d /opt/planka-backup/attachments ] && find /opt/planka-backup/attachments -maxdepth 1 -type f -exec mv -t /opt/planka/private/attachments {} +
+    msg_ok "Restored data"
 
     msg_info "Starting $APP"
     systemctl start planka

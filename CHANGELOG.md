@@ -10,6 +10,113 @@
 > [!CAUTION]
 Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit the project's popularity for potentially malicious purposes.
 
+## 2025-07-21
+
+## 2025-07-20
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Fix OpenWebUI install/update scripts [@karamanliev](https://github.com/karamanliev) ([#6093](https://github.com/community-scripts/ProxmoxVE/pull/6093))
+
+  - #### ✨ New Features
+
+    - karakeep: add DB_WAL_MODE; suppress test output [@vhsdream](https://github.com/vhsdream) ([#6101](https://github.com/community-scripts/ProxmoxVE/pull/6101))
+
+## 2025-07-19
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Fixed nag script on ProxMox 8.4.5 [@imcrazytwkr](https://github.com/imcrazytwkr) ([#6084](https://github.com/community-scripts/ProxmoxVE/pull/6084))
+
+## 2025-07-18
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - AdventureLog: add backup folder before update [@MickLesk](https://github.com/MickLesk) ([#6066](https://github.com/community-scripts/ProxmoxVE/pull/6066))
+
+  - #### ✨ New Features
+
+    - Bar-Assistant: add Cocktail database [@MickLesk](https://github.com/MickLesk) ([#6068](https://github.com/community-scripts/ProxmoxVE/pull/6068))
+    - ErsatzTV: use project prebuild ffmpeg version [@MickLesk](https://github.com/MickLesk) ([#6067](https://github.com/community-scripts/ProxmoxVE/pull/6067))
+
+## 2025-07-17
+
+### 🆕 New Scripts
+
+  - Cloudreve ([#6044](https://github.com/community-scripts/ProxmoxVE/pull/6044))
+
+### 🚀 Updated Scripts
+
+  - config-file: set GATE [@ahmaddxb](https://github.com/ahmaddxb) ([#6042](https://github.com/community-scripts/ProxmoxVE/pull/6042))
+
+  - #### 🐞 Bug Fixes
+
+    - add "setup_composer" in update_script (baikal, bar-assistant, firefly) [@MickLesk](https://github.com/MickLesk) ([#6047](https://github.com/community-scripts/ProxmoxVE/pull/6047))
+    - PLANKA: Fix update procedure [@tremor021](https://github.com/tremor021) ([#6031](https://github.com/community-scripts/ProxmoxVE/pull/6031))
+
+  - #### ✨ New Features
+
+    - Reactive Resume: switch source to community-maintained fork [@vhsdream](https://github.com/vhsdream) ([#6051](https://github.com/community-scripts/ProxmoxVE/pull/6051))
+
+## 2025-07-16
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - homepage.sh: resolves #6028 [@vhsdream](https://github.com/vhsdream) ([#6032](https://github.com/community-scripts/ProxmoxVE/pull/6032))
+    - karakeep-install: Disable Playwright browser download, remove MCP build [@vhsdream](https://github.com/vhsdream) ([#5833](https://github.com/community-scripts/ProxmoxVE/pull/5833))
+
+  - #### 🔧 Refactor
+
+    - chore: reorganize nginxproxymanager update script [@Kirbo](https://github.com/Kirbo) ([#5971](https://github.com/community-scripts/ProxmoxVE/pull/5971))
+
+## 2025-07-15
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - checkmk: change password crawling based on there docs [@MickLesk](https://github.com/MickLesk) ([#6001](https://github.com/community-scripts/ProxmoxVE/pull/6001))
+    - Whiptail: Improve Dialogue to work with ESC [@MickLesk](https://github.com/MickLesk) ([#6003](https://github.com/community-scripts/ProxmoxVE/pull/6003))
+    - 2FAuth: Improve Update-Check [@MickLesk](https://github.com/MickLesk) ([#5998](https://github.com/community-scripts/ProxmoxVE/pull/5998))
+
+  - #### 💥 Breaking Changes
+
+    - EMQX: Purge Old Install (remove acl.conf too!) [@MickLesk](https://github.com/MickLesk) ([#5999](https://github.com/community-scripts/ProxmoxVE/pull/5999))
+
+  - #### 🔧 Refactor
+
+    - Refactor: PeaNUT [@MickLesk](https://github.com/MickLesk) ([#6002](https://github.com/community-scripts/ProxmoxVE/pull/6002))
+
+## 2025-07-14
+
+### 🆕 New Scripts
+
+  - Bar Assistant ([#5977](https://github.com/community-scripts/ProxmoxVE/pull/5977))
+- Mealie ([#5968](https://github.com/community-scripts/ProxmoxVE/pull/5968))
+
+### 🚀 Updated Scripts
+
+  - Config-File: Some Addons, Bugfixes...  [@MickLesk](https://github.com/MickLesk) ([#5978](https://github.com/community-scripts/ProxmoxVE/pull/5978))
+
+  - #### 🐞 Bug Fixes
+
+    - add --break-system-packages certbot-dns-cloudflare to the nginxproxym… [@tug-benson](https://github.com/tug-benson) ([#5957](https://github.com/community-scripts/ProxmoxVE/pull/5957))
+    - Dashy: remove unbound variable (RELEASE) [@MickLesk](https://github.com/MickLesk) ([#5974](https://github.com/community-scripts/ProxmoxVE/pull/5974))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - Update nic-offloading-fix: add Intel as search Text  [@calvin-li-developer](https://github.com/calvin-li-developer) ([#5954](https://github.com/community-scripts/ProxmoxVE/pull/5954))
+
 ## 2025-07-12
 
 ## 2025-07-11

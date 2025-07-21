@@ -191,7 +191,6 @@ base_settings() {
   GATE=""
   APT_CACHER=""
   APT_CACHER_IP=""
-  #DISABLEIP6="no"
   MTU=""
   SD=""
   NS=""
@@ -235,25 +234,30 @@ CT_TYPE="${CT_TYPE}"
 DISK_SIZE="${DISK_SIZE}"
 CORE_COUNT="${CORE_COUNT}"
 RAM_SIZE="${RAM_SIZE}"
+VERBOSE="${VERBOSE}"
+PW="${PW##-password }"
+#CT_ID=$NEXTID
 HN="${HN}"
 BRG="${BRG}"
+NET="${NET}"
+IPV6_METHOD="${IPV6_METHOD:-none}"
+# Set this only if using "IPV6_METHOD=static"
+#IPV6STATIC="fd00::1234/64"
+
+GATE="${GATE:-none}"
 APT_CACHER_IP="${APT_CACHER_IP:-none}"
-DISABLEIP6=""
-PW='${PW:-none}'
+MTU="${MTU:-1500}"
+SD="${SD:-none}"
+NS="${NS:-none}"
+MAC="${MAC:-none}"
+VLAN="${VLAN:-none}"
 SSH="${SSH}"
 SSH_AUTHORIZED_KEY="${SSH_AUTHORIZED_KEY}"
-VERBOSE="${VERBOSE}"
 TAGS="${TAGS:-none}"
-VLAN="${VLAN:-none}"
-MTU="${MTU:-1500}"
-GATE="${GATE:-none}"
-SD="${SD:-none}"
-MAC="${MAC:-none}"
-NS="${NS:-none}"
-NET="${NET}"
-FUSE="${ENABLE_FUSE}"
-
+ENABLE_FUSE="$ENABLE_FUSE"
+ENABLE_TUN="$ENABLE_TUN"
 EOF
+
       echo -e "${INFO}${BOLD}${GN}Writing configuration to ${FILEPATH}${CL}"
     else
       echo -e "${INFO}${BOLD}${RD}Configuration file already exists at ${FILEPATH}${CL}"
@@ -267,24 +271,29 @@ CT_TYPE="${CT_TYPE}"
 DISK_SIZE="${DISK_SIZE}"
 CORE_COUNT="${CORE_COUNT}"
 RAM_SIZE="${RAM_SIZE}"
+VERBOSE="${VERBOSE}"
+PW="${PW##-password }"
+#CT_ID=$NEXTID
 HN="${HN}"
 BRG="${BRG}"
+NET="${NET}"
+IPV6_METHOD="${IPV6_METHOD:-none}"
+
+# Set this only if using "IPV6_METHOD=static"
+#IPV6STATIC="fd00::1234/64"
+
+GATE="${GATE:-none}"
 APT_CACHER_IP="${APT_CACHER_IP:-none}"
-DISABLEIP6=""
-PW='${PW:-none}'
+MTU="${MTU:-1500}"
+SD="${SD:-none}"
+NS="${NS:-none}"
+MAC="${MAC:-none}"
+VLAN="${VLAN:-none}"
 SSH="${SSH}"
 SSH_AUTHORIZED_KEY="${SSH_AUTHORIZED_KEY}"
-VERBOSE="${VERBOSE}"
 TAGS="${TAGS:-none}"
-VLAN="${VLAN:-none}"
-MTU="${MTU:-1500}"
-GATE="${GATE:-none}"
-SD="${SD:-none}"
-MAC="${MAC:-none}"
-NS="${NS:-none}"
-NET="${NET}"
-FUSE="${ENABLE_FUSE}"
-
+ENABLE_FUSE="$ENABLE_FUSE"
+ENABLE_TUN="$ENABLE_TUN"
 EOF
         echo -e "${INFO}${BOLD}${GN}Writing configuration to ${FILEPATH}${CL}"
       else
@@ -666,13 +675,6 @@ advanced_settings() {
     fi
   fi
 
-  # if (whiptail --backtitle "Proxmox VE Helper Scripts" --defaultno --title "IPv6" --yesno "Disable IPv6?" 10 58); then
-  #   DISABLEIP6="yes"
-  # else
-  #   DISABLEIP6="no"
-  # fi
-  # echo -e "${DISABLEIPV6}${BOLD}${DGN}Disable IPv6: ${BGN}$DISABLEIP6${CL}"
-
   if MTU1=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set Interface MTU Size (leave blank for default [The MTU of your selected vmbr, default is 1500])" 8 58 --title "MTU SIZE" 3>&1 1>&2 2>&3); then
     if [ -z "$MTU1" ]; then
       MTU1="Default"
@@ -814,7 +816,6 @@ DIAGNOSTICS=yes
 #"ram_size"
 #"os_type"
 #"os_version"
-#"disableip6"
 #"nsapp"
 #"method"
 #"pve_version"
@@ -841,7 +842,6 @@ DIAGNOSTICS=no
 #"ram_size"
 #"os_type"
 #"os_version"
-#"disableip6"
 #"nsapp"
 #"method"
 #"pve_version"
@@ -873,19 +873,23 @@ install_script() {
   header_info
   while true; do
 
-    CHOICE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "SETTINGS" --menu "Choose an option:" \
-      18 60 6 \
+    TMP_CHOICE=$(whiptail --backtitle "Proxmox VE Helper Scripts" \
+      --title "SETTINGS" \
+      --menu "Choose an option:" 20 60 6 \
       "1" "Default Settings" \
       "2" "Default Settings (with verbose)" \
       "3" "Advanced Settings" \
       "4" "Use Config File" \
       "5" "Diagnostic Settings" \
-      "6" "Exit" --nocancel --default-item "1" 3>&1 1>&2 2>&3)
+      "6" "Exit" \
+      --default-item "1" 3>&1 1>&2 2>&3) || true
 
-    if [ $? -ne 0 ]; then
-      echo -e "${CROSS}${RD} Menu canceled. Exiting.${CL}"
+    if [ -z "$TMP_CHOICE" ]; then
+      echo -e "\n${CROSS}${RD}Menu canceled. Exiting script.${CL}\n"
       exit 0
     fi
+
+    CHOICE="$TMP_CHOICE"
 
     case $CHOICE in
     1)
@@ -941,11 +945,11 @@ install_script() {
 
       ;;
     6)
-      echo -e "${CROSS}${RD}Exiting.${CL}"
+      echo -e "\n${CROSS}${RD}Script terminated. Have a great day!${CL}\n"
       exit 0
       ;;
     *)
-      echo -e "${CROSS}${RD}Invalid option, please try again.${CL}"
+      echo -e "\n${CROSS}${RD}Invalid option, please try again.${CL}\n"
       ;;
     esac
   done
@@ -1070,7 +1074,6 @@ build_container() {
   export CACHER="$APT_CACHER"
   export CACHER_IP="$APT_CACHER_IP"
   export tz="$timezone"
-  #export DISABLEIPV6="$DISABLEIP6"
   export APPLICATION="$APP"
   export app="$NSAPP"
   export PASSWORD="$PW"
