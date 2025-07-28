@@ -362,13 +362,13 @@ fi
 msg_ok "Using ${CL}${BL}$STORAGE${CL} ${GN}for Storage Location."
 msg_ok "Virtual Machine ID is ${CL}${BL}$VMID${CL}."
 msg_info "Getting URL for Home Assistant Stable Disk Image"
-URL=https://github.com/home-assistant/operating-system/releases/download/Stable/haos_generic-aarch64-Stable.qcow2.xz
+URL=https://github.com/home-assistant/operating-system/releases/download/16.0/haos_generic-aarch64-16.0.qcow2.xz
 sleep 2
 msg_ok "${CL}${BL}${URL}${CL}"
 curl -f#SL -o "$(basename "$URL")" "$URL"
 echo -en "\e[1A\e[0K"
 FILE=$(basename $URL)
-msg_ok "Downloaded ${CL}${BL}haos_generic-aarch64-Stable.qcow2.xz${CL}"
+msg_ok "Downloaded ${CL}${BL}haos_generic-aarch64-16.0.qcow2.xz${CL}"
 msg_info "Extracting Disk Image"
 unxz $FILE
 STORAGE_TYPE=$(pvesm status -storage $STORAGE | awk 'NR>1 {print $2}')
