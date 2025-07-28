@@ -35,8 +35,8 @@ function update_script() {
     msg_ok "Removed old EMQX"
 
     msg_info "Downloading EMQX v${RELEASE}"
-    DEB_FILE="/tmp/emqx-enterprise-${RELEASE}-debian12-amd64.deb"
-    curl -fsSL -o "$DEB_FILE" "https://www.emqx.com/en/downloads/enterprise/v${RELEASE}/emqx-enterprise-${RELEASE}-debian12-amd64.deb"
+    DEB_FILE="/tmp/emqx-enterprise-${RELEASE}-debian12-arm64.deb"
+    curl -fsSL -o "$DEB_FILE" "https://www.emqx.com/en/downloads/enterprise/v${RELEASE}/emqx-enterprise-${RELEASE}-debian12-arm64.deb"
     msg_ok "Downloaded EMQX"
 
     msg_info "Installing EMQX"
