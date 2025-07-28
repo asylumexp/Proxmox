@@ -10,7 +10,131 @@
 > [!CAUTION]
 Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit the project's popularity for potentially malicious purposes.
 
+## 2025-07-28
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - add 'g++' to actualbudget-install.sh [@saivishnu725](https://github.com/saivishnu725) ([#6293](https://github.com/community-scripts/ProxmoxVE/pull/6293))
+
+  - #### ✨ New Features
+
+    - ProxmoxVE 9.0 Beta: add BETA Version as test in pve_check [@MickLesk](https://github.com/MickLesk) ([#6295](https://github.com/community-scripts/ProxmoxVE/pull/6295))
+    - karakeep: Run workers in prod without tsx [@vhsdream](https://github.com/vhsdream) ([#6285](https://github.com/community-scripts/ProxmoxVE/pull/6285))
+
+## 2025-07-27
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - karakeep: export DATA_DIR from user config in update [@vhsdream](https://github.com/vhsdream) ([#6283](https://github.com/community-scripts/ProxmoxVE/pull/6283))
+    - go2rtc: Fix release download handling [@tremor021](https://github.com/tremor021) ([#6280](https://github.com/community-scripts/ProxmoxVE/pull/6280))
+
+## 2025-07-26
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - PiAlert: Update dependencies [@leiweibau](https://github.com/leiweibau) ([#6251](https://github.com/community-scripts/ProxmoxVE/pull/6251))
+
+## 2025-07-25
+
+### 🆕 New Scripts
+
+  - Cleanuparr ([#6238](https://github.com/community-scripts/ProxmoxVE/pull/6238))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Immich: fix #6236 [@vhsdream](https://github.com/vhsdream) ([#6243](https://github.com/community-scripts/ProxmoxVE/pull/6243))
+    - Wizarr: use absolute path to uv [@vhsdream](https://github.com/vhsdream) ([#6221](https://github.com/community-scripts/ProxmoxVE/pull/6221))
+    - Immich v1.136.0 [@vhsdream](https://github.com/vhsdream) ([#6219](https://github.com/community-scripts/ProxmoxVE/pull/6219))
+
+## 2025-07-24
+
+### 🆕 New Scripts
+
+  - Alpine TeamSpeak Server [@tremor021](https://github.com/tremor021) ([#6201](https://github.com/community-scripts/ProxmoxVE/pull/6201))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Immich: Pin Version to v1.135.3 [@MickLesk](https://github.com/MickLesk) ([#6212](https://github.com/community-scripts/ProxmoxVE/pull/6212))
+    - Habitica: force npm to 10 [@MickLesk](https://github.com/MickLesk) ([#6192](https://github.com/community-scripts/ProxmoxVE/pull/6192))
+    - sabnzbd: add uv setup in update [@MickLesk](https://github.com/MickLesk) ([#6191](https://github.com/community-scripts/ProxmoxVE/pull/6191))
+
+  - #### ✨ New Features
+
+    - SnipeIT - Update dependencies  [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#6217](https://github.com/community-scripts/ProxmoxVE/pull/6217))
+    - Refactor: VictoriaMetrics [@tremor021](https://github.com/tremor021) ([#6210](https://github.com/community-scripts/ProxmoxVE/pull/6210))
+    - Headscale: Add headscale-admin UI as option [@tremor021](https://github.com/tremor021) ([#6205](https://github.com/community-scripts/ProxmoxVE/pull/6205))
+
+  - #### 🔧 Refactor
+
+    - Refactor: Gokapi [@tremor021](https://github.com/tremor021) ([#6197](https://github.com/community-scripts/ProxmoxVE/pull/6197))
+    - Refactor: duplicati [@tremor021](https://github.com/tremor021) ([#6202](https://github.com/community-scripts/ProxmoxVE/pull/6202))
+    - Refactor: go2rtc [@tremor021](https://github.com/tremor021) ([#6198](https://github.com/community-scripts/ProxmoxVE/pull/6198))
+    - Refactor: Headscale [@tremor021](https://github.com/tremor021) ([#6180](https://github.com/community-scripts/ProxmoxVE/pull/6180))
+
+## 2025-07-23
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - documenso: remove customerId by creating initial user [@MickLesk](https://github.com/MickLesk) ([#6171](https://github.com/community-scripts/ProxmoxVE/pull/6171))
+
+## 2025-07-22
+
+### 🆕 New Scripts
+
+  - Salt ([#6116](https://github.com/community-scripts/ProxmoxVE/pull/6116))
+- LinkStack ([#6137](https://github.com/community-scripts/ProxmoxVE/pull/6137))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - tools.func - fix typo for target_file [@tjcomserv](https://github.com/tjcomserv) ([#6156](https://github.com/community-scripts/ProxmoxVE/pull/6156))
+    - fix(nginxproxymanager.sh): Set the version number before build. [@JMarcosHP](https://github.com/JMarcosHP) ([#6139](https://github.com/community-scripts/ProxmoxVE/pull/6139))
+
+  - #### ✨ New Features
+
+    - Fixed the previous fix of the anti-nag hook and propagated fixes everywhere [@imcrazytwkr](https://github.com/imcrazytwkr) ([#6162](https://github.com/community-scripts/ProxmoxVE/pull/6162))
+    - [core]: Improved LXC Container Startup Handling [@MickLesk](https://github.com/MickLesk) ([#6142](https://github.com/community-scripts/ProxmoxVE/pull/6142))
+    - wallos: add cron in installer for yearly cost [@CrazyWolf13](https://github.com/CrazyWolf13) ([#6133](https://github.com/community-scripts/ProxmoxVE/pull/6133))
+
+  - #### 💥 Breaking Changes
+
+    - gitea-mirror: add: migration to 3.0 [@CrazyWolf13](https://github.com/CrazyWolf13) ([#6138](https://github.com/community-scripts/ProxmoxVE/pull/6138))
+
+  - #### 🔧 Refactor
+
+    - [core]: tools.func: increase setup_php function [@MickLesk](https://github.com/MickLesk) ([#6141](https://github.com/community-scripts/ProxmoxVE/pull/6141))
+
+### 🌐 Website
+
+  - Bump form-data from 4.0.3 to 4.0.4 in /frontend [@dependabot[bot]](https://github.com/dependabot[bot]) ([#6150](https://github.com/community-scripts/ProxmoxVE/pull/6150))
+
 ## 2025-07-21
+
+### 🆕 New Scripts
+
+  - Teamspeak-Server ([#6121](https://github.com/community-scripts/ProxmoxVE/pull/6121))
+
+### 🚀 Updated Scripts
+
+  - pve-post-installer: remove Nag-File if already exist [@luckman212](https://github.com/luckman212) ([#6098](https://github.com/community-scripts/ProxmoxVE/pull/6098))
+
+  - #### 🐞 Bug Fixes
+
+    - firefly: fix permissions at update [@MickLesk](https://github.com/MickLesk) ([#6119](https://github.com/community-scripts/ProxmoxVE/pull/6119))
+    - nginxproxymanager: remove injected footer link (tteck) [@MickLesk](https://github.com/MickLesk) ([#6117](https://github.com/community-scripts/ProxmoxVE/pull/6117))
 
 ## 2025-07-20
 

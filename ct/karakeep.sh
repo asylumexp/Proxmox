@@ -52,6 +52,10 @@ function update_script() {
   rm -rf /opt/karakeep
   msg_ok "Update prepared"
 
+  if grep -q "start:prod" /etc/systemd/system/karakeep-workers.service; then
+    sed -i 's|^ExecStart=.*$|ExecStart=/usr/bin/node dist/index.mjs|' /etc/systemd/system/karakeep-workers.service
+    systemctl daemon-reload
+  fi
   fetch_and_deploy_gh_release "karakeep" "karakeep-app/karakeep"
   if command -v corepack >/dev/null; then
     $STD corepack disable
@@ -60,6 +64,7 @@ function update_script() {
   NODE_VERSION="22" NODE_MODULE="pnpm@${MODULE_VERSION}" setup_nodejs
 
   msg_info "Updating ${APP} to v${RELEASE}"
+  corepack enable
   export PUPPETEER_SKIP_DOWNLOAD="true"
   export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="true"
   export NEXT_TELEMETRY_DISABLED=1
@@ -69,10 +74,12 @@ function update_script() {
   $STD pnpm build
   cd /opt/karakeep/apps/workers
   $STD pnpm install --frozen-lockfile
+  $STD pnpm build
   cd /opt/karakeep/apps/cli
   $STD pnpm install --frozen-lockfile
   $STD pnpm build
-  export DATA_DIR=/opt/karakeep_data
+  DATA_DIR="$(sed -n '/^DATA_DIR/p' /etc/karakeep/karakeep.env | awk -F= '{print $2}')"
+  export DATA_DIR="${DATA_DIR:-/opt/karakeep_data}"
   cd /opt/karakeep/packages/db
   $STD pnpm migrate
   $STD pnpm store prune

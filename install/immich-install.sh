@@ -266,7 +266,7 @@ GEO_DIR="${INSTALL_DIR}/geodata"
 mkdir -p "$INSTALL_DIR"
 mkdir -p {"${APP_DIR}","${UPLOAD_DIR}","${GEO_DIR}","${ML_DIR}","${INSTALL_DIR}"/cache}
 
-fetch_and_deploy_gh_release "immich" "immich-app/immich" "tarball" "latest" "$SRC_DIR"
+fetch_and_deploy_gh_release "immich" "immich-app/immich" "tarball" "v1.136.0" "$SRC_DIR"
 
 msg_info "Installing ${APPLICATION} (more patience please)"
 
@@ -282,7 +282,7 @@ cd "$SRC_DIR"/web
 $STD npm ci
 $STD npm run build
 cd "$SRC_DIR"
-cp -a server/{node_modules,dist,bin,resources,package.json,package-lock.json,start*.sh} "$APP_DIR"/
+cp -a server/{node_modules,dist,bin,resources,package.json,package-lock.json,bin/start.sh} "$APP_DIR"/
 cp -a web/build "$APP_DIR"/www
 cp LICENSE "$APP_DIR"
 cd "$APP_DIR"

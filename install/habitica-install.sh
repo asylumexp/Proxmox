@@ -22,16 +22,17 @@ curl -fsSL "http://ports.ubuntu.com/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu
 $STD dpkg -i libssl1.1_1.1.1f-1ubuntu2_arm64.deb
 msg_ok "Installed Dependencies"
 
-NODE_VERSION="20" NODE_MODULE="gulp-cli,mocha" setup_nodejs
+NODE_VERSION="20" NODE_MODULE="gulp-cli,mocha,npm@10" setup_nodejs
 fetch_and_deploy_gh_release "habitica" "HabitRPG/habitica" "tarball" "latest" "/opt/habitica"
 
 msg_info "Setup ${APPLICATION}"
 cd /opt/habitica
 $STD npm i
 $STD npm run postinstall
+cp config.json.example config.json
 $STD npm run client:build
 $STD gulp build:prod
-cp config.json.example config.json
+
 msg_ok "Setup ${APPLICATION}"
 
 msg_info "Creating Service"
