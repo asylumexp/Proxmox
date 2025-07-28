@@ -35,7 +35,7 @@ function update_script() {
     systemctl stop cloudreve
     msg_ok "Stopped $APP"
 
-    fetch_and_deploy_gh_release "cloudreve" "cloudreve/cloudreve" "prebuild" "latest" "/opt/cloudreve" "*linux_amd64.tar.gz"
+    fetch_and_deploy_gh_release "cloudreve" "cloudreve/cloudreve" "prebuild" "latest" "/opt/cloudreve" "*linux_arm64.tar.gz"
 
     msg_info "Starting $APP"
     systemctl start cloudreve

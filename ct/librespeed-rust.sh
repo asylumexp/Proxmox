@@ -33,7 +33,7 @@ function update_script() {
     systemctl stop librespeed-rs
     msg_ok "Services Stopped"
 
-    fetch_and_deploy_gh_release "librespeed-rust" "librespeed/speedtest-rust" "binary" "latest" "/opt/librespeed-rust" "librespeed-rs-x86_64-unknown-linux-gnu.deb"
+    fetch_and_deploy_gh_release "librespeed-rust" "librespeed/speedtest-rust" "binary" "latest" "/opt/librespeed-rust" "librespeed-rs-aarch64-unknown-linux-gnu.deb"
 
     msg_info "Starting Service"
     systemctl start librespeed-rs
