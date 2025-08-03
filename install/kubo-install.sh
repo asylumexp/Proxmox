@@ -14,10 +14,9 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing IPFS"
-RELEASE=$(curl -fsSL https://github.com/ipfs/kubo/releases/latest | grep "title>Release" | cut -d " " -f 4)
-$STD curl -fsSL "https://github.com/ipfs/kubo/releases/download/${RELEASE}/kubo_${RELEASE}_linux-arm64.tar.gz" -o "kubo_${RELEASE}_linux-arm64.tar.gz"
-tar -xzf "kubo_${RELEASE}_linux-arm64.tar.gz" -C /usr/local
+fetch_and_deploy_gh_release "kubo" "ipfs/kubo" "prebuild" "latest" "/usr/local/kubo" "kubo*linux-arm64.tar.gz"
+
+msg_info "Configuring IPFS"
 $STD ln -s /usr/local/kubo/ipfs /usr/local/bin/ipfs
 $STD ipfs init
 ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
@@ -43,7 +42,7 @@ Environment=HOME=/root
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable --now -q ipfs.service
+systemctl enable -q --now ipfs
 msg_ok "Created Service"
 
 motd_ssh

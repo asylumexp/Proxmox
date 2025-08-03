@@ -37,8 +37,11 @@ function update_script() {
 
     fetch_and_deploy_gh_release "victoriametrics" "VictoriaMetrics/VictoriaMetrics" "prebuild" "latest" "/opt/victoriametrics" "victoria-metrics-linux-arm64-v+([0-9.]).tar.gz"
     fetch_and_deploy_gh_release "vmutils" "VictoriaMetrics/VictoriaMetrics" "prebuild" "latest" "/opt/victoriametrics" "vmutils-linux-arm64-v+([0-9.]).tar.gz"
-    fetch_and_deploy_gh_release "victorialogs" "VictoriaMetrics/VictoriaLogs" "prebuild" "latest" "/opt/victoriametrics" "victoria-logs-linux-arm64*.tar.gz"
-    fetch_and_deploy_gh_release "vlutils" "VictoriaMetrics/VictoriaLogs" "prebuild" "latest" "/opt/victoriametrics" "vlutils-linux-arm64*.tar.gz"
+
+    if [[ -f /etc/systemd/system/victoriametrics-logs.service ]]; then
+      fetch_and_deploy_gh_release "victorialogs" "VictoriaMetrics/VictoriaLogs" "prebuild" "latest" "/opt/victoriametrics" "victoria-logs-linux-arm64*.tar.gz"
+      fetch_and_deploy_gh_release "vlutils" "VictoriaMetrics/VictoriaLogs" "prebuild" "latest" "/opt/victoriametrics" "vlutils-linux-arm64*.tar.gz"
+    fi
     chmod +x /opt/victoriametrics/*
 
     msg_info "Starting $APP"

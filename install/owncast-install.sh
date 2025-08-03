@@ -19,13 +19,7 @@ $STD apt-get install -y wget
 $STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
-msg_info "Installing Owncast"
-mkdir /opt/owncast
-cd /opt/owncast
-curl -fsSL "$(curl -fsSL https://api.github.com/repos/owncast/owncast/releases/latest | grep download | grep linux-arm64 | cut -d\" -f4)" -o $(basename "$(curl -fsSL https://api.github.com/repos/owncast/owncast/releases/latest | grep download | grep linux-arm64 | cut -d\" -f4)")
-$STD unzip owncast*.zip
-rm owncast*.zip
-msg_ok "Installed Owncast"
+fetch_and_deploy_gh_release "owncast" "owncast/owncast" "prebuild" "latest" "/opt/owncast" "owncast*linux-arm64.zip"
 
 msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/owncast.service
