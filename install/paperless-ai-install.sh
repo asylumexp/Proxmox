@@ -21,6 +21,7 @@ msg_ok "Installed Dependencies"
 msg_info "Installing Python3"
 $STD apt-get install -y \
   python3-pip
+rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Installed Python3"
 
 setup_nodejs
