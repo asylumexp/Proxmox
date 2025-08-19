@@ -27,7 +27,6 @@ msg_ok "Installed Dependencies"
 
 msg_info "Installing Python Dependencies"
 $STD apt-get install -y \
-  python3-pip \
   python3-ldap \
   python3-msgpack \
   python3-regex
@@ -35,9 +34,10 @@ rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Installed Python Dependencies"
 
 NODE_VERSION="22" setup_nodejs
+PYTHON_VERSION="3.13" setup_uv
 
 msg_info "Installing Playwright"
-$STD pip install playwright
+$STD uv pip install playwright --system
 $STD playwright install-deps chromium
 msg_ok "Installed Playwright"
 
@@ -46,7 +46,7 @@ mkdir -p /opt/archivebox/{data,.npm,.cache,.local}
 $STD adduser --system --shell /bin/bash --gecos 'Archive Box User' --group --disabled-password --home /home/archivebox archivebox
 chown -R archivebox:archivebox /opt/archivebox/{data,.npm,.cache,.local}
 chmod -R 755 /opt/archivebox/data
-$STD pip install archivebox
+$STD uv pip install archivebox --system
 cd /opt/archivebox/data
 expect <<EOF
 set timeout -1

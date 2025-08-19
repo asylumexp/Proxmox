@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/build.func)
 # Copyright (c) 2021-2025 community-scripts ORG
-# Author: rcourtman
+# Author: rcourtman | vhsdream
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://github.com/rcourtman/Pulse
 
@@ -23,42 +23,48 @@ function update_script() {
   header_info
   check_container_storage
   check_container_resources
-  if [[ -d /opt/pulse-monitor ]]; then
-  msg_error "An old installation was detected. Please recreate the LXC from scratch (https://github.com/community-scripts/ProxmoxVE/pull/4848)"
-  exit 1
-  fi
   if [[ ! -d /opt/pulse ]]; then
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -fsSL https://api.github.com/repos/rcourtman/Pulse/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
-  if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
+
+  if [[ ! -f ~/.pulse ]]; then
+    msg_error "Old Installation Found! Please recreate the container due big changes in the software."
+    exit 1
+  fi
+
+  RELEASE=$(curl -fsSL https://api.github.com/repos/rcourtman/Pulse/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+  SERVICE_PATH="/etc/systemd/system"
+  if [[ "${RELEASE}" != "$(cat ~/.pulse 2>/dev/null)" ]] || [[ ! -f ~/.pulse ]]; then
     msg_info "Stopping ${APP}"
-    systemctl stop pulse
+    systemctl stop pulse*.service
     msg_ok "Stopped ${APP}"
 
-    msg_info "Updating Pulse"
-    temp_file=$(mktemp)
-    mkdir -p /opt/pulse
-    rm -rf /opt/pulse/*
-    curl -fsSL "https://github.com/rcourtman/Pulse/releases/download/v${RELEASE}/pulse-v${RELEASE}.tar.gz" -o "$temp_file"
-    tar zxf "$temp_file" --strip-components=1 -C /opt/pulse
-    echo "${RELEASE}" >/opt/${APP}_version.txt
-    msg_ok "Updated Pulse to ${RELEASE}"
+    if [[ -f /opt/pulse/pulse ]]; then
+      rm -f /opt/pulse/pulse
+    fi
 
-    msg_info "Setting permissions for /opt/pulse..."
-    chown -R pulse:pulse "/opt/pulse"
-    find "/opt/pulse" -type d -exec chmod 755 {} \;
-    find "/opt/pulse" -type f -exec chmod 644 {} \;
-    msg_ok "Set permissions."
+    fetch_and_deploy_gh_release "pulse" "rcourtman/Pulse" "prebuild" "latest" "/opt/pulse" "*-linux-amd64.tar.gz"
+    chown -R pulse:pulse /etc/pulse /opt/pulse
+    if [[ -f "$SERVICE_PATH"/pulse.service ]]; then
+      mv "$SERVICE_PATH"/pulse.service "$SERVICE_PATH"/pulse-backend.service
+    fi
+    sed -i -e 's|pulse/pulse|pulse/bin/pulse|' \
+      -e 's/^Environment="API.*$//' "$SERVICE_PATH"/pulse-backend.service
+    systemctl daemon-reload
+    if grep -q 'pulse-home:/bin/bash' /etc/passwd; then
+      usermod -s /usr/sbin/nologin pulse
+    fi
 
     msg_info "Starting ${APP}"
-    systemctl start pulse
+    systemctl start pulse-backend
     msg_ok "Started ${APP}"
+
+    msg_ok "Updated Successfully"
   else
-    msg_ok "No update required. ${APP} is already at ${RELEASE}."
+    msg_ok "No update required. ${APP} is already at v${RELEASE}"
   fi
-  exit  
+  exit
 }
 
 start

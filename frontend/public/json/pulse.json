@@ -12,7 +12,7 @@
   "documentation": null,
   "website": "https://github.com/rcourtman/Pulse",
   "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons/webp/pulse.webp",
-  "config_path": "/opt/pulse/.env",
+  "config_path": "/etc/pulse",
   "description": "A lightweight monitoring application for Proxmox VE that displays real-time status for VMs and containers via a simple web interface.",
   "install_methods": [
     {
@@ -38,6 +38,10 @@
     },
     {
       "text": "After installation, access the web interface to configure your Proxmox connection details through the built-in setup wizard",
+      "type": "Info"
+    },
+    {
+      "text": "Configure authentication in the Web UI => Settings => Security",
       "type": "Info"
     }
   ]

@@ -10,7 +10,293 @@
 > [!CAUTION]
 Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit the project's popularity for potentially malicious purposes.
 
+## 2025-08-19
+
+## 2025-08-18
+
+### 🆕 New Scripts
+
+  - CopyParty [@MickLesk](https://github.com/MickLesk) ([#6929](https://github.com/community-scripts/ProxmoxVE/pull/6929))
+- Twingate-Connector ([#6921](https://github.com/community-scripts/ProxmoxVE/pull/6921))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Keycloak: fix update function [@MickLesk](https://github.com/MickLesk) ([#6943](https://github.com/community-scripts/ProxmoxVE/pull/6943))
+    - Immich: add message to indicate image-processing library update check [@vhsdream](https://github.com/vhsdream) ([#6935](https://github.com/community-scripts/ProxmoxVE/pull/6935))
+    - fix(uptimekuma): unbound env variable [@vidonnus](https://github.com/vidonnus) ([#6922](https://github.com/community-scripts/ProxmoxVE/pull/6922))
+
+  - #### 🔧 Refactor
+
+    - Refactor: Traefik [@tremor021](https://github.com/tremor021) ([#6940](https://github.com/community-scripts/ProxmoxVE/pull/6940))
+    - Refactor: Traccar [@tremor021](https://github.com/tremor021) ([#6942](https://github.com/community-scripts/ProxmoxVE/pull/6942))
+    - Refactor: Umami [@tremor021](https://github.com/tremor021) ([#6939](https://github.com/community-scripts/ProxmoxVE/pull/6939))
+    - Refactor: GoMFT [@tremor021](https://github.com/tremor021) ([#6916](https://github.com/community-scripts/ProxmoxVE/pull/6916))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - OpenWRT: add info for VLAN-aware in frontend [@MickLesk](https://github.com/MickLesk) ([#6944](https://github.com/community-scripts/ProxmoxVE/pull/6944))
+
+## 2025-08-17
+
+## 2025-08-16
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Wireguard: Fix WGDashboard not updating [@tremor021](https://github.com/tremor021) ([#6898](https://github.com/community-scripts/ProxmoxVE/pull/6898))
+    - Tandoor Images Fix [@WarLord185](https://github.com/WarLord185) ([#6892](https://github.com/community-scripts/ProxmoxVE/pull/6892))
+
+  - #### 🔧 Refactor
+
+    - Refactor: Uptime Kuma [@tremor021](https://github.com/tremor021) ([#6902](https://github.com/community-scripts/ProxmoxVE/pull/6902))
+    - Refactor: Wallos [@tremor021](https://github.com/tremor021) ([#6900](https://github.com/community-scripts/ProxmoxVE/pull/6900))
+
+## 2025-08-15
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Immich: pin Vectorchord release; adjust extension update commands [@vhsdream](https://github.com/vhsdream) ([#6878](https://github.com/community-scripts/ProxmoxVE/pull/6878))
+
+  - #### ✨ New Features
+
+    - Bump Immich to v1.138.0 [@vhsdream](https://github.com/vhsdream) ([#6813](https://github.com/community-scripts/ProxmoxVE/pull/6813))
+
+  - #### 🔧 Refactor
+
+    - Refactor: Wavelog [@tremor021](https://github.com/tremor021) ([#6869](https://github.com/community-scripts/ProxmoxVE/pull/6869))
+    - Refactor: WatchYourLAN [@tremor021](https://github.com/tremor021) ([#6871](https://github.com/community-scripts/ProxmoxVE/pull/6871))
+    - Refactor: Watcharr [@tremor021](https://github.com/tremor021) ([#6872](https://github.com/community-scripts/ProxmoxVE/pull/6872))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - Add missing default user & pass for RabbitMQ [@hbenyoussef](https://github.com/hbenyoussef) ([#6883](https://github.com/community-scripts/ProxmoxVE/pull/6883))
+
+## 2025-08-14
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Bugfix Searxng Redis replaced with Valkey in installscript  [@elvito](https://github.com/elvito) ([#6831](https://github.com/community-scripts/ProxmoxVE/pull/6831))
+    - Spoolman: Use environment variables to control host and port [@tremor021](https://github.com/tremor021) ([#6825](https://github.com/community-scripts/ProxmoxVE/pull/6825))
+    - Pulse: v4.3.2+ [@vhsdream](https://github.com/vhsdream) ([#6859](https://github.com/community-scripts/ProxmoxVE/pull/6859))
+    - rustdeskserver: fix API version file [@steadfasterX](https://github.com/steadfasterX) ([#6847](https://github.com/community-scripts/ProxmoxVE/pull/6847))
+    - Immich: quickfix #6836 [@vhsdream](https://github.com/vhsdream) ([#6848](https://github.com/community-scripts/ProxmoxVE/pull/6848))
+
+  - #### 🔧 Refactor
+
+    - Refactor: WikiJS [@tremor021](https://github.com/tremor021) ([#6840](https://github.com/community-scripts/ProxmoxVE/pull/6840))
+    - Refactor: Zoraxy [@tremor021](https://github.com/tremor021) ([#6823](https://github.com/community-scripts/ProxmoxVE/pull/6823))
+    - Refactor: Zitadel [@tremor021](https://github.com/tremor021) ([#6826](https://github.com/community-scripts/ProxmoxVE/pull/6826))
+    - Refactor: WordPress [@tremor021](https://github.com/tremor021) ([#6837](https://github.com/community-scripts/ProxmoxVE/pull/6837))
+    - Refactor: WireGuard [@tremor021](https://github.com/tremor021) ([#6839](https://github.com/community-scripts/ProxmoxVE/pull/6839))
+    - Refactor: yt-dlp-webui [@tremor021](https://github.com/tremor021) ([#6832](https://github.com/community-scripts/ProxmoxVE/pull/6832))
+    - Refactor: Zipline [@tremor021](https://github.com/tremor021) ([#6829](https://github.com/community-scripts/ProxmoxVE/pull/6829))
+    - Refactor: Zot-Registry [@tremor021](https://github.com/tremor021) ([#6822](https://github.com/community-scripts/ProxmoxVE/pull/6822))
+    - Refactor: Zwave-JS-UI [@tremor021](https://github.com/tremor021) ([#6820](https://github.com/community-scripts/ProxmoxVE/pull/6820))
+
+### 🧰 Maintenance
+
+  - #### 📂 Github
+
+    - ProxmoxVE svg logo [@LuisPalacios](https://github.com/LuisPalacios) ([#6846](https://github.com/community-scripts/ProxmoxVE/pull/6846))
+
+## 2025-08-13
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - emby: fix update output [@MickLesk](https://github.com/MickLesk) ([#6791](https://github.com/community-scripts/ProxmoxVE/pull/6791))
+    - archivebox: fix wrong formatted uv command [@MickLesk](https://github.com/MickLesk) ([#6794](https://github.com/community-scripts/ProxmoxVE/pull/6794))
+    - Outline: Fixes for install and update procedures [@tremor021](https://github.com/tremor021) ([#6806](https://github.com/community-scripts/ProxmoxVE/pull/6806))
+    - Palmr: fix release version parsing // increase RAM [@vhsdream](https://github.com/vhsdream) ([#6800](https://github.com/community-scripts/ProxmoxVE/pull/6800))
+    - myspeed: fix update process if no data exist [@MickLesk](https://github.com/MickLesk) ([#6795](https://github.com/community-scripts/ProxmoxVE/pull/6795))
+    - crafty-controller: fix update output [@MickLesk](https://github.com/MickLesk) ([#6793](https://github.com/community-scripts/ProxmoxVE/pull/6793))
+    - GLPI: Fix timezone command [@tremor021](https://github.com/tremor021) ([#6783](https://github.com/community-scripts/ProxmoxVE/pull/6783))
+
+  - #### ✨ New Features
+
+    - Docker LXC: Add Portainer info [@tremor021](https://github.com/tremor021) ([#6803](https://github.com/community-scripts/ProxmoxVE/pull/6803))
+    - AgentDVR: Added update function [@tremor021](https://github.com/tremor021) ([#6804](https://github.com/community-scripts/ProxmoxVE/pull/6804))
+
+## 2025-08-12
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Pulse: binary path changed AGAIN; other fixes [@vhsdream](https://github.com/vhsdream) ([#6770](https://github.com/community-scripts/ProxmoxVE/pull/6770))
+    - fix alpine syncthing config not being created [@GamerHun1238](https://github.com/GamerHun1238) ([#6773](https://github.com/community-scripts/ProxmoxVE/pull/6773))
+    - change owner of hortusfox directory [@snow2k9](https://github.com/snow2k9) ([#6763](https://github.com/community-scripts/ProxmoxVE/pull/6763))
+
+## 2025-08-11
+
+### 🚀 Updated Scripts
+
+  - Reactive Resume: use new release parsing; other fixes [@vhsdream](https://github.com/vhsdream) ([#6744](https://github.com/community-scripts/ProxmoxVE/pull/6744))
+
+## 2025-08-10
+
+### 🚀 Updated Scripts
+
+  - Fix/thinpool detection as it allows to delete active thinpool with different name than "data" [@onethree7](https://github.com/onethree7) ([#6730](https://github.com/community-scripts/ProxmoxVE/pull/6730))
+
+  - #### 🐞 Bug Fixes
+
+    - Pulse: fix binary path [@vhsdream](https://github.com/vhsdream) ([#6740](https://github.com/community-scripts/ProxmoxVE/pull/6740))
+    - Karakeep: chromium fix [@vhsdream](https://github.com/vhsdream) ([#6729](https://github.com/community-scripts/ProxmoxVE/pull/6729))
+
+## 2025-08-09
+
+### 🚀 Updated Scripts
+
+  - Paperless-AI: increase HDD Space to 20G [@MickLesk](https://github.com/MickLesk) ([#6716](https://github.com/community-scripts/ProxmoxVE/pull/6716))
+
+  - #### 🐞 Bug Fixes
+
+    - vaultwarden: increase disk space [@CrazyWolf13](https://github.com/CrazyWolf13) ([#6712](https://github.com/community-scripts/ProxmoxVE/pull/6712))
+    - Fix: Bazarr requirements.txt file not parse-able by UV [@Xerovoxx98](https://github.com/Xerovoxx98) ([#6701](https://github.com/community-scripts/ProxmoxVE/pull/6701))
+    - Improve backup of adventurelog folder [@ThomasDetemmerman](https://github.com/ThomasDetemmerman) ([#6653](https://github.com/community-scripts/ProxmoxVE/pull/6653))
+    - HomeBox: Fixes for update procedure [@tremor021](https://github.com/tremor021) ([#6702](https://github.com/community-scripts/ProxmoxVE/pull/6702))
+
+  - #### 🔧 Refactor
+
+    - Refactor: Tianji [@MickLesk](https://github.com/MickLesk) ([#6662](https://github.com/community-scripts/ProxmoxVE/pull/6662))
+
+## 2025-08-08
+
+### 🆕 New Scripts
+
+  - Palmr ([#6642](https://github.com/community-scripts/ProxmoxVE/pull/6642))
+- HortusFox ([#6641](https://github.com/community-scripts/ProxmoxVE/pull/6641))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Unifi: Update libssl dependency [@tremor021](https://github.com/tremor021) ([#6680](https://github.com/community-scripts/ProxmoxVE/pull/6680))
+    - HomeBox: Fix checking for existing install [@tremor021](https://github.com/tremor021) ([#6677](https://github.com/community-scripts/ProxmoxVE/pull/6677))
+    - Immich: unpin libvips revision [@vhsdream](https://github.com/vhsdream) ([#6669](https://github.com/community-scripts/ProxmoxVE/pull/6669))
+    - Meilisearch: fix wrong path switch [@MickLesk](https://github.com/MickLesk) ([#6668](https://github.com/community-scripts/ProxmoxVE/pull/6668))
+    - MariaDB: fix "feedback" (statistical informations) whiptail  [@MickLesk](https://github.com/MickLesk) ([#6657](https://github.com/community-scripts/ProxmoxVE/pull/6657))
+    - Karakeep: workaround/fix for #6593 [@vhsdream](https://github.com/vhsdream) ([#6648](https://github.com/community-scripts/ProxmoxVE/pull/6648))
+
+  - #### ✨ New Features
+
+    - Feature: FSTrim (Filesystem Trim) - Log / LVM Check / ZFS [@MickLesk](https://github.com/MickLesk) ([#6660](https://github.com/community-scripts/ProxmoxVE/pull/6660))
+    - IP Tag: Allow installation on PVE 9.x [@webhdx](https://github.com/webhdx) ([#6679](https://github.com/community-scripts/ProxmoxVE/pull/6679))
+
+  - #### 🔧 Refactor
+
+    - Refactor: Alpine IT-Tools [@tremor021](https://github.com/tremor021) ([#6579](https://github.com/community-scripts/ProxmoxVE/pull/6579))
+    - Refactor: ArchiveBox [@MickLesk](https://github.com/MickLesk) ([#6670](https://github.com/community-scripts/ProxmoxVE/pull/6670))
+    - Refactor: Bazarr [@MickLesk](https://github.com/MickLesk) ([#6663](https://github.com/community-scripts/ProxmoxVE/pull/6663))
+    - Refactor: Kometa [@MickLesk](https://github.com/MickLesk) ([#6673](https://github.com/community-scripts/ProxmoxVE/pull/6673))
+
+## 2025-08-07
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Commafeed: Fix Backup Handling while Update [@MickLesk](https://github.com/MickLesk) ([#6629](https://github.com/community-scripts/ProxmoxVE/pull/6629))
+    - VictoriaMetrics: Fix release fetching [@tremor021](https://github.com/tremor021) ([#6632](https://github.com/community-scripts/ProxmoxVE/pull/6632))
+
+  - #### ✨ New Features
+
+    - Feature: Post-PVE-Script (PVE9 Support + some Features) [@MickLesk](https://github.com/MickLesk) ([#6626](https://github.com/community-scripts/ProxmoxVE/pull/6626))
+    - Feature: Clean-LXC now supports Alpine based containers [@MickLesk](https://github.com/MickLesk) ([#6628](https://github.com/community-scripts/ProxmoxVE/pull/6628))
+
+  - #### 🔧 Refactor
+
+    - Refactor: Tandoor v2  [@MickLesk](https://github.com/MickLesk) ([#6635](https://github.com/community-scripts/ProxmoxVE/pull/6635))
+    - Refactor: Paymenter [@tremor021](https://github.com/tremor021) ([#6589](https://github.com/community-scripts/ProxmoxVE/pull/6589))
+
+## 2025-08-06
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - [core] better y/N handling for ressource check [@MickLesk](https://github.com/MickLesk) ([#6608](https://github.com/community-scripts/ProxmoxVE/pull/6608))
+    - fix: update Pulse scripts for v4 Go rewrite support [@rcourtman](https://github.com/rcourtman) ([#6574](https://github.com/community-scripts/ProxmoxVE/pull/6574))
+    - OpenProject: Fix missing apt update [@tremor021](https://github.com/tremor021) ([#6598](https://github.com/community-scripts/ProxmoxVE/pull/6598))
+
+  - #### ✨ New Features
+
+    - PVE9: Remove Beta Whiptail / add correct version check [@MickLesk](https://github.com/MickLesk) ([#6599](https://github.com/community-scripts/ProxmoxVE/pull/6599))
+
+## 2025-08-05
+
+### 🚀 Updated Scripts
+
+  - #### ✨ New Features
+
+    - NIC offloading: e1000 support [@rcastley](https://github.com/rcastley) ([#6575](https://github.com/community-scripts/ProxmoxVE/pull/6575))
+
+  - #### 💥 Breaking Changes
+
+    - Temporary Remove: SearXNG [@MickLesk](https://github.com/MickLesk) ([#6578](https://github.com/community-scripts/ProxmoxVE/pull/6578))
+
+  - #### 🔧 Refactor
+
+    - Refactor: Prometheus Alertmanager [@tremor021](https://github.com/tremor021) ([#6577](https://github.com/community-scripts/ProxmoxVE/pull/6577))
+
+## 2025-08-04
+
+### 🆕 New Scripts
+
+  - Tududi ([#6534](https://github.com/community-scripts/ProxmoxVE/pull/6534))
+- ots ([#6532](https://github.com/community-scripts/ProxmoxVE/pull/6532))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - MySpeed: fix update and copy old tests back [@MickLesk](https://github.com/MickLesk) ([#6550](https://github.com/community-scripts/ProxmoxVE/pull/6550))
+    - Composer: PATH Issues when updating [@MickLesk](https://github.com/MickLesk) ([#6543](https://github.com/community-scripts/ProxmoxVE/pull/6543))
+
+  - #### ✨ New Features
+
+    - Feat: enable tun for VPN services (wireguard) [@MickLesk](https://github.com/MickLesk) ([#6562](https://github.com/community-scripts/ProxmoxVE/pull/6562))
+    - turnkey: add hostname & Fix TUN access [@masterofrpm](https://github.com/masterofrpm) ([#6512](https://github.com/community-scripts/ProxmoxVE/pull/6512))
+    - Increase: Core Network check (pre-LXC Creation)  [@MickLesk](https://github.com/MickLesk) ([#6546](https://github.com/community-scripts/ProxmoxVE/pull/6546))
+
+  - #### 🔧 Refactor
+
+    - Refactor: PrivateBin [@tremor021](https://github.com/tremor021) ([#6559](https://github.com/community-scripts/ProxmoxVE/pull/6559))
+    - Refactor: PocketID [@tremor021](https://github.com/tremor021) ([#6556](https://github.com/community-scripts/ProxmoxVE/pull/6556))
+    - Refactor: Pocketbase [@tremor021](https://github.com/tremor021) ([#6554](https://github.com/community-scripts/ProxmoxVE/pull/6554))
+    - Refactor: NocoDB [@tremor021](https://github.com/tremor021) ([#6548](https://github.com/community-scripts/ProxmoxVE/pull/6548))
+    - Refactor: PairDrop [@tremor021](https://github.com/tremor021) ([#6528](https://github.com/community-scripts/ProxmoxVE/pull/6528))
+
 ## 2025-08-03
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - docmost: remove build step due new version [@MickLesk](https://github.com/MickLesk) ([#6513](https://github.com/community-scripts/ProxmoxVE/pull/6513))
+    - Fix: Komga uses .komga as storage / so it fails after install [@MickLesk](https://github.com/MickLesk) ([#6517](https://github.com/community-scripts/ProxmoxVE/pull/6517))
+
+  - #### 💥 Breaking Changes
+
+    - Remove: Ubuntu 24.10-VM [@MickLesk](https://github.com/MickLesk) ([#6515](https://github.com/community-scripts/ProxmoxVE/pull/6515))
+
+  - #### 🔧 Refactor
+
+    - Refactor: openHAB [@tremor021](https://github.com/tremor021) ([#6524](https://github.com/community-scripts/ProxmoxVE/pull/6524))
+    - Refactor: OpenProject [@tremor021](https://github.com/tremor021) ([#6525](https://github.com/community-scripts/ProxmoxVE/pull/6525))
 
 ## 2025-08-02
 

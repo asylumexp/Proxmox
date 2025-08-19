@@ -13,35 +13,36 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies (Patience)"
+msg_info "Installing SearXNG dependencies"
+echo "deb http://deb.debian.org/debian bookworm-backports main" > /etc/apt/sources.list.d/backports.list
+$STD apt-get update
 $STD apt-get install -y \
-  redis-server \
-  build-essential \
-  libffi-dev \
-  libssl-dev \
-  git
-msg_ok "Installed Dependencies"
+  python3-dev python3-babel python3-venv python-is-python3 \
+  uwsgi uwsgi-plugin-python3 \
+  git build-essential libxslt-dev zlib1g-dev libffi-dev libssl-dev sudo valkey
+msg_ok "Installed dependencies"
 
-msg_info "Setup Python3"
-$STD apt-get install -y \
-  python3 \
-  python3-{pip,venv,yaml,dev}
-rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
-$STD pip install --upgrade pip setuptools wheel
-$STD pip install pyyaml
-msg_ok "Setup Python3"
+msg_info "Creating user and preparing directories"
+useradd --system --shell /bin/bash --home-dir "/usr/local/searxng" --comment 'Privacy-respecting metasearch engine' searxng || true
+mkdir -p /usr/local/searxng
+chown -R searxng:searxng /usr/local/searxng
+msg_ok "User and directories ready"
 
-msg_info "Setup SearXNG"
-mkdir -p /usr/local/searxng /etc/searxng
-useradd -d /etc/searxng searxng
-chown searxng:searxng /usr/local/searxng /etc/searxng
-$STD git clone https://github.com/searxng/searxng.git /usr/local/searxng/searxng-src
-cd /usr/local/searxng/
-sudo -u searxng python3 -m venv /usr/local/searxng/searx-pyenv
-source /usr/local/searxng/searx-pyenv/bin/activate
-$STD pip install --upgrade pip setuptools wheel
-$STD pip install pyyaml
-$STD pip install --use-pep517 --no-build-isolation -e /usr/local/searxng/searxng-src
+msg_info "Cloning SearXNG source"
+$STD sudo -H -u searxng git clone https://github.com/searxng/searxng /usr/local/searxng/searxng-src
+msg_ok "Cloned SearXNG"
+
+msg_info "Creating Python virtual environment"
+sudo -H -u searxng bash -c "
+  python3 -m venv /usr/local/searxng/searx-pyenv &&
+  . /usr/local/searxng/searx-pyenv/bin/activate &&
+  $STD pip install -U pip setuptools wheel pyyaml &&
+  $STD pip install --use-pep517 --no-build-isolation -e /usr/local/searxng/searxng-src
+"
+msg_ok "Python environment ready"
+
+msg_info "Configuring SearXNG settings"
+mkdir -p /etc/searxng
 SECRET_KEY=$(openssl rand -hex 32)
 cat <<EOF >/etc/searxng/settings.yml
 # SearXNG settings
@@ -57,8 +58,8 @@ server:
   secret_key: "${SECRET_KEY}"
   limiter: false
   image_proxy: true
-redis:
-  url: "redis://127.0.0.1:6379/0"
+valkey:
+  url: "valkey://localhost:6379/0"
 ui:
   static_use_hash: true
 enabled_plugins:
@@ -79,16 +80,17 @@ engines:
     shortcut: ddg
     display_error_messages: true
 EOF
+
 chown searxng:searxng /etc/searxng/settings.yml
 chmod 640 /etc/searxng/settings.yml
-msg_ok "Setup SearXNG"
+msg_ok "Configured settings"
 
 msg_info "Set up web services"
 cat <<EOF >/etc/systemd/system/searxng.service
 [Unit]
 Description=SearXNG service
-After=network.target redis-server.service
-Wants=redis-server.service
+After=network.target valkey-server.service
+Wants=valkey-server.service
 
 [Service]
 Type=simple

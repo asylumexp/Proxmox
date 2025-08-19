@@ -21,18 +21,25 @@ function find_orphaned_lvm {
     echo -e "\n🔍 Scanning for orphaned LVM volumes...\n"
 
     orphaned_volumes=()
-    while read -r lv vg size; do
+    while read -r lv vg size seg_type; do
         # Exclude system-critical LVs and Ceph OSDs
         if [[ "$lv" == "data" || "$lv" == "root" || "$lv" == "swap" || "$lv" =~ ^osd-block- ]]; then
             continue
         fi
+
+        # Exclude thin pools (any name)
+        if [[ "$seg_type" == "thin-pool" ]]; then
+            continue
+        fi
+
         container_id=$(echo "$lv" | grep -oE "[0-9]+" | head -1)
         # Check if the ID exists as a VM or LXC container
         if [ -f "/etc/pve/lxc/${container_id}.conf" ] || [ -f "/etc/pve/qemu-server/${container_id}.conf" ]; then
             continue
         fi
+
         orphaned_volumes+=("$lv" "$vg" "$size")
-    done < <(lvs --noheadings -o lv_name,vg_name,lv_size --separator ' ' | awk '{print $1, $2, $3}')
+    done < <(lvs --noheadings -o lv_name,vg_name,lv_size,seg_type --separator ' ' 2>/dev/null | awk '{print $1, $2, $3, $4}')
 
     # Display orphaned volumes
     echo -e "❗ The following orphaned LVM volumes were found:\n"

@@ -52,13 +52,14 @@ function update_script() {
   if [[ -f ~/.immich_library_revisions ]]; then
     libraries=("libjxl" "libheif" "libraw" "imagemagick" "libvips")
     cd "$BASE_DIR"
+    msg_info "Checking for updates to custom image-processing libraries"
     $STD git pull
     for library in "${libraries[@]}"; do
       compile_"$library"
     done
-    msg_ok "Image-processing libraries updated"
+    msg_ok "Image-processing libraries up to date"
   fi
-  RELEASE="1.137.3"
+  RELEASE="1.138.0"
   #RELEASE=$(curl -fsSL https://api.github.com/repos/immich-app/immich/releases?per_page=1 | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ -f ~/.immich && "$RELEASE" == "$(cat ~/.immich)" ]]; then
     msg_ok "No update required. ${APP} is already at v${RELEASE}"
@@ -74,7 +75,8 @@ function update_script() {
   APP_DIR="${INSTALL_DIR}/app"
   ML_DIR="${APP_DIR}/machine-learning"
   GEO_DIR="${INSTALL_DIR}/geodata"
-  VCHORD_RELEASE="$(curl -fsSL https://api.github.com/repos/tensorchord/vectorchord/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')"
+  VCHORD_RELEASE="0.4.3"
+  # VCHORD_RELEASE="$(curl -fsSL https://api.github.com/repos/tensorchord/vectorchord/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')"
 
   if [[ ! -f ~/.vchord_version ]] || [[ "$VCHORD_RELEASE" != "$(cat ~/.vchord_version)" ]]; then
     msg_info "Updating VectorChord"
@@ -91,7 +93,8 @@ function update_script() {
     $STD sudo -u postgres psql -d immich -c "ALTER EXTENSION vchord UPDATE;"
     systemctl restart postgresql
     if [[ ! -f ~/.vchord_version ]] || [[ ! "$(cat ~/.vchord_version)" > "0.3.0" ]]; then
-      $STD sudo -u postgres psql -d immich -c "REINDEX DATABASE;"
+      $STD sudo -u postgres psql -d immich -c "REINDEX INDEX face_index;"
+      $STD sudo -u postgres psql -d immich -c "REINDEX INDEX clip_index;"
     fi
     echo "$VCHORD_RELEASE" >~/.vchord_version
     rm ./vchord.deb
@@ -180,7 +183,10 @@ EOF
   msg_ok "Updated Immich CLI"
 
   chown -R immich:immich "$INSTALL_DIR"
-  echo "$RELEASE" >/opt/"${APP}"_version.txt
+  if [[ ! -f ~/.debian_version.bak ]]; then
+    cp /etc/debian_version ~/.debian_version.bak
+    sed -i 's/.*/13.0/' /etc/debian_version
+  fi
   msg_ok "Updated ${APP} to v${RELEASE}"
 
   msg_info "Cleaning up"
@@ -315,8 +321,7 @@ function compile_imagemagick() {
 
 function compile_libvips() {
   SOURCE=$SOURCE_DIR/libvips
-  # : "${LIBVIPS_REVISION:=$(jq -cr '.revision' "$BASE_DIR"/server/sources/libvips.json)}"
-  : "${LIBVIPS_REVISION:=8fa37a64547e392d3808eed8d72adab7e02b3d00}"
+  : "${LIBVIPS_REVISION:=$(jq -cr '.revision' "$BASE_DIR"/server/sources/libvips.json)}"
   if [[ "${update:-}" ]] || [[ "$LIBVIPS_REVISION" != "$(grep 'libvips' ~/.immich_library_revisions | awk '{print $2}')" ]]; then
     msg_info "Recompiling libvips"
     if [[ -d "$SOURCE" ]]; then rm -rf "$SOURCE"; fi

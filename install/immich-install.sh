@@ -98,7 +98,8 @@ NODE_VERSION="22" setup_nodejs
 PG_VERSION="16" PG_MODULES="pgvector" setup_postgresql
 
 msg_info "Setting up Postgresql Database"
-VCHORD_RELEASE="$(curl -fsSL https://api.github.com/repos/tensorchord/vectorchord/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')"
+VCHORD_RELEASE="0.4.3"
+# VCHORD_RELEASE="$(curl -fsSL https://api.github.com/repos/tensorchord/vectorchord/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')"
 curl -fsSL "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD_RELEASE}/postgresql-16-vchord_${VCHORD_RELEASE}-1_arm64.deb" -o vchord.deb
 $STD apt install -y ./vchord.deb
 rm vchord.deb
@@ -237,8 +238,7 @@ $STD make clean
 cd "$STAGING_DIR"
 
 SOURCE=$SOURCE_DIR/libvips
-# : "${LIBVIPS_REVISION:=$(jq -cr '.revision' $BASE_DIR/server/sources/libvips.json)}"
-: "${LIBVIPS_REVISION:=8fa37a64547e392d3808eed8d72adab7e02b3d00}"
+: "${LIBVIPS_REVISION:=$(jq -cr '.revision' $BASE_DIR/server/sources/libvips.json)}"
 $STD git clone https://github.com/libvips/libvips.git "$SOURCE"
 cd "$SOURCE"
 $STD git reset --hard "$LIBVIPS_REVISION"
@@ -266,7 +266,7 @@ GEO_DIR="${INSTALL_DIR}/geodata"
 mkdir -p "$INSTALL_DIR"
 mkdir -p {"${APP_DIR}","${UPLOAD_DIR}","${GEO_DIR}","${ML_DIR}","${INSTALL_DIR}"/cache}
 
-fetch_and_deploy_gh_release "immich" "immich-app/immich" "tarball" "v1.137.3" "$SRC_DIR"
+fetch_and_deploy_gh_release "immich" "immich-app/immich" "tarball" "v1.138.0" "$SRC_DIR"
 
 msg_info "Installing ${APPLICATION} (more patience please)"
 
@@ -432,6 +432,8 @@ systemctl enable -q --now "$APPLICATION"-ml.service "$APPLICATION"-web.service
 msg_ok "Created user, env file, scripts and services"
 
 sed -i "$ a VERSION_ID=12" /etc/os-release # otherwise the motd_ssh function will fail
+cp /etc/debian_version ~/.debian_version.bak
+sed -i 's/.*/13.0/' /etc/debian_version
 motd_ssh
 customize
 
