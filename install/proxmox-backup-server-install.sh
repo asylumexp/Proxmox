@@ -21,7 +21,7 @@ msg_info "Installing Proxmox Backup Server (Patience)"
 export DEBIAN_FRONTEND=noninteractive
 git clone https://github.com/wofferl/proxmox-backup-arm64
 cd ./proxmox-backup-arm64
-$STD ./build.sh download
+$STD ./build.sh install
 $STD apt install -y -f ./packages/*
 msg_ok "Installed Proxmox Backup Server"
 
