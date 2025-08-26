@@ -925,6 +925,7 @@ install_script() {
   pve_check
   shell_check
   root_check
+  arch_check
   ssh_check
   maxkeys_check
   diagnostics_check
