@@ -878,9 +878,7 @@ function fetch_and_deploy_gh_release() {
     ### Binary Mode ###
   elif [[ "$mode" == "binary" ]]; then
     local arch
-    arch=$(dpkg --print-architecture 2>/dev/null || uname -m)
-    [[ "$arch" == "x86_64" ]] && arch="amd64"
-    [[ "$arch" == "aarch64" ]] && arch="arm64"
+    arch="arm64"
 
     local assets url_match=""
     assets=$(echo "$json" | jq -r '.assets[].browser_download_url')
