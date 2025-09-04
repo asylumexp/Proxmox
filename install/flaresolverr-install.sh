@@ -32,18 +32,7 @@ $STD apt-get install -y \
 rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Updated Python3"
 
-msg_info "Installing FlareSolverr"
-$STD git clone https://github.com/FlareSolverr/FlareSolverr /opt/flaresolverr
-$STD pip install -r /opt/flaresolverr/requirements.txt
-msg_ok "Installed FlareSolverr"
-
-msg_info "Installing Chrome Webdriver"
-RELEASE=$(curl -fsSL https://api.github.com/repos/electron/electron/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
-wget -q "https://github.com/electron/electron/releases/download/$RELEASE/chromedriver-$RELEASE-linux-arm64.zip" -O /opt/flaresolverr/webdriver.zip
-cd /opt/flaresolverr
-unzip -q webdriver.zip chromedriver
-sed -i 's|^PATCHED_DRIVER_PATH = None|PATCHED_DRIVER_PATH = "/opt/flaresolverr/chromedriver"|' ./src/utils.py
-msg_ok "Installed Chrome Webdriver"
+fetch_and_deploy_gh_release "flaresolverr" "FlareSolverr/FlareSolverr" "prebuild" "v3.3.25" "/opt/flaresolverr" "flaresolverr_linux_arm64.tar.gz"
 
 msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/flaresolverr.service

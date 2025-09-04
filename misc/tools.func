@@ -161,19 +161,19 @@ function setup_postgresql() {
     if [[ "$CURRENT_PG_VERSION" == "$PG_VERSION" ]]; then
       : # PostgreSQL is already at the desired version – no action needed
     else
-      msg_info "Detected PostgreSQL $CURRENT_PG_VERSION, preparing upgrade to $PG_VERSION"
+      $STD msg_info "Detected PostgreSQL $CURRENT_PG_VERSION, preparing upgrade to $PG_VERSION"
       NEED_PG_INSTALL=true
     fi
   else
-    msg_info "Setup PostgreSQL $PG_VERSION"
+
     NEED_PG_INSTALL=true
   fi
 
   if [[ "$NEED_PG_INSTALL" == true ]]; then
     if [[ -n "$CURRENT_PG_VERSION" ]]; then
-      msg_info "Dumping PostgreSQL $CURRENT_PG_VERSION data"
+      $STD msg_info "Dumping PostgreSQL $CURRENT_PG_VERSION data"
       su - postgres -c "pg_dumpall > /var/lib/postgresql/backup_$(date +%F)_v${CURRENT_PG_VERSION}.sql"
-      msg_ok "Data dump completed"
+      $STD msg_ok "Data dump completed"
 
       systemctl stop postgresql
     fi
@@ -186,29 +186,26 @@ function setup_postgresql() {
 
     echo "deb https://apt.postgresql.org/pub/repos/apt ${DISTRO}-pgdg main" \
       >/etc/apt/sources.list.d/pgdg.list
-    $STD msg_ok "Repository added"
 
     $STD apt-get update
+    $STD msg_ok "Repository added"
 
     msg_info "Setup PostgreSQL $PG_VERSION"
     $STD apt-get install -y "postgresql-${PG_VERSION}" "postgresql-client-${PG_VERSION}"
-    msg_ok "Setup PostgreSQL $PG_VERSION"
 
     if [[ -n "$CURRENT_PG_VERSION" ]]; then
       $STD apt-get purge -y "postgresql-${CURRENT_PG_VERSION}" "postgresql-client-${CURRENT_PG_VERSION}" || true
     fi
 
-    $STD msg_info "Starting PostgreSQL $PG_VERSION"
     systemctl enable -q --now postgresql
-    $STD msg_ok "PostgreSQL $PG_VERSION started"
 
     if [[ -n "$CURRENT_PG_VERSION" ]]; then
-      msg_info "Restoring dumped data"
+      $STD msg_info "Restoring dumped data"
       su - postgres -c "psql < /var/lib/postgresql/backup_$(date +%F)_v${CURRENT_PG_VERSION}.sql"
-      msg_ok "Data restored"
+      $STD msg_ok "Data restored"
     fi
 
-    msg_ok "PostgreSQL $PG_VERSION installed"
+    $STD msg_ok "PostgreSQL $PG_VERSION installed"
   fi
 
   # Install optional PostgreSQL modules
@@ -216,13 +213,13 @@ function setup_postgresql() {
     IFS=',' read -ra MODULES <<<"$PG_MODULES"
     for module in "${MODULES[@]}"; do
       local pkg="postgresql-${PG_VERSION}-${module}"
-      msg_info "Setup PostgreSQL module/s: $pkg"
+      $STD msg_info "Setup PostgreSQL module/s: $pkg"
       $STD apt-get install -y "$pkg" || {
         msg_error "Failed to install $pkg"
         continue
       }
     done
-    msg_ok "Setup PostgreSQL modules"
+    $STD msg_ok "Setup PostgreSQL modules"
   fi
 }
 
@@ -886,7 +883,12 @@ function fetch_and_deploy_gh_release() {
     # If explicit filename pattern is provided (param $6), match that first
     if [[ -n "$asset_pattern" ]]; then
       for u in $assets; do
-        [[ "$u" =~ $asset_pattern || "$u" == *"$asset_pattern" ]] && url_match="$u" && break
+        case "${u##*/}" in
+        $asset_pattern)
+          url_match="$u"
+          break
+          ;;
+        esac
       done
     fi
 
@@ -1248,8 +1250,20 @@ function setup_uv() {
   local UV_TAR
 
   case "$ARCH" in
-  x86_64) UV_TAR="uv-x86_64-unknown-linux-gnu.tar.gz" ;;
-  aarch64) UV_TAR="uv-aarch64-unknown-linux-gnu.tar.gz" ;;
+  x86_64)
+    if grep -qi "alpine" /etc/os-release; then
+      UV_TAR="uv-x86_64-unknown-linux-musl.tar.gz"
+    else
+      UV_TAR="uv-x86_64-unknown-linux-gnu.tar.gz"
+    fi
+    ;;
+  aarch64)
+    if grep -qi "alpine" /etc/os-release; then
+      UV_TAR="uv-aarch64-unknown-linux-musl.tar.gz"
+    else
+      UV_TAR="uv-aarch64-unknown-linux-gnu.tar.gz"
+    fi
+    ;;
   *)
     msg_error "Unsupported architecture: $ARCH"
     rm -rf "$TMP_DIR"
@@ -1303,8 +1317,13 @@ function setup_uv() {
     return 1
   }
 
-  rm -rf "$TMP_DIR"
+  if [[ ":$PATH:" != *":/usr/local/bin:"* ]]; then
+    export PATH="/usr/local/bin:$PATH"
+  fi
   ensure_usr_local_bin_persist
+  if ! $STD uv python update-shell; then
+    msg_error "uv shell integration failed – continuing anyway"
+  fi
   msg_ok "Setup uv $LATEST_VERSION"
 
   # Optional: install specific Python version
@@ -1387,7 +1406,9 @@ function setup_gs() {
     rm -rf "$TMP_DIR"
   }
   $STD apt-get install -y build-essential libpng-dev zlib1g-dev
-  ./configure >/dev/null && make && sudo make install >/dev/null
+  $STD ./configure >/dev/null
+  $STD make
+  $STD sudo make install
   local EXIT_CODE=$?
   hash -r
   if [[ ! -x "$(command -v gs)" ]]; then
@@ -1890,4 +1911,129 @@ function setup_ffmpeg() {
   rm -rf "$TMP_DIR"
   ensure_usr_local_bin_persist
   msg_ok "Setup FFmpeg $FINAL_VERSION"
+}
+
+# ------------------------------------------------------------------------------
+# Checks for new GitHub release (latest tag).
+#
+# Description:
+#   - Queries the GitHub API for the latest release tag
+#   - Compares it to a local cached version (~/.<app>)
+#   - If newer, sets global CHECK_UPDATE_RELEASE and returns 0
+#
+# Usage:
+#     if check_for_gh_release "flaresolverr" "FlareSolverr/FlareSolverr" [optional] "v1.1.1"; then
+#       # trigger update...
+#     fi
+#     exit 0
+#     } (end of update_script not from the function)
+#
+# Notes:
+#   - Requires `jq` (auto-installed if missing)
+#   - Does not modify anything, only checks version state
+#   - Does not support pre-releases
+# ------------------------------------------------------------------------------
+check_for_gh_release() {
+  local app="$1"
+  local source="$2"
+  local pinned_version_in="${3:-}" # optional
+  local app_lc="${app,,}"
+  local current_file="$HOME/.${app_lc}"
+
+  msg_info "Checking for update: ${app}"
+
+  # DNS check
+  if ! getent hosts api.github.com >/dev/null 2>&1; then
+    msg_error "Network error: cannot resolve api.github.com"
+    return 1
+  fi
+
+  # jq check
+  if ! command -v jq &>/dev/null; then
+    $STD apt-get update -qq
+    $STD apt-get install -y jq || {
+      msg_error "Failed to install jq"
+      return 1
+    }
+  fi
+
+  # Fetch releases and exclude drafts/prereleases
+  local releases_json
+  releases_json=$(curl -fsSL --max-time 20 \
+    -H 'Accept: application/vnd.github+json' \
+    -H 'X-GitHub-Api-Version: 2022-11-28' \
+    "https://api.github.com/repos/${source}/releases") || {
+    msg_error "Unable to fetch releases for ${app}"
+    return 1
+  }
+
+  mapfile -t raw_tags < <(jq -r '.[] | select(.draft==false and .prerelease==false) | .tag_name' <<<"$releases_json")
+  if ((${#raw_tags[@]} == 0)); then
+    msg_error "No stable releases found for ${app}"
+    return 1
+  fi
+
+  local clean_tags=()
+  for t in "${raw_tags[@]}"; do
+    clean_tags+=("${t#v}")
+  done
+
+  local latest_raw="${raw_tags[0]}"
+  local latest_clean="${clean_tags[0]}"
+
+  # current installed (stored without v)
+  local current=""
+  if [[ -f "$current_file" ]]; then
+    current="$(<"$current_file")"
+  else
+    # Migration: search for any /opt/*_version.txt
+    local legacy_files
+    mapfile -t legacy_files < <(find /opt -maxdepth 1 -type f -name "*_version.txt" 2>/dev/null)
+    if ((${#legacy_files[@]} == 1)); then
+      current="$(<"${legacy_files[0]}")"
+      echo "${current#v}" >"$current_file"
+      rm -f "${legacy_files[0]}"
+    fi
+  fi
+  current="${current#v}"
+
+  # Pinned version handling
+  if [[ -n "$pinned_version_in" ]]; then
+    local pin_clean="${pinned_version_in#v}"
+    local match_raw=""
+    for i in "${!clean_tags[@]}"; do
+      if [[ "${clean_tags[$i]}" == "$pin_clean" ]]; then
+        match_raw="${raw_tags[$i]}"
+        break
+      fi
+    done
+
+    if [[ -z "$match_raw" ]]; then
+      msg_error "Pinned version ${pinned_version_in} not found upstream"
+      return 1
+    fi
+
+    if [[ "$current" != "$pin_clean" ]]; then
+      msg_info "${app} pinned to ${pinned_version_in} (installed ${current:-none}) → update required"
+      CHECK_UPDATE_RELEASE="$match_raw"
+      return 0
+    fi
+
+    if [[ "$pin_clean" == "$latest_clean" ]]; then
+      msg_ok "${app} pinned to ${pinned_version_in} (up to date)"
+    else
+      msg_ok "${app} pinned to ${pinned_version_in} (already installed, upstream ${latest_raw})"
+    fi
+    return 1
+  fi
+
+  # No pinning → use latest
+  if [[ -z "$current" || "$current" != "$latest_clean" ]]; then
+    CHECK_UPDATE_RELEASE="$latest_raw"
+    msg_info "New release available: ${latest_raw} (current: v${current:-none})"
+    return 0
+  fi
+
+  msg_ok "${app} is up to date (${latest_raw})"
+  return 1
 }

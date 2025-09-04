@@ -27,10 +27,20 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  msg_info "Updating ${APP}"
 
-  $STD bash <(curl -fsSL https://download.technitium.com/dns/install.sh)
-  msg_ok "Updated Successfully"
+  RELEASE=$(curl -fsSL https://technitium.com/dns/ | grep -oP 'Version \K[\d.]+')
+  if [[ ! -f ~/.technitium || "${RELEASE}" != "$(cat ~/.technitium)" ]]; then
+    msg_info "Updating ${APP}"
+    curl -fsSL "https://download.technitium.com/dns/DnsServerPortable.tar.gz" -o /opt/DnsServerPortable.tar.gz
+    $STD tar zxvf /opt/DnsServerPortable.tar.gz -C /opt/technitium/dns/
+    msg_ok "Updated Successfully"
+
+    msg_info "Cleaning up"
+    rm -f /opt/DnsServerPortable.tar.gz
+    msg_ok "Cleaned up"
+  else
+    msg_ok "No update required.  ${APP} is already at v${RELEASE}."
+  fi
   exit
 }
 

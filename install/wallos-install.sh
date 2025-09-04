@@ -22,8 +22,6 @@ cd /opt/wallos
 mv /opt/wallos/db/wallos.empty.db /opt/wallos/db/wallos.db
 chown -R www-data:www-data /opt/wallos
 chmod -R 755 /opt/wallos
-echo "${RELEASE}" >"/opt/${APPLICATION}_version.txt"
-
 cat <<EOF >/etc/apache2/sites-available/wallos.conf
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost

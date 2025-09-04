@@ -203,10 +203,9 @@ function exit-script() {
 
 function default_settings() {
   VMID=$(get_valid_nextid)
-  FORMAT=",efitype=4m"
-  MACHINE=""
+  MACHINE="q35"
+  FORMAT=""
   DISK_SIZE="32G"
-  DISK_CACHE=""
   HN="umbrelos"
   CPU_TYPE=""
   CORE_COUNT="2"
@@ -218,9 +217,8 @@ function default_settings() {
   START_VM="yes"
   METHOD="default"
   echo -e "${CONTAINERID}${BOLD}${DGN}Virtual Machine ID: ${BGN}${VMID}${CL}"
-  echo -e "${CONTAINERTYPE}${BOLD}${DGN}Machine Type: ${BGN}i440fx${CL}"
+  echo -e "${CONTAINERTYPE}${BOLD}${DGN}Machine Type: ${BGN}q35${CL}"
   echo -e "${DISKSIZE}${BOLD}${DGN}Disk Size: ${BGN}${DISK_SIZE}${CL}"
-  echo -e "${DISKSIZE}${BOLD}${DGN}Disk Cache: ${BGN}None${CL}"
   echo -e "${HOSTNAME}${BOLD}${DGN}Hostname: ${BGN}${HN}${CL}"
   echo -e "${OS}${BOLD}${DGN}CPU Model: ${BGN}KVM64${CL}"
   echo -e "${CPUCORE}${BOLD}${DGN}CPU Cores: ${BGN}${CORE_COUNT}${CL}"
@@ -253,16 +251,16 @@ function advanced_settings() {
     fi
   done
 
-  if MACH=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "MACHINE TYPE" --radiolist --cancel-button Exit-Script "Choose Type" 10 58 2 \
-    "i440fx" "Machine i440fx" ON \
-    "q35" "Machine q35" OFF \
+  if MACH=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "MACHINE TYPE" --radiolist --cancel-button Exit-Script "Choose Machine Type" 10 58 2 \
+    "q35" "Modern (PCIe, UEFI, default)" ON \
+    "i440fx" "Legacy (older compatibility)" OFF \
     3>&1 1>&2 2>&3); then
-    if [ $MACH = q35 ]; then
-      echo -e "${CONTAINERTYPE}${BOLD}${DGN}Machine Type: ${BGN}$MACH${CL}"
+    if [ "$MACH" = "q35" ]; then
+      echo -e "${CONTAINERTYPE}${BOLD}${DGN}Machine Type: ${BGN}q35${CL}"
       FORMAT=""
       MACHINE=" -machine q35"
     else
-      echo -e "${CONTAINERTYPE}${BOLD}${DGN}Machine Type: ${BGN}$MACH${CL}"
+      echo -e "${CONTAINERTYPE}${BOLD}${DGN}Machine Type: ${BGN}i440fx${CL}"
       FORMAT=",efitype=4m"
       MACHINE=""
     fi
@@ -312,17 +310,20 @@ function advanced_settings() {
     exit-script
   fi
 
-  if CPU_TYPE1=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "CPU MODEL" --radiolist "Choose" --cancel-button Exit-Script 10 58 2 \
-    "0" "KVM64 (Default)" ON \
-    "1" "Host" OFF \
+  if CPU_TYPE1=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "CPU MODEL" --radiolist "Choose CPU Model" --cancel-button Exit-Script 10 58 2 \
+    "KVM64" "Default – safe for migration/compatibility" ON \
+    "Host" "Use host CPU features (faster, no migration)" OFF \
     3>&1 1>&2 2>&3); then
-    if [ $CPU_TYPE1 = "1" ]; then
+    case "$CPU_TYPE1" in
+    "Host")
       echo -e "${OS}${BOLD}${DGN}CPU Model: ${BGN}Host${CL}"
       CPU_TYPE=" -cpu host"
-    else
+      ;;
+    *)
       echo -e "${OS}${BOLD}${DGN}CPU Model: ${BGN}KVM64${CL}"
       CPU_TYPE=""
-    fi
+      ;;
+    esac
   else
     exit-script
   fi
@@ -433,86 +434,71 @@ pve_check
 ssh_check
 start_script
 
-post_to_api_vm
 msg_info "Validating Storage"
-while read -r line; do
-  TAG=$(echo $line | awk '{print $1}')
-  TYPE=$(echo $line | awk '{printf "%-10s", $2}')
-  FREE=$(echo $line | numfmt --field 4-6 --from-unit=K --to=iec --format %.2f | awk '{printf( "%9sB", $6)}')
-  ITEM="  Type: $TYPE Free: $FREE "
-  OFFSET=2
-  if [[ $((${#ITEM} + $OFFSET)) -gt ${MSG_MAX_LENGTH:-} ]]; then
-    MSG_MAX_LENGTH=$((${#ITEM} + $OFFSET))
-  fi
-  STORAGE_MENU+=("$TAG" "$ITEM" "OFF")
-done < <(pvesm status -content images | awk 'NR>1')
-VALID=$(pvesm status -content images | awk 'NR>1')
-if [ -z "$VALID" ]; then
+STORAGE_MENU=()
+while read -r tag type free; do
+  ITEM="Type: $type Free: $free"
+  STORAGE_MENU+=("$tag" "$ITEM" "OFF")
+done < <(pvesm status -content images | awk 'NR>1 {printf "%s %s %s\n", $1, $2, $6}')
+
+if [ ${#STORAGE_MENU[@]} -eq 0 ]; then
   msg_error "Unable to detect a valid storage location."
-  exit
+  exit 1
 elif [ $((${#STORAGE_MENU[@]} / 3)) -eq 1 ]; then
   STORAGE=${STORAGE_MENU[0]}
 else
   while [ -z "${STORAGE:+x}" ]; do
     STORAGE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "Storage Pools" --radiolist \
       "Which storage pool would you like to use for ${HN}?\nTo make a selection, use the Spacebar.\n" \
-      16 $(($MSG_MAX_LENGTH + 23)) 6 \
+      16 70 6 \
       "${STORAGE_MENU[@]}" 3>&1 1>&2 2>&3)
   done
 fi
 msg_ok "Using ${CL}${BL}$STORAGE${CL} ${GN}for Storage Location."
-msg_ok "Virtual Machine ID is ${CL}${BL}$VMID${CL}."
-msg_info "Retrieving the URL for $APP"
-URL="https://download.umbrel.com/release/latest/umbrelos-amd64.img.xz"
-FILE="$(basename "$URL")"
-sleep 2
-msg_ok "${CL}${BL}${URL}${CL}"
-curl -f#SL -o "$FILE" "$URL"
-msg_ok "Downloaded ${CL}${BL}${FILE}${CL}"
 
-if ! command -v pv &>/dev/null; then
-  apt-get update &>/dev/null && apt-get install -y pv &>/dev/null
+msg_ok "Virtual Machine ID is ${CL}${BL}$VMID${CL}."
+
+URL="https://download.umbrel.com/release/latest/umbrelos-amd64.img.xz"
+CACHE_DIR="/var/lib/vz/template/cache"
+CACHE_FILE="$CACHE_DIR/$(basename "$URL")"
+FILE_IMG="/var/lib/vz/template/tmp/${CACHE_FILE##*/%.xz}"
+
+mkdir -p "$CACHE_DIR" "$(dirname "$FILE_IMG")"
+
+if [[ ! -s "$CACHE_FILE" ]]; then
+  msg_ok "Downloading Umbrel OS image"
+  curl -f#SL -o "$CACHE_FILE" "$URL"
+else
+  msg_ok "Using cached Umbrel OS image"
 fi
 
-msg_info "Decompressing $FILE with progress${CL}\n"
-FILE_IMG="${FILE%.xz}"
-SIZE=$(xz --robot -l "$FILE" | awk -F '\t' '/^totals/ { print $5 }') &>/dev/null
-xz -dc "$FILE" | pv -s "$SIZE" -N "Extracting" >"$FILE_IMG"
-msg_ok "Decompressed to ${CL}${BL}${FILE%.xz}${CL}"
+if ! command -v pv &>/dev/null; then
+  apt-get update -qq &>/dev/null && apt-get install -y pv &>/dev/null
+fi
 
-STORAGE_TYPE=$(pvesm status -storage $STORAGE | awk 'NR>1 {print $2}')
-case $STORAGE_TYPE in
-nfs | dir)
-  DISK_EXT=".raw"
-  DISK_REF="$VMID/"
-  DISK_IMPORT="-format raw"
-  THIN=""
-  ;;
-btrfs)
-  DISK_EXT=".raw"
-  DISK_REF="$VMID/"
-  DISK_IMPORT="-format raw"
-  FORMAT=",efitype=4m"
-  THIN=""
-  ;;
-esac
-for i in {0,1,2}; do
-  disk="DISK$i"
-  eval DISK${i}=vm-${VMID}-disk-${i}${DISK_EXT:-}
-  eval DISK${i}_REF=${STORAGE}:${DISK_REF:-}${!disk}
-done
+set -o pipefail
+qm create "$VMID" -machine q35 -bios ovmf -agent 1 -tablet 0 -localtime 1 ${CPU_TYPE} \
+  -cores "$CORE_COUNT" -memory "$RAM_SIZE" -name "$HN" -tags community-script \
+  -net0 "virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU" -onboot 1 -ostype l26 -scsihw virtio-scsi-pci >/dev/null
 
-msg_info "Creating a Umbrel OS VM"
-qm create $VMID -agent 1${MACHINE} -tablet 0 -localtime 1 -bios ovmf${CPU_TYPE} -cores $CORE_COUNT -memory $RAM_SIZE \
-  -name $HN -tags community-script -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU -onboot 1 -ostype l26 -scsihw virtio-scsi-pci >/dev/null
-pvesm alloc $STORAGE $VMID $DISK0 4M >/dev/null
-qm importdisk $VMID ${FILE_IMG} $STORAGE ${DISK_IMPORT:-} >/dev/null
-qm set $VMID \
-  -efidisk0 ${DISK0_REF}${FORMAT} \
-  -scsi0 ${DISK1_REF},${DISK_CACHE}${THIN}size=${DISK_SIZE} \
-  -boot order=scsi0 \
-  -serial0 socket >/dev/null
-qm set $VMID --agent enabled=1 >/dev/null
+xz -dc "$CACHE_FILE" | pv -N "Extracting" >"$FILE_IMG"
+
+if qm disk import --help >/dev/null 2>&1; then
+  IMPORT_CMD=(qm disk import)
+else
+  IMPORT_CMD=(qm importdisk)
+fi
+IMPORT_OUT="$("${IMPORT_CMD[@]}" "$VMID" "$FILE_IMG" "$STORAGE" --format raw 2>&1 || true)"
+DISK_REF="$(printf '%s\n' "$IMPORT_OUT" | sed -n "s/.*imported disk '\([^']\+\)'.*/\1/p" | tr -d "\r\"'")"
+[[ -z "$DISK_REF" ]] && DISK_REF="$(pvesm list "$STORAGE" | awk -v id="$VMID" '$5 ~ ("vm-"id"-disk-") {print $1":"$5}' | sort | tail -n1)"
+
+qm set "$VMID" \
+  --efidisk0 "${STORAGE}:0,efitype=4m" \
+  --scsi0 "${DISK_REF},ssd=1,discard=on" \
+  --boot order=scsi0 \
+  --serial0 socket >/dev/null
+qm set "$VMID" --agent enabled=1 >/dev/null
+qm resize "$VMID" scsi0 "${DISK_SIZE}" >/dev/null
 
 DESCRIPTION=$(
   cat <<EOF
@@ -546,13 +532,14 @@ EOF
 )
 qm set "$VMID" -description "$DESCRIPTION" >/dev/null
 
-if [ -n "$DISK_SIZE" ]; then
-  msg_info "Resizing disk to $DISK_SIZE GB"
-  qm resize $VMID scsi0 ${DISK_SIZE} >/dev/null
+if whiptail --backtitle "Proxmox VE Helper Scripts" --title "Image Cache" \
+  --yesno "Keep downloaded Umbrel OS image for future VMs?\n\nFile: $CACHE_FILE" 10 70; then
+  msg_ok "Keeping cached image"
 else
-  msg_info "Using default disk size of $DEFAULT_DISK_SIZE GB"
-  qm resize $VMID scsi0 ${DEFAULT_DISK_SIZE} >/dev/null
+  rm -f "$CACHE_FILE"
+  msg_ok "Deleted cached image"
 fi
+rm -f "$FILE_IMG"
 
 msg_ok "Created a Umbrel OS VM ${CL}${BL}(${HN})"
 if [ "$START_VM" == "yes" ]; then

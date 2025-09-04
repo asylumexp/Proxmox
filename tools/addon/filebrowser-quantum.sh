@@ -97,31 +97,41 @@ if [[ -f "$LEGACY_DB" || -f "$LEGACY_BIN" && ! -f "$CONFIG_PATH" ]]; then
 fi
 
 # Check existing installation
-if [[ -f "$INSTALL_PATH" ]]; then
-  echo -e "${YW}⚠️ ${APP} is already installed.${CL}"
-  echo -n "Uninstall ${APP}? (y/N): "
-  read -r uninstall_prompt
-  if [[ "${uninstall_prompt,,}" =~ ^(y|yes)$ ]]; then
-    msg_info "Uninstalling ${APP}"
-    if [[ "$OS" == "Debian" ]]; then
-      systemctl disable --now filebrowser.service &>/dev/null
-      rm -f "$SERVICE_PATH"
-    else
-      rc-service filebrowser stop &>/dev/null
-      rc-update del filebrowser &>/dev/null
-      rm -f "$SERVICE_PATH"
+  if [[ -f "$INSTALL_PATH" ]]; then
+    echo -e "${YW}⚠️ ${APP} is already installed.${CL}"
+    echo -n "Uninstall ${APP}? (y/N): "
+    read -r uninstall_prompt
+    if [[ "${uninstall_prompt,,}" =~ ^(y|yes)$ ]]; then
+      msg_info "Uninstalling ${APP}"
+      if [[ "$OS" == "Debian" ]]; then
+        systemctl disable --now filebrowser.service &>/dev/null
+        rm -f "$SERVICE_PATH"
+      else
+        rc-service filebrowser stop &>/dev/null
+        rc-update del filebrowser &>/dev/null
+        rm -f "$SERVICE_PATH"
+      fi
+      rm -f "$INSTALL_PATH" "$CONFIG_PATH"
+      msg_ok "${APP} has been uninstalled."
+      exit 0
     fi
-    rm -f "$INSTALL_PATH" "$CONFIG_PATH"
-    msg_ok "${APP} has been uninstalled."
-    exit 0
-  fi
-
-  echo -n "Update ${APP}? (y/N): "
-  read -r update_prompt
+  
+    echo -n "Update ${APP}? (y/N): "
+    read -r update_prompt
   if [[ "${update_prompt,,}" =~ ^(y|yes)$ ]]; then
     msg_info "Updating ${APP}"
-    curl -fsSL https://github.com/gtsteffaniak/filebrowser/releases/latest/download/linux-arm64-filebrowser -o "$INSTALL_PATH"
-    chmod +x "$INSTALL_PATH"
+    tmp="${INSTALL_PATH}.tmp.$$"
+    if ! curl -fSL https://github.com/gtsteffaniak/filebrowser/releases/latest/download/linux-arm64-filebrowser -o "$tmp"; then
+      msg_error "Download failed"
+      rm -f "$tmp"
+      exit 1
+    fi
+    chmod 0755 "$tmp"
+    if ! mv -f "$tmp" "$INSTALL_PATH"; then
+      msg_error "Install failed (cannot move into $INSTALL_PATH)"
+      rm -f "$tmp"
+      exit 1
+    fi
     msg_ok "Updated ${APP}"
     exit 0
   else

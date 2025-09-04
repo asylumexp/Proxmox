@@ -27,31 +27,28 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  RELEASE=$(curl -fsSL https://api.github.com/repos/raydak-labs/configarr/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
-  if [[ "${RELEASE}" != "$(cat ~/.configarr 2>/dev/null || cat /opt/configarr_version.txt 2>/dev/null)" ]]; then
+  if check_for_gh_release "configarr" "raydak-labs/configarr"; then
     msg_info "Stopping $APP"
     systemctl stop configarr-task.timer
     msg_ok "Stopped $APP"
 
-    msg_info "Updating $APP to v${RELEASE}"
+    msg_info "Updating $APP"
     mkdir -p /opt/backup/
     mv /opt/configarr/{config.yml,secrets.yml,.env} "/opt/backup/"
     rm -rf /opt/configarr
     fetch_and_deploy_gh_release "configarr" "raydak-labs/configarr"
-    mv /opt/backup/* /opt/configarr/
+    mv /opt/backup/{config.yml,secrets.yml,.env} "/opt/configarr/"
     cd /opt/configarr
     $STD pnpm install
     $STD pnpm run build
-    msg_ok "Updated $APP to v${RELEASE}"
+    msg_ok "Updated $APP"
 
     msg_info "Starting $APP"
     systemctl start configarr-task.timer
     msg_ok "Started configarr"
 
     rm -rf /opt/backup
-    msg_ok "Update Successful"
-  else
-    msg_ok "No update required. ${APP} is already at v${RELEASE}"
+    msg_ok "Updated Successfully"
   fi
   exit
 }

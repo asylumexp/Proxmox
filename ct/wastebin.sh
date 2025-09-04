@@ -27,6 +27,10 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
+  if ! [[ $(dpkg -s zstd 2>/dev/null) ]]; then
+    $STD apt-get update
+    $STD apt-get install -y zstd
+  fi
   RELEASE=$(curl -fsSL https://api.github.com/repos/matze/wastebin/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
   # Dirty-Fix 03/2025 for missing APP_version.txt on old installations, set to pre-latest release
   msg_info "Running Migration"
@@ -66,8 +70,9 @@ EOF
     temp_file=$(mktemp)
     curl -fsSL "https://github.com/matze/wastebin/releases/download/${RELEASE}/wastebin_${RELEASE}_x86_64-unknown-linux-musl.tar.zst" -o "$temp_file"
     tar -xf $temp_file
-    cp -f wastebin /opt/wastebin/
+    cp -f wastebin* /opt/wastebin/
     chmod +x /opt/wastebin/wastebin
+    chmod +x /opt/wastebin/wastebin-ctl
     echo "${RELEASE}" >/opt/${APP}_version.txt
     msg_ok "Updated Wastebin"
 

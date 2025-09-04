@@ -6,7 +6,7 @@
   ],
   "date_created": "2024-05-02",
   "type": "addon",
-  "updateable": false,
+  "updateable": true,
   "privileged": false,
   "interface_port": 61208,
   "documentation": "https://glances.readthedocs.io/en/latest/",
@@ -33,12 +33,8 @@
   },
   "notes": [
     {
-      "text": "Execute within an existing LXC Console",
-      "type": "warning"
-    },
-    {
-      "text": "WARNING: Installation sources scripts outside of Community Scripts repo. Please check the source before installing.",
-      "type": "warning"
+      "text": "Execute within an existing LXC Console (Debian / Ubuntu / Alpine supported)",
+      "type": "info"
     }
   ]
 }

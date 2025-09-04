@@ -28,33 +28,23 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-
-  RELEASE=$(curl -fsSL https://api.github.com/repos/Pf2eToolsOrg/Pf2eTools/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
-  if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f "/opt/${APP}_version.txt" ]]; then
+  if check_for_gh_release "pf2etools" "Pf2eToolsOrg/Pf2eTools"; then
     msg_info "Updating System"
     $STD apt-get update
     $STD apt-get -y upgrade
     msg_ok "Updated System"
 
+    rm -rf /opt/Pf2eTools
+    fetch_and_deploy_gh_release "pf2etools" "Pf2eToolsOrg/Pf2eTools" "tarball" "latest" "/opt/Pf2eTools"
+
     msg_info "Updating ${APP}"
-    cd /opt
-    curl -fsSL "https://github.com/Pf2eToolsOrg/Pf2eTools/archive/refs/tags/${RELEASE}.zip" -o $(basename "https://github.com/Pf2eToolsOrg/Pf2eTools/archive/refs/tags/${RELEASE}.zip")
-    $STD unzip ${RELEASE}.zip
-    rm -rf "/opt/${APP}"
-    mv ${APP}-${RELEASE:1} /opt/${APP}
     cd /opt/Pf2eTools
     $STD npm install
     $STD npm run build
     chown -R www-data: "/opt/${APP}"
     chmod -R 755 "/opt/${APP}"
-    echo "${RELEASE}" >"/opt/${APP}_version.txt"
     msg_ok "Updated ${APP}"
-
-    msg_info "Cleaning Up"
-    rm -rf /opt/${RELEASE}.zip
-    msg_ok "Cleanup Completed"
-  else
-    msg_ok "No update required. ${APP} is already at ${RELEASE}"
+    msg_ok "Updated successfully"
   fi
   exit
 }

@@ -9,7 +9,7 @@
     "updateable": true,
     "privileged": false,
     "interface_port": 8000,
-    "documentation": null,
+    "documentation": "https://docs.paperless-ngx.com/",
     "website": "https://docs.paperless-ngx.com/",
     "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons/webp/paperless-ngx.webp",
     "config_path": "/opt/paperless/paperless.conf",
@@ -21,19 +21,19 @@
             "resources": {
                 "cpu": 2,
                 "ram": 2048,
-                "hdd": 10,
+                "hdd": 12,
                 "os": "debian",
                 "version": "12"
             }
         }
     ],
     "default_credentials": {
-        "username": null,
+        "username": "admin",
         "password": null
     },
     "notes": [
         {
-            "text": "Show Login Credentials, type `update` in the LXC console",
+            "text": "Show Login Credentials, type `cat ~/paperless-ngx.creds` in the LXC console",
             "type": "info"
         },
         {

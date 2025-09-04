@@ -16,6 +16,7 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y git
 $STD apt-get install -y dpkg-dev
+$STD apt-get install -y dpkg-dev
 
 msg_info "Installing Proxmox Backup Server (Patience)"
 export DEBIAN_FRONTEND=noninteractive

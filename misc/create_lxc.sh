@@ -60,11 +60,11 @@ function exit_script() {
 function check_storage_support() {
   local CONTENT="$1"
   local -a VALID_STORAGES=()
-
   while IFS= read -r line; do
-    local STORAGE=$(awk '{print $1}' <<<"$line")
-    [[ "$STORAGE" == "storage" || -z "$STORAGE" ]] && continue
-    VALID_STORAGES+=("$STORAGE")
+    local STORAGE_NAME
+    STORAGE_NAME=$(awk '{print $1}' <<<"$line")
+    [[ -z "$STORAGE_NAME" ]] && continue
+    VALID_STORAGES+=("$STORAGE_NAME")
   done < <(pvesm status -content "$CONTENT" 2>/dev/null | awk 'NR>1')
 
   [[ ${#VALID_STORAGES[@]} -gt 0 ]]
@@ -123,11 +123,12 @@ function select_storage() {
 
   while read -r TAG TYPE _ TOTAL USED FREE _; do
     [[ -n "$TAG" && -n "$TYPE" ]] || continue
-    local DISPLAY="${TAG} (${TYPE})"
+    local STORAGE_NAME="$TAG"
+    local DISPLAY="${STORAGE_NAME} (${TYPE})"
     local USED_FMT=$(numfmt --to=iec --from-unit=K --format %.1f <<<"$USED")
     local FREE_FMT=$(numfmt --to=iec --from-unit=K --format %.1f <<<"$FREE")
     local INFO="Free: ${FREE_FMT}B  Used: ${USED_FMT}B"
-    STORAGE_MAP["$DISPLAY"]="$TAG"
+    STORAGE_MAP["$DISPLAY"]="$STORAGE_NAME"
     MENU+=("$DISPLAY" "$INFO" "OFF")
     ((${#DISPLAY} > COL_WIDTH)) && COL_WIDTH=${#DISPLAY}
   done < <(pvesm status -content "$CONTENT" | awk 'NR>1')
@@ -198,21 +199,22 @@ if qm status "$CTID" &>/dev/null || pct status "$CTID" &>/dev/null; then
 fi
 
 # This checks for the presence of valid Container Storage and Template Storage locations
-msg_info "Validating Storage"
+msg_info "Validating storage"
 if ! check_storage_support "rootdir"; then
-  msg_error "No valid storage found for 'rootdir' (Container)."
+  msg_error "No valid storage found for 'rootdir' [Container]"
   exit 1
 fi
 if ! check_storage_support "vztmpl"; then
-  msg_error "No valid storage found for 'vztmpl' (Template)."
+  msg_error "No valid storage found for 'vztmpl' [Template]"
   exit 1
 fi
-msg_ok "Valid Storage Found"
 
+#msg_info "Checking template storage"
 while true; do
   if select_storage template; then
     TEMPLATE_STORAGE="$STORAGE_RESULT"
     TEMPLATE_STORAGE_INFO="$STORAGE_INFO"
+    msg_ok "Storage ${BL}$TEMPLATE_STORAGE${CL} ($TEMPLATE_STORAGE_INFO) [Template]"
     break
   fi
 done
@@ -221,10 +223,10 @@ while true; do
   if select_storage container; then
     CONTAINER_STORAGE="$STORAGE_RESULT"
     CONTAINER_STORAGE_INFO="$STORAGE_INFO"
+    msg_ok "Storage ${BL}$CONTAINER_STORAGE${CL} ($CONTAINER_STORAGE_INFO) [Container]"
     break
   fi
 done
-msg_ok "Validated Storage | Container: ${BL}$CONTAINER_STORAGE${CL} ($CONTAINER_STORAGE_INFO)"
 
 # Check free space on selected container storage
 STORAGE_FREE=$(pvesm status | awk -v s="$CONTAINER_STORAGE" '$1 == s { print $6 }')
@@ -233,11 +235,12 @@ if [ "$STORAGE_FREE" -lt "$REQUIRED_KB" ]; then
   msg_error "Not enough space on '$CONTAINER_STORAGE'. Needed: ${PCT_DISK_SIZE:-8}G."
   exit 214
 fi
+
 # Check Cluster Quorum if in Cluster
 if [ -f /etc/pve/corosync.conf ]; then
-  msg_info "Checking Proxmox cluster quorum status"
+  msg_info "Checking cluster quorum"
   if ! pvecm status | awk -F':' '/^Quorate/ { exit ($2 ~ /Yes/) ? 0 : 1 }'; then
-    printf "\e[?25h"
+
     msg_error "Cluster is not quorate. Start all nodes or configure quorum device (QDevice)."
     exit 210
   fi
@@ -246,15 +249,28 @@ fi
 
 # Update LXC template list
 TEMPLATE_SEARCH="${PCT_OSTYPE}-${PCT_OSVERSION:-}"
+case "$PCT_OSTYPE" in
+debian | ubuntu)
+  TEMPLATE_PATTERN="-standard_"
+  ;;
+alpine | fedora | rocky | centos)
+  TEMPLATE_PATTERN="-default_"
+  ;;
+*)
+  TEMPLATE_PATTERN=""
+  ;;
+esac
 
-msg_info "Updating LXC Template List"
-if ! pveam update >/dev/null 2>&1; then
-  TEMPLATE_FALLBACK=$(pveam list "$TEMPLATE_STORAGE" | awk "/$TEMPLATE_SEARCH/ {print \$2}" | sort -t - -k 2 -V | tail -n1)
-  if [[ -z "$TEMPLATE_FALLBACK" ]]; then
-    msg_error "Failed to update LXC template list and no local template matching '$TEMPLATE_SEARCH' found."
-    exit 201
-  fi
-  msg_info "Skipping template update – using local fallback: $TEMPLATE_FALLBACK"
+# 1. Check local templates first
+msg_info "Searching for template '$TEMPLATE_SEARCH'"
+mapfile -t TEMPLATES < <(
+  pveam list "$TEMPLATE_STORAGE" |
+    awk -v s="$TEMPLATE_SEARCH" -v p="$TEMPLATE_PATTERN" '$1 ~ s && $1 ~ p {print $1}' |
+    sed 's/.*\///' | sort -t - -k 2 -V
+)
+
+if [ ${#TEMPLATES[@]} -gt 0 ]; then
+  TEMPLATE_SOURCE="local"
 else
   msg_ok "LXC Template List Updated"
 fi
@@ -320,8 +336,6 @@ else
 fi
 msg_ok "LXC Template is ready to use."
 
-
-msg_ok "LXC Template '$TEMPLATE' is ready to use."
 
 msg_info "Creating LXC Container"
 # Check and fix subuid/subgid
