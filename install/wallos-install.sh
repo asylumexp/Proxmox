@@ -44,6 +44,7 @@ $STD curl http://localhost/endpoints/db/migrate.php
 msg_ok "Installed Wallos"
 
 msg_info "Setting up Crontabs"
+apt-get -y install cron
 mkdir -p /var/log/cron
 cat <<EOF >/opt/wallos.cron
 0 1 * * * php /opt/wallos/endpoints/cronjobs/updatenextpayment.php >> /var/log/cron/updatenextpayment.log 2>&1
