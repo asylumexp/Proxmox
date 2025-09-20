@@ -147,7 +147,7 @@ maxkeys_check() {
 arch_check() {
   if [ "$(dpkg --print-architecture)" != "arm64" ]; then
     echo -e "\n ${INFO}${YWB}This script will not work on non arm64 systems! \n"
-    echo -e "\n ${YWB}Visit https://github.com/asylumexp/Proxmox for AMD64 support. \n"
+    echo -e "\n ${YWB}Visit https://github.com/community-scripts/ProxmoxVE for AMD64 support. \n"
     echo -e "Exiting..."
     sleep 2
     exit
