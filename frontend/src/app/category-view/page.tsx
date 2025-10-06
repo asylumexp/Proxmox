@@ -39,7 +39,7 @@ function CategoryView() {
     const fetchCategories = async () => {
       try {
         // eslint-disable-next-line node/no-process-env
-        const basePath = process.env.NODE_ENV === "production" ? "/ProxmoxVE" : "";
+        const basePath = process.env.NODE_ENV === "production" ? "/Proxmox" : "";
         const response = await fetch(`${basePath}/api/categories`);
         if (!response.ok) {
           throw new Error("Failed to fetch categories");
