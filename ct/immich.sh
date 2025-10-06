@@ -32,6 +32,10 @@ function update_script() {
   PNPM_VERSION="$(curl -fsSL "https://raw.githubusercontent.com/immich-app/immich/refs/heads/main/package.json" | jq -r '.packageManager | split("@")[1]')"
   NODE_VERSION="22" NODE_MODULE="pnpm@${PNPM_VERSION}" setup_nodejs
 
+  if dpkg -l | grep -q "libmimalloc2.0"; then
+    $STD apt-get update && $STD apt-get install -y libmimalloc3
+  fi
+
   STAGING_DIR=/opt/staging
   BASE_DIR=${STAGING_DIR}/base-images
   SOURCE_DIR=${STAGING_DIR}/image-source
@@ -45,8 +49,10 @@ function update_script() {
       for url in "${INTEL_URLS[@]}"; do
         curl -fsSLO "$url"
       done
+      $STD apt-mark unhold libigdgmm12
       $STD apt install -y ./*.deb
       rm ./*.deb
+      $STD apt-mark hold libigdgmm12
       msg_ok "Intel iGPU dependencies updated"
     fi
     rm ~/Dockerfile
@@ -61,7 +67,7 @@ function update_script() {
     done
     msg_ok "Image-processing libraries up to date"
   fi
-  RELEASE="1.140.1"
+  RELEASE="2.0.1"
   if check_for_gh_release "immich" "immich-app/immich" "${RELEASE}"; then
     msg_info "Stopping Services"
     systemctl stop immich-web
@@ -144,6 +150,7 @@ EOF
 
     # openapi & web build
     cd "$SRC_DIR"
+    echo "packageImportMethod: hardlink" >>./pnpm-workspace.yaml    
     $STD pnpm --filter @immich/sdk --filter immich-web --frozen-lockfile --force install
     $STD pnpm --filter @immich/sdk --filter immich-web build
     cp -a web/build "$APP_DIR"/www
@@ -158,17 +165,18 @@ EOF
     msg_ok "Updated ${APP} web and microservices"
 
     cd "$SRC_DIR"/machine-learning
-    mkdir -p "$ML_DIR"
+    mkdir -p "$ML_DIR" && chown -R immich:immich "$ML_DIR"
+    chown immich:immich ./uv.lock    
     export VIRTUAL_ENV="${ML_DIR}"/ml-venv
     $STD /usr/local/bin/uv venv "$VIRTUAL_ENV"
     if [[ -f ~/.openvino ]]; then
       msg_info "Updating HW-accelerated machine-learning"
-      /usr/local/bin/uv -q sync --extra openvino --no-cache --active
+      $STD sudo --preserve-env=VIRTUAL_ENV -nu immich uv sync --extra openvino --active -n -p python3.11 --managed-python
       patchelf --clear-execstack "${VIRTUAL_ENV}/lib/python3.11/site-packages/onnxruntime/capi/onnxruntime_pybind11_state.cpython-311-x86_64-linux-gnu.so"
       msg_ok "Updated HW-accelerated machine-learning"
     else
       msg_info "Updating machine-learning"
-      /usr/local/bin/uv -q sync --extra cpu --no-cache --active
+      $STD sudo --preserve-env=VIRTUAL_ENV -nu immich uv sync --extra cpu --active -n -p python3.11 --managed-python
       msg_ok "Updated machine-learning"
     fi
     cd "$SRC_DIR"
@@ -196,6 +204,7 @@ EOF
     msg_info "Cleaning up"
     $STD apt-get -y autoremove
     $STD apt-get -y autoclean
+    $STD apt clean -y    
     msg_ok "Cleaned"
     systemctl restart immich-ml immich-web
   fi
@@ -207,7 +216,7 @@ function compile_libjxl() {
   JPEGLI_LIBJPEG_LIBRARY_SOVERSION="62"
   JPEGLI_LIBJPEG_LIBRARY_VERSION="62.3.0"
   : "${LIBJXL_REVISION:=$(jq -cr '.revision' "$BASE_DIR"/server/sources/libjxl.json)}"
-  if [[ "${update:-}" ]] || [[ "$LIBJXL_REVISION" != "$(grep 'libjxl' ~/.immich_library_revisions | awk '{print $2}')" ]]; then
+  if [[ "$LIBJXL_REVISION" != "$(grep 'libjxl' ~/.immich_library_revisions | awk '{print $2}')" ]]; then
     msg_info "Recompiling libjxl"
     if [[ -d "$SOURCE" ]]; then rm -rf "$SOURCE"; fi
     $STD git clone https://github.com/libjxl/libjxl.git "$SOURCE"
@@ -286,7 +295,7 @@ function compile_libraw() {
   SOURCE=${SOURCE_DIR}/libraw
   local update
   : "${LIBRAW_REVISION:=$(jq -cr '.revision' "$BASE_DIR"/server/sources/libraw.json)}"
-  if [[ "${update:-}" ]] || [[ "$LIBRAW_REVISION" != "$(grep 'libraw' ~/.immich_library_revisions | awk '{print $2}')" ]]; then
+  if [[ "$LIBRAW_REVISION" != "$(grep 'libraw' ~/.immich_library_revisions | awk '{print $2}')" ]]; then
     msg_info "Recompiling libraw"
     if [[ -d "$SOURCE" ]]; then rm -rf "$SOURCE"; fi
     $STD git clone https://github.com/libraw/libraw.git "$SOURCE"
@@ -307,13 +316,14 @@ function compile_libraw() {
 function compile_imagemagick() {
   SOURCE=$SOURCE_DIR/imagemagick
   : "${IMAGEMAGICK_REVISION:=$(jq -cr '.revision' "$BASE_DIR"/server/sources/imagemagick.json)}"
-  if [[ "${update:-}" ]] || [[ "$IMAGEMAGICK_REVISION" != "$(grep 'imagemagick' ~/.immich_library_revisions | awk '{print $2}')" ]]; then
+   if [[ "$IMAGEMAGICK_REVISION" != "$(grep 'imagemagick' ~/.immich_library_revisions | awk '{print $2}')" ]] ||
+    ! grep -q 'DMAGICK_LIBRAW' /usr/local/lib/ImageMagick-7*/config-Q16HDRI/configure.xml; then
     msg_info "Recompiling ImageMagick"
     if [[ -d "$SOURCE" ]]; then rm -rf "$SOURCE"; fi
     $STD git clone https://github.com/ImageMagick/ImageMagick.git "$SOURCE"
     cd "$SOURCE"
     $STD git reset --hard "$IMAGEMAGICK_REVISION"
-    $STD ./configure --with-modules
+    $STD ./configure --with-modules CPPFLAGS="-DMAGICK_LIBRAW_VERSION_TAIL=202502"
     $STD make -j"$(nproc)"
     $STD make install
     ldconfig /usr/local/lib
@@ -327,7 +337,7 @@ function compile_imagemagick() {
 function compile_libvips() {
   SOURCE=$SOURCE_DIR/libvips
   : "${LIBVIPS_REVISION:=$(jq -cr '.revision' "$BASE_DIR"/server/sources/libvips.json)}"
-  if [[ "${update:-}" ]] || [[ "$LIBVIPS_REVISION" != "$(grep 'libvips' ~/.immich_library_revisions | awk '{print $2}')" ]]; then
+  if [[ "$LIBVIPS_REVISION" != "$(grep 'libvips' ~/.immich_library_revisions | awk '{print $2}')" ]]; then
     msg_info "Recompiling libvips"
     if [[ -d "$SOURCE" ]]; then rm -rf "$SOURCE"; fi
     $STD git clone https://github.com/libvips/libvips.git "$SOURCE"
