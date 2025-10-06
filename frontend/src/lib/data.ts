@@ -1,7 +1,7 @@
 import type { Category } from "./types";
 
 export async function fetchCategories() {
-  const response = await fetch(`/Proxmox/api/categories`);
+  const response = await fetch(`/api/categories`);
   if (!response.ok) {
     throw new Error(`Failed to fetch categories: ${response.statusText}`);
   }
@@ -10,7 +10,7 @@ export async function fetchCategories() {
 }
 
 export async function fetchVersions() {
-  const response = await fetch(`/Proxmox/api/versions`);
+  const response = await fetch(`/api/versions`);
   if (!response.ok) {
     throw new Error(`Failed to fetch versions: ${response.statusText}`);
   }
