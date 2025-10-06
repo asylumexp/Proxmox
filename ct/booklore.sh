@@ -9,7 +9,7 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 APP="BookLore"
 var_tags="${var_tags:-books;library}"
 var_cpu="${var_cpu:-3}"
-var_ram="${var_ram:-2048}"
+var_ram="${var_ram:-3072}"
 var_disk="${var_disk:-7}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-12}"

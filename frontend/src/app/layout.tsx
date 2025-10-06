@@ -17,7 +17,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Proxmox VE Helper-Scripts",
   description:
-    "The official website for the Proxmox VE Helper-Scripts (Community) Repository. Featuring over 300+ scripts to help you manage your Proxmox VE environment.",
+    "The official website for the Proxmox VE Helper-Scripts (Community) repository. Featuring over 300+ scripts to help you manage your Proxmox Virtual Environment.",
   applicationName: "Proxmox VE Helper-Scripts",
   generator: "Next.js",
   referrer: "origin-when-cross-origin",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Proxmox VE Helper-Scripts",
     description:
-      "The official website for the Proxmox VE Helper-Scripts (Community) Repository. Featuring over 300+ scripts to help you manage your Proxmox VE environment.",
+      "The official website for the Proxmox VE Helper-Scripts (Community) repository. Featuring over 300+ scripts to help you manage your Proxmox Virtual Environment.",
     url: `https://community-scripts.github.io/${basePath}/`,
     siteName: "Proxmox VE Helper-Scripts",
     images: [
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     title: "Proxmox VE Helper-Scripts",
     creator: "@BramSuurdje",
     description:
-      "The official website for the Proxmox VE Helper-Scripts (Community) Repository. Featuring over 300+ scripts to help you manage your Proxmox VE environment.",
+      "The official website for the Proxmox VE Helper-Scripts (Community) repository. Featuring over 300+ scripts to help you manage your Proxmox Virtual Environment.",
     images: [`https://community-scripts.github.io/${basePath}/defaultimg.png`],
   },
   manifest: "/manifest.webmanifest",
@@ -103,18 +103,22 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <div className="flex w-full flex-col justify-center">
-            <Navbar />
-            <div className="flex min-h-screen flex-col justify-center">
-              <div className="flex w-full justify-center">
-                <div className="w-full max-w-[1440px] ">
-                  <QueryProvider>
-                    <NuqsAdapter>{children}</NuqsAdapter>
-                  </QueryProvider>
-                  <Toaster richColors />
+            <NuqsAdapter>
+              <QueryProvider>
+
+                <Navbar />
+                <div className="flex min-h-screen flex-col justify-center">
+                  <div className="flex w-full justify-center">
+                    <div className="w-full max-w-[1440px] ">
+                      {children}
+                      <Toaster richColors />
+                    </div>
+                  </div>
+                  <Footer />
                 </div>
-              </div>
-              <Footer />
-            </div>
+              </QueryProvider>
+
+            </NuqsAdapter>
           </div>
         </ThemeProvider>
       </body>

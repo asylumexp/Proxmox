@@ -189,7 +189,7 @@ start_routines_9() {
   # check if deb822 Sources (*.sources) exist
   if find /etc/apt/sources.list.d/ -maxdepth 1 -name '*.sources' | grep -q .; then
     whiptail --backtitle "Proxmox VE Helper Scripts" --title "Deb822 sources detected" \
-      --msgbox "Modern deb822 sources (*.sources) already exist.\n\nNo changes to sources format required.\n\nYou may still have legacy sources.list or .list files, which you can disable in the next step." 12 65
+      --msgbox "Modern deb822 sources (*.sources) already exist.\n\nNo changes to sources format required.\n\nYou may still have legacy sources.list or .list files, which you can disable in the next step." 12 65 || true
   else
     check_and_disable_legacy_sources() {
       local LEGACY_COUNT=0
@@ -197,7 +197,7 @@ start_routines_9() {
 
       # Check sources.list
       if [[ -f "$listfile" ]] && grep -qE '^\s*deb ' "$listfile"; then
-        ((LEGACY_COUNT++))
+        (( ++LEGACY_COUNT ))
       fi
 
       # Check .list files
@@ -514,7 +514,62 @@ post_routines_common() {
   yes)
     whiptail --backtitle "Proxmox VE Helper Scripts" --msgbox --title "Support Subscriptions" "Supporting the software's development team is essential. Check their official website's Support Subscriptions for pricing. Without their dedicated work, we wouldn't have this exceptional software." 10 58
     msg_info "Disabling subscription nag"
-    echo "DPkg::Post-Invoke { \"if [ -s /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js ] && ! grep -q -F 'NoMoreNagging' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js; then echo 'Removing subscription nag from UI...'; sed -i '/data\.status/{s/\\!//;s/active/NoMoreNagging/}' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js; fi\" };" >/etc/apt/apt.conf.d/no-nag-script
+    # Create external script, this is needed because DPkg::Post-Invoke is fidly with quote interpretation
+    mkdir -p /usr/local/bin
+    cat >/usr/local/bin/pve-remove-nag.sh <<'EOF'
+#!/bin/sh
+WEB_JS=/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+if [ -s "$WEB_JS" ] && ! grep -q NoMoreNagging "$WEB_JS"; then
+    echo "Patching Web UI nag..."
+    sed -i -e "/data\.status/ s/!//" -e "/data\.status/ s/active/NoMoreNagging/" "$WEB_JS"
+fi
+
+MOBILE_TPL=/usr/share/pve-yew-mobile-gui/index.html.tpl
+MARKER="<!-- MANAGED BLOCK FOR MOBILE NAG -->"
+if [ -f "$MOBILE_TPL" ] && ! grep -q "$MARKER" "$MOBILE_TPL"; then
+    echo "Patching Mobile UI nag..."
+    printf "%s\n" \
+      "$MARKER" \
+      "<script>" \
+      "  function removeSubscriptionElements() {" \
+      "    // --- Remove subscription dialogs ---" \
+      "    const dialogs = document.querySelectorAll('dialog.pwt-outer-dialog');" \
+      "    dialogs.forEach(dialog => {" \
+      "      const text = (dialog.textContent || '').toLowerCase();" \
+      "      if (text.includes('subscription')) {" \
+      "        dialog.remove();" \
+      "        console.log('Removed subscription dialog');" \
+      "      }" \
+      "    });" \
+      "" \
+      "    // --- Remove subscription cards, but keep Reboot/Shutdown/Console ---" \
+      "    const cards = document.querySelectorAll('.pwt-card.pwt-p-2.pwt-d-flex.pwt-interactive.pwt-justify-content-center');" \
+      "    cards.forEach(card => {" \
+      "      const text = (card.textContent || '').toLowerCase();" \
+      "      const hasButton = card.querySelector('button');" \
+      "      if (!hasButton && text.includes('subscription')) {" \
+      "        card.remove();" \
+      "        console.log('Removed subscription card');" \
+      "      }" \
+      "    });" \
+      "  }" \
+      "" \
+      "  const observer = new MutationObserver(removeSubscriptionElements);" \
+      "  observer.observe(document.body, { childList: true, subtree: true });" \
+      "  removeSubscriptionElements();" \
+      "  setInterval(removeSubscriptionElements, 300);" \
+      "  setTimeout(() => {observer.disconnect();}, 10000);" \
+      "</script>" \
+      "" >> "$MOBILE_TPL"
+fi
+EOF
+    chmod 755 /usr/local/bin/pve-remove-nag.sh
+
+    cat >/etc/apt/apt.conf.d/no-nag-script <<'EOF'
+DPkg::Post-Invoke { "/usr/local/bin/pve-remove-nag.sh"; };
+EOF
+    chmod 644 /etc/apt/apt.conf.d/no-nag-script
+
     msg_ok "Disabled subscription nag (Delete browser cache)"
     ;;
   no)

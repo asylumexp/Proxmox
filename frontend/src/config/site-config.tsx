@@ -12,7 +12,7 @@ export const navbarLinks = [
     href: `https://github.com/asylumexp/Proxmox`,
     event: "Github",
     icon: <FaGithub className="h-4 w-4" />,
-    text: "Github",
+    text: "GitHub",
   },
   {
     href: `https://discord.gg/2wvnMDgdnU`,
@@ -24,7 +24,7 @@ export const navbarLinks = [
     href: `https://github.com/asylumexp/Proxmox/blob/main/CHANGELOG.md`,
     event: "Change Log",
     icon: <Scroll className="h-4 w-4" />,
-    text: "Change Log",
+    text: "Changelog",
     mobileHidden: true,
   },
   {

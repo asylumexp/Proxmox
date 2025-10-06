@@ -42,14 +42,14 @@ ENABLE_OLLAMA_API=false
 OLLAMA_BASE_URL=http://0.0.0.0:11434
 EOF
 $STD npm install --force
-export NODE_OPTIONS="--max-old-space-size=3584"
+export NODE_OPTIONS="--max-old-space-size=6000"
 $STD npm run build
 msg_ok "Installed Open WebUI"
 
 read -r -p "${TAB3}Would you like to add Ollama? <y/N> " prompt
 if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
   msg_info "Installing Ollama"
-  curl -fsSLO https://ollama.com/download/ollama-linux-arm64.tgz
+  curl -fsSLO -C - https://ollama.com/download/ollama-linux-arm64.tgz
   tar -C /usr -xzf ollama-linux-arm64.tgz
   rm -rf ollama-linux-arm64.tgz
   cat <<EOF >/etc/systemd/system/ollama.service

@@ -73,7 +73,13 @@ function CategoryView() {
   };
 
   const handleScriptClick = (scriptSlug: string) => {
-    router.push(`/scripts?id=${scriptSlug}`);
+    // Include category context when navigating to scripts
+    const categoryName = selectedCategoryIndex !== null ? categories[selectedCategoryIndex]?.name : null;
+    const queryParams = new URLSearchParams({ id: scriptSlug });
+    if (categoryName) {
+      queryParams.append("category", categoryName);
+    }
+    router.push(`/scripts?${queryParams.toString()}`);
   };
 
   const navigateCategory = (direction: "prev" | "next") => {

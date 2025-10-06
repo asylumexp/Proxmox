@@ -35,7 +35,6 @@ GN=$(echo "\033[1;92m")
 DGN=$(echo "\033[32m")
 CL=$(echo "\033[m")
 
-CL=$(echo "\033[m")
 BOLD=$(echo "\033[1m")
 BFR="\\r\\033[K"
 HOLD=" "
@@ -199,6 +198,69 @@ function exit-script() {
   clear
   echo -e "\n${CROSS}${RD}User exited script${CL}\n"
   exit
+}
+
+# Ensure pv is installed or abort with instructions
+function ensure_pv() {
+  if ! command -v pv &>/dev/null; then
+    msg_info "Installing required package: pv"
+    if ! apt-get update -qq &>/dev/null || ! apt-get install -y pv &>/dev/null; then
+      msg_error "Failed to install pv automatically."
+      echo -e "\nPlease run manually on the Proxmox host:\n  apt install pv\n"
+      exit 1
+    fi
+    msg_ok "Installed pv"
+  fi
+}
+
+# Download an .xz file and validate it
+# Args: $1=url $2=cache_file
+function download_and_validate_xz() {
+  local url="$1"
+  local file="$2"
+
+  # If file exists, check validity
+  if [[ -s "$file" ]]; then
+    if xz -t "$file" &>/dev/null; then
+      msg_ok "Using cached image $(basename "$file")"
+      return 0
+    else
+      msg_error "Cached file $(basename "$file") is corrupted. Deleting and retrying download..."
+      rm -f "$file"
+    fi
+  fi
+
+  # Download fresh file
+  msg_info "Downloading image: $(basename "$file")"
+  if ! curl -fSL -o "$file" "$url"; then
+    msg_error "Download failed: $url"
+    rm -f "$file"
+    exit 1
+  fi
+
+  # Validate again
+  if ! xz -t "$file" &>/dev/null; then
+    msg_error "Downloaded file $(basename "$file") is corrupted. Please try again later."
+    rm -f "$file"
+    exit 1
+  fi
+  msg_ok "Downloaded and validated $(basename "$file")"
+}
+
+# Extract .xz with pv
+# Args: $1=cache_file $2=target_img
+function extract_xz_with_pv() {
+  set -o pipefail
+  local file="$1"
+  local target="$2"
+
+  msg_info "Decompressing $(basename "$file") to $target"
+  if ! xz -dc "$file" | pv -N "Extracting" >"$target"; then
+    msg_error "Failed to extract $file"
+    rm -f "$target"
+    exit 1
+  fi
+  msg_ok "Decompressed to $target"
 }
 
 function default_settings() {
@@ -432,6 +494,7 @@ check_root
 arch_check
 pve_check
 ssh_check
+ensure_pv
 start_script
 
 msg_info "Validating Storage"
@@ -465,23 +528,13 @@ FILE_IMG="/var/lib/vz/template/tmp/${CACHE_FILE##*/%.xz}"
 
 mkdir -p "$CACHE_DIR" "$(dirname "$FILE_IMG")"
 
-if [[ ! -s "$CACHE_FILE" ]]; then
-  msg_ok "Downloading Umbrel OS image"
-  curl -f#SL -o "$CACHE_FILE" "$URL"
-else
-  msg_ok "Using cached Umbrel OS image"
-fi
+download_and_validate_xz "$URL" "$CACHE_FILE"
 
-if ! command -v pv &>/dev/null; then
-  apt-get update -qq &>/dev/null && apt-get install -y pv &>/dev/null
-fi
-
-set -o pipefail
 qm create "$VMID" -machine q35 -bios ovmf -agent 1 -tablet 0 -localtime 1 ${CPU_TYPE} \
   -cores "$CORE_COUNT" -memory "$RAM_SIZE" -name "$HN" -tags community-script \
   -net0 "virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU" -onboot 1 -ostype l26 -scsihw virtio-scsi-pci >/dev/null
 
-xz -dc "$CACHE_FILE" | pv -N "Extracting" >"$FILE_IMG"
+extract_xz_with_pv "$CACHE_FILE" "$FILE_IMG"
 
 if qm disk import --help >/dev/null 2>&1; then
   IMPORT_CMD=(qm disk import)

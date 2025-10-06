@@ -22,13 +22,13 @@ function header_info {
 EOF
 }
 header_info
-echo -e "Loading..."
+echo -e "\n Loading..."
 RANDOM_UUID="$(cat /proc/sys/kernel/random/uuid)"
 METHOD=""
 NSAPP="openwrt-vm"
 var_os="openwrt"
 var_version=" "
-DISK_SIZE="0.5G"
+DISK_SIZE="1G"
 GEN_MAC=02:$(openssl rand -hex 5 | awk '{print toupper($0)}' | sed 's/\(..\)/\1:/g; s/.$//')
 GEN_MAC_LAN=02:$(openssl rand -hex 5 | awk '{print toupper($0)}' | sed 's/\(..\)/\1:/g; s/.$//')
 
@@ -40,10 +40,31 @@ BGN=$(echo "\033[4;92m")
 GN=$(echo "\033[1;92m")
 DGN=$(echo "\033[32m")
 CL=$(echo "\033[m")
+
+BOLD=$(echo "\033[1m")
 BFR="\\r\\033[K"
-HOLD="-"
-CM="${GN}✓${CL}"
-CROSS="${RD}✗${CL}"
+HOLD=" "
+TAB="  "
+
+CM="${TAB}✔️${TAB}${CL}"
+CROSS="${TAB}✖️${TAB}${CL}"
+INFO="${TAB}💡${TAB}${CL}"
+OS="${TAB}🖥️${TAB}${CL}"
+CONTAINERTYPE="${TAB}📦${TAB}${CL}"
+DISKSIZE="${TAB}💾${TAB}${CL}"
+CPUCORE="${TAB}🧠${TAB}${CL}"
+RAMSIZE="${TAB}🛠️${TAB}${CL}"
+CONTAINERID="${TAB}🆔${TAB}${CL}"
+HOSTNAME="${TAB}🏠${TAB}${CL}"
+BRIDGE="${TAB}🌉${TAB}${CL}"
+GATEWAY="${TAB}🌐${TAB}${CL}"
+DEFAULT="${TAB}⚙️${TAB}${CL}"
+MACADDRESS="${TAB}🔗${TAB}${CL}"
+VLANTAG="${TAB}🏷️${TAB}${CL}"
+CREATING="${TAB}🚀${TAB}${CL}"
+ADVANCED="${TAB}🧩${TAB}${CL}"
+CLOUD="${TAB}☁️${TAB}${CL}"
+
 set -Eeo pipefail
 trap 'error_handler $LINENO "$BASH_COMMAND"' ERR
 trap cleanup EXIT
@@ -248,35 +269,30 @@ function exit-script() {
 
 function default_settings() {
   VMID=$(get_valid_nextid)
-  HN=openwrt
+  HN="openwrt"
   CORE_COUNT="1"
   RAM_SIZE="256"
   BRG="vmbr0"
-  VLAN=""
+  LAN_BRG="vmbr0"
   MAC=$GEN_MAC
   LAN_MAC=$GEN_MAC_LAN
-  LAN_BRG="vmbr0"
+  VLAN=""
+  LAN_VLAN=",tag=999"
   LAN_IP_ADDR="192.168.1.1"
   LAN_NETMASK="255.255.255.0"
-  LAN_VLAN=",tag=999"
   MTU=""
   START_VM="yes"
   METHOD="default"
-  echo -e "${DGN}Using Virtual Machine ID: ${BGN}${VMID}${CL}"
-  echo -e "${DGN}Using Hostname: ${BGN}${HN}${CL}"
-  echo -e "${DGN}Allocated Cores: ${BGN}${CORE_COUNT}${CL}"
-  echo -e "${DGN}Allocated RAM: ${BGN}${RAM_SIZE}${CL}"
-  echo -e "${DGN}Using WAN Bridge: ${BGN}${BRG}${CL}"
-  echo -e "${DGN}Using WAN VLAN: ${BGN}Default${CL}"
-  echo -e "${DGN}Using WAN MAC Address: ${BGN}${MAC}${CL}"
-  echo -e "${DGN}Using LAN MAC Address: ${BGN}${LAN_MAC}${CL}"
-  echo -e "${DGN}Using LAN Bridge: ${BGN}${LAN_BRG}${CL}"
-  echo -e "${DGN}Using LAN VLAN: ${BGN}999${CL}"
-  echo -e "${DGN}Using LAN IP Address: ${BGN}${LAN_IP_ADDR}${CL}"
-  echo -e "${DGN}Using LAN NETMASK: ${BGN}${LAN_NETMASK}${CL}"
-  echo -e "${DGN}Using Interface MTU Size: ${BGN}Default${CL}"
-  echo -e "${DGN}Start VM when completed: ${BGN}yes${CL}"
-  echo -e "${BL}Creating a OpenWrt VM using the above default settings${CL}"
+  DISK_SIZE="1G"
+  echo -e "${CONTAINERID}${BOLD}${DGN}VMID: ${BGN}${VMID}${CL}"
+  echo -e "${HOSTNAME}${BOLD}${DGN}Hostname: ${BGN}${HN}${CL}"
+  echo -e "${CPUCORE}${BOLD}${DGN}CPU Cores: ${BGN}${CORE_COUNT}${CL}"
+  echo -e "${RAMSIZE}${BOLD}${DGN}RAM: ${BGN}${RAM_SIZE}${CL}"
+  echo -e "${DISKSIZE}${BOLD}${DGN}Disk Size: ${BGN}${DISK_SIZE}${CL}"
+  echo -e "${BRIDGE}${BOLD}${DGN}WAN Bridge: ${BGN}${BRG}${CL}"
+  echo -e "${BRIDGE}${BOLD}${DGN}LAN Bridge: ${BGN}${LAN_BRG}${CL}"
+  echo -e "${MACADDRESS}${BOLD}${DGN}WAN MAC: ${BGN}${MAC}${CL}"
+  echo -e "${MACADDRESS}${BOLD}${DGN}LAN MAC: ${BGN}${LAN_MAC}${CL}"
 }
 
 function advanced_settings() {
@@ -324,6 +340,17 @@ function advanced_settings() {
       RAM_SIZE="256"
     fi
     echo -e "${DGN}Allocated RAM: ${BGN}$RAM_SIZE${CL}"
+  else
+    exit-script
+  fi
+
+  if DISK_SIZE=$(whiptail --backtitle "Proxmox VE Helper Scripts" \
+    --inputbox "Set Disk Size in GiB (e.g., 1, 2, 4)" 8 58 "1" \
+    --title "DISK SIZE" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
+    if [[ "$DISK_SIZE" =~ ^[0-9]+$ ]]; then
+      DISK_SIZE="${DISK_SIZE}G"
+    fi
+    echo -e "${DISKSIZE}${BOLD}${DGN}Disk Size: ${BGN}${DISK_SIZE}${CL}"
   else
     exit-script
   fi
@@ -491,47 +518,44 @@ response=$(curl -fsSL https://openwrt.org)
 stableversion=$(echo "$response" | sed -n 's/.*Current stable release - OpenWrt \([0-9.]\+\).*/\1/p' | head -n 1)
 URL="https://downloads.openwrt.org/releases/$stableversion/targets/x86/64/openwrt-$stableversion-x86-64-generic-ext4-combined.img.gz"
 
-sleep 2
 msg_ok "${CL}${BL}${URL}${CL}"
 curl -f#SL -o "$(basename "$URL")" "$URL"
-echo -en "\e[1A\e[0K"
-FILE=$(basename $URL)
+FILE=$(basename "$URL")
 msg_ok "Downloaded ${CL}${BL}$FILE${CL}"
-gunzip -f $FILE >/dev/null 2>/dev/null || true
-NEWFILE="${FILE%.*}"
-FILE="$NEWFILE"
-mv $FILE ${FILE%.*}
-qemu-img resize -f raw ${FILE%.*} 512M >/dev/null 2>/dev/null
-msg_ok "Extracted & Resized OpenWrt Disk Image ${CL}${BL}$FILE${CL}"
-STORAGE_TYPE=$(pvesm status -storage $STORAGE | awk 'NR>1 {print $2}')
-case $STORAGE_TYPE in
-nfs | dir)
-  DISK_EXT=".qcow2"
-  DISK_REF="$VMID/"
-  DISK_IMPORT="-format qcow2"
-  ;;
-btrfs)
-  DISK_EXT=".raw"
-  DISK_REF="$VMID/"
-  DISK_IMPORT="-format raw"
-  ;;
-esac
-for i in {0,1}; do
-  disk="DISK$i"
-  eval DISK${i}=vm-${VMID}-disk-${i}${DISK_EXT:-}
-  eval DISK${i}_REF=${STORAGE}:${DISK_REF:-}${!disk}
-done
+
+gunzip -f "$FILE" >/dev/null 2>&1 || true
+FILE="${FILE%.*}"
+msg_ok "Extracted OpenWrt Disk Image ${CL}${BL}$FILE${CL}"
 
 msg_info "Creating OpenWrt VM"
-qm create $VMID -cores $CORE_COUNT -memory $RAM_SIZE -name $HN \
+qm create "$VMID" -cores "$CORE_COUNT" -memory "$RAM_SIZE" -name "$HN" \
   -onboot 1 -ostype l26 -scsihw virtio-scsi-pci --tablet 0
-pvesm alloc $STORAGE $VMID $DISK0 4M 1>&/dev/null
-qm importdisk $VMID ${FILE%.*} $STORAGE ${DISK_IMPORT:-} 1>&/dev/null
-qm set $VMID \
-  -efidisk0 ${DISK0_REF},efitype=4m,size=4M \
-  -scsi0 ${DISK1_REF},size=512M \
+if [[ "$(pvesm status | awk -v s=$STORAGE '$1==s {print $2}')" == "dir" ]]; then
+  qm set "$VMID" -efidisk0 "${STORAGE}:0,efitype=4m,size=4M"
+else
+  pvesm alloc "$STORAGE" "$VMID" "vm-$VMID-disk-0" 4M >/dev/null
+  qm set "$VMID" -efidisk0 "${STORAGE}:vm-$VMID-disk-0,efitype=4m,size=4M"
+fi
+
+IMPORT_OUT="$(qm importdisk "$VMID" "$FILE" "$STORAGE" --format raw 2>&1 || true)"
+DISK_REF="$(printf '%s\n' "$IMPORT_OUT" | sed -n "s/.*successfully imported disk '\([^']\+\)'.*/\1/p")"
+
+if [[ -z "$DISK_REF" ]]; then
+  DISK_REF="$(pvesm list "$STORAGE" | awk -v id="$VMID" '$1 ~ ("vm-"id"-disk-") {print $1}' | sort | tail -n1)"
+fi
+
+if [[ -z "$DISK_REF" ]]; then
+  msg_error "Unable to determine imported disk reference."
+  echo "$IMPORT_OUT"
+  exit 1
+fi
+
+qm set "$VMID" \
+  -efidisk0 "${STORAGE}:0,efitype=4m,size=4M" \
+  -scsi0 "${DISK_REF},size=${DISK_SIZE}" \
   -boot order=scsi0 \
   -tags community-script >/dev/null
+msg_ok "Attached disk (${DISK_SIZE})"
 
 DESCRIPTION=$(
   cat <<EOF
@@ -569,37 +593,59 @@ msg_ok "Created OpenWrt VM ${CL}${BL}(${HN})"
 msg_info "OpenWrt is being started in order to configure the network interfaces."
 qm start $VMID
 sleep 15
+msg_info "Waiting for OpenWrt to boot..."
+for i in {1..30}; do
+  if qm status "$VMID" | grep -q "running"; then
+    sleep 5
+    msg_ok "OpenWrt is running"
+    break
+  fi
+  sleep 1
+done
+
 msg_ok "Network interfaces are being configured as OpenWrt initiates."
-send_line_to_vm ""
-send_line_to_vm "uci delete network.@device[0]"
-send_line_to_vm "uci set network.wan=interface"
-send_line_to_vm "uci set network.wan.device=eth1"
-send_line_to_vm "uci set network.wan.proto=dhcp"
-send_line_to_vm "uci delete network.lan"
-send_line_to_vm "uci set network.lan=interface"
-send_line_to_vm "uci set network.lan.device=eth0"
-send_line_to_vm "uci set network.lan.proto=static"
-send_line_to_vm "uci set network.lan.ipaddr=${LAN_IP_ADDR}"
-send_line_to_vm "uci set network.lan.netmask=${LAN_NETMASK}"
-send_line_to_vm "uci commit"
-send_line_to_vm "halt"
-msg_ok "Network interfaces have been successfully configured."
-until qm status $VMID | grep -q "stopped"; do
+
+if qm status "$VMID" | grep -q "running"; then
+  send_line_to_vm ""
+  send_line_to_vm "uci delete network.@device[0]"
+  send_line_to_vm "uci set network.wan=interface"
+  send_line_to_vm "uci set network.wan.device=eth1"
+  send_line_to_vm "uci set network.wan.proto=dhcp"
+  send_line_to_vm "uci delete network.lan"
+  send_line_to_vm "uci set network.lan=interface"
+  send_line_to_vm "uci set network.lan.device=eth0"
+  send_line_to_vm "uci set network.lan.proto=static"
+  send_line_to_vm "uci set network.lan.ipaddr=${LAN_IP_ADDR}"
+  send_line_to_vm "uci set network.lan.netmask=${LAN_NETMASK}"
+  send_line_to_vm "uci commit"
+  send_line_to_vm "halt"
+  msg_ok "Network interfaces configured in OpenWrt"
+else
+  msg_error "VM is not running"
+  exit 1
+fi
+
+msg_info "Waiting for OpenWrt to shut down..."
+until qm status "$VMID" | grep -q "stopped"; do
   sleep 2
 done
-msg_info "Bridge interfaces are being added."
-qm set $VMID \
-  -net0 virtio,bridge=${LAN_BRG},macaddr=${LAN_MAC}${LAN_VLAN}${MTU} \
-  -net1 virtio,bridge=${BRG},macaddr=${MAC}${VLAN}${MTU} >/dev/null 2>/dev/null
-msg_ok "Bridge interfaces have been successfully added."
-if [ "$START_VM" == "yes" ]; then
+msg_ok "OpenWrt has shut down"
+
+msg_info "Adding bridge interfaces on Proxmox side"
+qm set "$VMID" \
+  -net0 virtio,bridge="${LAN_BRG}",macaddr="${LAN_MAC}${LAN_VLAN}${MTU}" \
+  -net1 virtio,bridge="${BRG}",macaddr="${MAC}${VLAN}${MTU}" >/dev/null
+msg_ok "Bridge interfaces added"
+
+if [ "$START_VM" = "yes" ]; then
   msg_info "Starting OpenWrt VM"
-  qm start $VMID
+  qm start "$VMID"
   msg_ok "Started OpenWrt VM"
 fi
+
 VLAN_FINISH=""
-if [ "$VLAN" == "" ] && [ "$VLAN2" != "999" ]; then
+if [ -z "$VLAN" ] && [ "$VLAN2" != "999" ]; then
   VLAN_FINISH=" Please remember to adjust the VLAN tags to suit your network."
 fi
 post_update_to_api "done" "none"
-msg_ok "Completed Successfully!\n${VLAN_FINISH}"
+msg_ok "Completed Successfully!${VLAN_FINISH:+\n$VLAN_FINISH}"

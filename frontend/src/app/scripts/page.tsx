@@ -8,16 +8,14 @@ import type { Category, Script } from "@/lib/types";
 import { ScriptItem } from "@/app/scripts/_components/script-item";
 import { fetchCategories } from "@/lib/data";
 
-import {
-  LatestScripts,
-  MostViewedScripts,
-} from "./_components/script-info-blocks";
+import { LatestScripts, MostViewedScripts } from "./_components/script-info-blocks";
 import Sidebar from "./_components/sidebar";
 
 export const dynamic = "force-static";
 
 function ScriptContent() {
   const [selectedScript, setSelectedScript] = useQueryState("id");
+  const [selectedCategory, setSelectedCategory] = useQueryState("category");
   const [links, setLinks] = useState<Category[]>([]);
   const [item, setItem] = useState<Script>();
 
@@ -47,6 +45,8 @@ function ScriptContent() {
             items={links}
             selectedScript={selectedScript}
             setSelectedScript={setSelectedScript}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
           />
         </div>
         <div className="mx-4 w-full sm:mx-0 sm:ml-4">

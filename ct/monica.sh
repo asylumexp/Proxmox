@@ -27,6 +27,9 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
+
+  NODE_VERSION="22" NODE_MODULE="yarn@latest" setup_nodejs
+
   if check_for_gh_release "monica" "monicahq/monica"; then
     msg_info "Stopping Service"
     systemctl stop apache2
@@ -43,6 +46,7 @@ function update_script() {
     cp -r /opt/monica-backup/.env /opt/monica
     cp -r /opt/monica-backup/storage/* /opt/monica/storage/
     $STD composer install --no-interaction --no-dev
+    $STD yarn config set ignore-engines true
     $STD yarn install
     $STD yarn run production
     $STD php artisan monica:update --force

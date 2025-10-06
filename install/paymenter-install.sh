@@ -21,7 +21,7 @@ $STD apt-get install -y \
 msg_ok "Installed Dependencies"
 
 setup_mariadb
-PHP_VERSION="8.3" PHP_FPM="YES" PHP_MODULE="common,mysql,fpm,redis" setup_php
+PHP_VERSION="8.3" PHP_FPM="YES" PHP_MODULE="common,mysql,redis" setup_php
 setup_composer
 fetch_and_deploy_gh_release "paymenter" "paymenter/paymenter" "prebuild" "latest" "/opt/paymenter" "paymenter.tar.gz"
 chmod -R 755 /opt/paymenter/storage/* /opt/paymenter/bootstrap/cache/
@@ -30,7 +30,7 @@ msg_info "Setting up database"
 DB_NAME=paymenter
 DB_USER=paymenter
 DB_PASS=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9' | head -c13)
-mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql mysql
+mariadb-tzinfo-to-sql /usr/share/zoneinfo | mariadb mysql
 $STD mariadb -u root -e "CREATE DATABASE $DB_NAME;"
 $STD mariadb -u root -e "CREATE USER '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';"
 $STD mariadb -u root -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost' WITH GRANT OPTION;"
@@ -108,8 +108,8 @@ RestartSec=5s
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable --now paymenter
-systemctl enable --now redis-server
+systemctl enable -q --now paymenter
+systemctl enable -q --now redis-server
 msg_ok "Setup Service"
 
 motd_ssh

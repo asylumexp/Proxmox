@@ -6,13 +6,13 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 # Source: https://actualbudget.org/
 
 APP="Actual Budget"
-var_tags="finance"
-var_cpu="2"
-var_ram="2048"
-var_disk="4"
-var_os="debian"
-var_version="12"
-var_unprivileged="1"
+var_tags="${var_tags:-finance}"
+var_cpu="${var_cpu:-2}"
+var_ram="${var_ram:-2048}"
+var_disk="${var_disk:-4}"
+var_os="${var_os:-debian}"
+var_version="${var_version:-13}"
+var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
 variables
@@ -28,8 +28,7 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  NODE_VERSION="22"
-  setup_nodejs
+  NODE_VERSION="22" setup_nodejs
   RELEASE=$(curl -fsSL https://api.github.com/repos/actualbudget/actual/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
   if [[ -f /opt/actualbudget-data/config.json ]]; then
     if [[ ! -f /opt/actualbudget_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/actualbudget_version.txt)" ]]; then

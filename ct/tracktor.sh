@@ -11,7 +11,7 @@ var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-4096}"
 var_disk="${var_disk:-6}"
 var_os="${var_os:-debian}"
-var_version="${var_version:-12}"
+var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
@@ -33,22 +33,23 @@ function update_script() {
     systemctl stop tracktor
     msg_ok "Stopped Service"
 
-    msg_info "Creating Backup"
-    cp /opt/tracktor/app/backend/.env /opt/tracktor.env
-    msg_ok "Created Backup"
+    msg_info "Correcting Services"
+    if [ -f /opt/tracktor/app/backend/.env ]; then
+        mv /opt/tracktor/app/backend/.env /opt/tracktor.env
+        echo 'AUTH_PIN=123456' >> /opt/tracktor.env
+        sed -i 's|^EnvironmentFile=.*|EnvironmentFile=/opt/tracktor.env|' /etc/systemd/system/tracktor.service
+        systemctl daemon-reload
+    fi
+    msg_ok "Corrected Services"
 
     setup_nodejs
-    fetch_and_deploy_gh_release "tracktor" "javedh-dev/tracktor" "tarball" "latest" "/opt/tracktor"
+    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "tracktor" "javedh-dev/tracktor" "tarball" "latest" "/opt/tracktor"
 
-    msg_info "Updating ${APP}"
+    msg_info "Updating tracktor"
     cd /opt/tracktor
     $STD npm install
     $STD npm run build
-    msg_ok "Updated $APP"
-
-    msg_info "Restoring Backup"
-    cp /opt/tracktor.env /opt/tracktor/app/backend/.env
-    msg_ok "Restored Backup"
+    msg_ok "Updated tracktor"
 
     msg_info "Starting Service"
     systemctl start tracktor

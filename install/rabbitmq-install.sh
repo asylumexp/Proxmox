@@ -23,16 +23,17 @@ $STD apt-get install -y \
 msg_ok "Installed Dependencies"
 
 msg_info "Adding RabbitMQ signing key"
-curl -fsSL "https://keys.openpgp.org/vks/v1/by-fingerprint/0A9AF2115F4687BD29803A206B73A36E6026DFCA" | gpg --dearmor >/usr/share/keyrings/com.rabbitmq.team.gpg
-curl -fsSL "https://github.com/rabbitmq/signing-keys/releases/download/3.0/cloudsmith.rabbitmq-erlang.E495BB49CC4BBE5B.key" | gpg --dearmor >/usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg
-curl -fsSL "https://github.com/rabbitmq/signing-keys/releases/download/3.0/cloudsmith.rabbitmq-server.9F4587F226208342.key" | gpg --dearmor >/usr/share/keyrings/rabbitmq.9F4587F226208342.gpg
+# primary RabbitMQ signing key
+curl -1sLf "https://github.com/rabbitmq/signing-keys/releases/download/3.0/rabbitmq-release-signing-key.asc" | sudo gpg --dearmor | sudo tee /usr/share/keyrings/com.github.rabbitmq.signing.gpg > /dev/null
+
+# Launchpad PPA signing key for apt
+curl -1sLf "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xf77f1eda57ebb1cc" | sudo gpg --dearmor | sudo tee /usr/share/keyrings/net.launchpad.ppa.rabbitmq.erlang.gpg > /dev/null
 msg_ok "Signing keys added"
 
 msg_info "Adding RabbitMQ repository"
 cat <<EOF >/etc/apt/sources.list.d/rabbitmq.list
-## Provides RabbitMQ from a Cloudsmith mirror
-deb [signed-by=/usr/share/keyrings/rabbitmq.9F4587F226208342.gpg] https://dl.cloudsmith.io/public/rabbitmq/rabbitmq-server/deb/ubuntu $(lsb_release -cs) main
-deb-src [signed-by=/usr/share/keyrings/rabbitmq.9F4587F226208342.gpg] https://dl.cloudsmith.io/public/rabbitmq/rabbitmq-server/deb/ubuntu $(lsb_release -cs) main
+deb [arch=arm64 signed-by=/usr/share/keyrings/net.launchpad.ppa.rabbitmq.erlang.gpg] http://ppa.launchpad.net/rabbitmq/rabbitmq-erlang/ubuntu noble main
+deb-src [signed-by=/usr/share/keyrings/net.launchpad.ppa.rabbitmq.erlang.gpg] http://ppa.launchpad.net/rabbitmq/rabbitmq-erlang/ubuntu noble main
 EOF
 $STD add-apt-repository -y ppa:rabbitmq/rabbitmq-erlang
 msg_ok "RabbitMQ repository added"
