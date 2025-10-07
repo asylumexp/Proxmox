@@ -44,6 +44,8 @@ function ScriptHeader({ item }: { item: Script }) {
         return "🚧 Unported";
       case "🧪":
         return "🧪 Untested";
+      case "⚗️":
+        return "🧪 Untested";
       default:
         return "🚧 Unported";
     }
