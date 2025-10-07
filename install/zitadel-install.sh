@@ -14,7 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies (Patience)"
-$STD apt-get install -y ca-certificates
+$STD apt-get install -y ca-certificates lsof
 msg_ok "Installed Dependecies"
 
 PG_VERSION="17" setup_postgresql
