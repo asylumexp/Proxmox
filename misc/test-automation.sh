@@ -171,6 +171,73 @@ cleanup_container() {
     fi
 }
 
+# Function to monitor log file for output timeout (5 minutes of no output)
+monitor_output_timeout() {
+    local log_file="$1"
+    local script_name="$2"
+    local timeout_file="/tmp/timeout_monitor_${script_name}_$$.txt"
+    local timeout_seconds=300  # 5 minutes
+    
+    # Background process to monitor log file modification time
+    (
+        local last_size=0
+        local no_change_count=0
+        
+        while [ -f "$timeout_file" ]; do
+            if [ -f "$log_file" ]; then
+                local current_size=$(stat -c%s "$log_file" 2>/dev/null || echo "0")
+                
+                if [ "$current_size" -eq "$last_size" ]; then
+                    # No change in file size
+                    no_change_count=$((no_change_count + 1))
+                    
+                    # Check if we've exceeded the timeout
+                    if [ $no_change_count -ge $timeout_seconds ]; then
+                        echo "TIMEOUT_EXCEEDED" > "${timeout_file}.exceeded"
+                        # Kill the parent bash process (the test script)
+                        local parent_pid=$(cat "${timeout_file}.pid" 2>/dev/null || echo "")
+                        if [ -n "$parent_pid" ]; then
+                            kill -TERM "$parent_pid" 2>/dev/null || true
+                        fi
+                        break
+                    fi
+                else
+                    # File size changed, reset counter
+                    last_size=$current_size
+                    no_change_count=0
+                fi
+            fi
+            sleep 1
+        done
+    ) &
+    
+    echo "$!" > "$timeout_file"
+}
+
+# Function to stop timeout monitor
+stop_timeout_monitor() {
+    local script_name="$1"
+    local timeout_file="/tmp/timeout_monitor_${script_name}_$$.txt"
+    
+    if [ -f "$timeout_file" ]; then
+        local pid=$(cat "$timeout_file")
+        kill "$pid" 2>/dev/null || true
+        rm -f "$timeout_file" "${timeout_file}.pid" "${timeout_file}.exceeded"
+    fi
+}
+
+# Function to check if timeout was exceeded
+check_timeout_exceeded() {
+    local script_name="$1"
+    local timeout_file="/tmp/timeout_monitor_${script_name}_$$.txt"
+    
+    if [ -f "${timeout_file}.exceeded" ]; then
+        return 0  # Timeout exceeded
+    else
+        return 1  # No timeout
+    fi
+}
+
 # Function to create wrapper script for automated testing
 create_wrapper_script() {
     local original_script="$1"
@@ -246,8 +313,31 @@ test_script() {
     # Start monitoring current step
     monitor_current_step "${script_log}" "${script_name}"
     
-    if bash "${TEMP_SCRIPT}" > "${script_log}" 2>&1; then
-        stop_monitor "${script_name}"
+    # Start timeout monitoring (5 minutes of no output)
+    monitor_output_timeout "${script_log}" "${script_name}"
+    
+    # Run the script in background so we can monitor it
+    bash "${TEMP_SCRIPT}" > "${script_log}" 2>&1 &
+    local script_pid=$!
+    
+    # Store PID for timeout monitor
+    echo "$script_pid" > "/tmp/timeout_monitor_${script_name}_$$.txt.pid"
+    
+    # Wait for the script to complete
+    wait $script_pid
+    local exit_code=$?
+    
+    # Stop monitors
+    stop_monitor "${script_name}"
+    stop_timeout_monitor "${script_name}"
+    
+    # Check if timeout was exceeded
+    if check_timeout_exceeded "${script_name}"; then
+        log_error "Script ${script_name} timed out (no output for 5 minutes)"
+        FAILED_CONTAINERS+=("${script_name}:${next_id}:TIMEOUT - No output for 5 minutes")
+        rm -f "$TEMP_SCRIPT"
+        cleanup_container "${next_id}"
+    elif [ $exit_code -eq 0 ]; then
         rm -f "$TEMP_SCRIPT"
         log_ok "Container creation completed for ${script_name}"
         
@@ -283,7 +373,6 @@ test_script() {
         pct stop "${next_id}" 2>/dev/null || true
         
     else
-        stop_monitor "${script_name}"
         log_error "Container creation failed for ${script_name}"
         
         # Extract last completed step even on failure
@@ -308,8 +397,36 @@ log_info "Starting automated container testing..."
 log_info "Log directory: ${LOG_DIR}"
 log_info ""
 
+# Limit to 10 scripts per session (excluding skipped scripts)
+TESTED_COUNT=0
+MAX_SCRIPTS=10
+
 while IFS= read -r script; do
+    # Check if we've reached the limit
+    if [[ $TESTED_COUNT -ge $MAX_SCRIPTS ]]; then
+        log_warn "Reached maximum of ${MAX_SCRIPTS} tested scripts for this session"
+        log_info "Remaining scripts will be skipped"
+        break
+    fi
+    
+    # Test the script
     test_script "$script"
+    
+    # Increment counter only if script was actually tested (not skipped)
+    # We check if the script was added to SKIPPED_SCRIPTS array
+    local was_skipped=false
+    for skipped in "${SKIPPED_SCRIPTS[@]}"; do
+        if [[ "$skipped" =~ ^"$script" ]]; then
+            was_skipped=true
+            break
+        fi
+    done
+    
+    if [[ "$was_skipped" == false ]]; then
+        TESTED_COUNT=$((TESTED_COUNT + 1))
+        log_info "Progress: ${TESTED_COUNT}/${MAX_SCRIPTS} scripts tested"
+    fi
+    
     # Small delay between tests
     sleep 5
 done <<< "$TEST_SCRIPTS"
@@ -440,26 +557,47 @@ log_info "  - Summary: ${SUMMARY_LOG}"
 log_info "  - Full log: ${OUTPUT_LOG}"
 log_info "  - Script logs: ${SCRIPT_LOG_DIR}/"
 
-# Ask user if they want to destroy test containers
-echo ""
-read -p "Do you want to destroy all test containers? (y/N): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    log_info "Destroying test containers..."
-    
-    for item in "${ACCESSIBLE_CONTAINERS[@]}" "${INACCESSIBLE_CONTAINERS[@]}" "${NOT_TESTED_CONTAINERS[@]}" "${FAILED_CONTAINERS[@]}"; do
-        IFS=':' read -r name id _ <<< "$item"
+# Auto-delete successful and HTTP accessible containers
+log_info "Auto-deleting successful and HTTP accessible containers..."
+if [[ ${#ACCESSIBLE_CONTAINERS[@]} -gt 0 ]]; then
+    for item in "${ACCESSIBLE_CONTAINERS[@]}"; do
+        IFS=':' read -r name id url _ <<< "$item"
         if [[ -n "$id" ]] && pct status "$id" &>/dev/null; then
-            log_info "Destroying container ${id} (${name})..."
+            log_info "Destroying container ${id} (${name}) - successful and HTTP accessible"
             pct stop "$id" 2>/dev/null || true
             sleep 2
             pct destroy "$id" 2>/dev/null || true
         fi
     done
-    
-    log_ok "All test containers destroyed"
+    log_ok "Auto-deleted ${#ACCESSIBLE_CONTAINERS[@]} successful and HTTP accessible container(s)"
 else
-    log_info "Test containers left running for manual inspection"
+    log_info "No successful and HTTP accessible containers to delete"
+fi
+
+# Ask user if they want to destroy remaining test containers
+if [[ ${#INACCESSIBLE_CONTAINERS[@]} -gt 0 ]] || [[ ${#NOT_TESTED_CONTAINERS[@]} -gt 0 ]] || [[ ${#FAILED_CONTAINERS[@]} -gt 0 ]]; then
+    echo ""
+    read -p "Do you want to destroy remaining test containers (inaccessible/failed/not-tested)? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Destroying remaining test containers..."
+        
+        for item in "${INACCESSIBLE_CONTAINERS[@]}" "${NOT_TESTED_CONTAINERS[@]}" "${FAILED_CONTAINERS[@]}"; do
+            IFS=':' read -r name id _ <<< "$item"
+            if [[ -n "$id" ]] && pct status "$id" &>/dev/null; then
+                log_info "Destroying container ${id} (${name})..."
+                pct stop "$id" 2>/dev/null || true
+                sleep 2
+                pct destroy "$id" 2>/dev/null || true
+            fi
+        done
+        
+        log_ok "Remaining test containers destroyed"
+    else
+        log_info "Remaining test containers left running for manual inspection"
+    fi
+else
+    log_info "No remaining containers to prompt for deletion"
 fi
 
 log_ok "Automation complete!"
