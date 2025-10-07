@@ -33,7 +33,7 @@ function update_script() {
     systemctl stop oauth2-proxy
     msg_ok "Stopped Service"
 
-    fetch_and_deploy_gh_release "oauth2-proxy" "oauth2-proxy/oauth2-proxy" "prebuild" "latest" "/opt/oauth2-proxy" "oauth2-proxy*linux-amd64.tar.gz"
+    fetch_and_deploy_gh_release "oauth2-proxy" "oauth2-proxy/oauth2-proxy" "prebuild" "latest" "/opt/oauth2-proxy" "oauth2-proxy*linux-arm64.tar.gz"
 
     msg_info "Starting Service"
     systemctl start oauth2-proxy
