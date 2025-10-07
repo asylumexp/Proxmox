@@ -20,7 +20,7 @@ $STD apt-get install -y \
     openssl
 msg_ok "Installed Dependencies"
 
-fetch_and_deploy_gh_release "ots" "Luzifer/ots" "prebuild" "latest" "/opt/ots" "ots_linux_amd64.tgz"
+fetch_and_deploy_gh_release "ots" "Luzifer/ots" "prebuild" "latest" "/opt/ots" "ots_linux_arm64.tgz"
 
 msg_info "Setup OTS"
 cat <<EOF >/opt/ots/.env
