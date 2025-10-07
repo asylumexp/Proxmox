@@ -2045,7 +2045,7 @@ function setup_yq() {
   fi
 
   msg_info "Setup yq ($LATEST_VERSION)"
-  curl -fsSL "https://github.com/${GITHUB_REPO}/releases/download/v${LATEST_VERSION}/yq_linux_amd64" -o "$TMP_DIR/yq"
+  curl -fsSL "https://github.com/${GITHUB_REPO}/releases/download/v${LATEST_VERSION}/yq_linux_arm64" -o "$TMP_DIR/yq"
   chmod +x "$TMP_DIR/yq"
   mv "$TMP_DIR/yq" "$BINARY_PATH"
 
