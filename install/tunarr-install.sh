@@ -20,49 +20,18 @@ if [[ "$CTTYPE" == "0" ]]; then
 fi
 msg_ok "Base Hardware Acceleration Set Up"
 
-read -r -p "${TAB3}Do you need the intel-media-va-driver-non-free driver for HW encoding (Debian 13 only)? <y/N> " prompt
-if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
-  msg_info "Installing Intel Hardware Acceleration (non-free)"
-  cat <<'EOF' >/etc/apt/sources.list.d/non-free.sources
-Types: deb deb-src
-URIs: http://deb.debian.org/debian
-Suites: trixie
-Components: non-free non-free-firmware
 
-Types: deb deb-src
-URIs: http://deb.debian.org/debian-security
-Suites: trixie-security
-Components: non-free non-free-firmware
+msg_info "Installing Hardware Acceleration"
+$STD apt -y install \
+  ocl-icd-libopencl1 \   # OpenCL loader
+  mesa-opencl-icd \      # Mesa (Rusticl) OpenCL for GPUs Mesa supports
+  clinfo \               # OpenCL capability probe
+  libva2 libva-drm2 \    # VA-API userspace
+  vainfofi
+msg_ok "Installed and Set Up Hardware Acceleration"
 
-Types: deb deb-src
-URIs: http://deb.debian.org/debian
-Suites: trixie-updates
-Components: non-free non-free-firmware
-EOF
-
-  $STD apt update
-  $STD apt -y install \
-    intel-media-va-driver-non-free \
-    ocl-icd-libopencl1 \
-    mesa-opencl-icd \
-    mesa-va-drivers \
-    libvpl2 \
-    vainfo \
-    intel-gpu-tools
-else
-  msg_info "Installing Intel Hardware Acceleration (open packages)"
-  $STD apt -y install \
-    va-driver-all \
-    ocl-icd-libopencl1 \
-    mesa-opencl-icd \
-    mesa-va-drivers \
-    vainfo \
-    intel-gpu-tools
-fi
-msg_ok "Installed and Set Up Intel Hardware Acceleration"
-
-fetch_and_deploy_gh_release "tunarr" "chrisbenincasa/tunarr" "singlefile" "latest" "/opt/tunarr" "*linux-x64"
-fetch_and_deploy_gh_release "ersatztv-ffmpeg" "ErsatzTV/ErsatzTV-ffmpeg" "prebuild" "latest" "/opt/ErsatzTV-ffmpeg" "*-linux64-gpl-7.1.tar.xz"
+fetch_and_deploy_gh_release "tunarr" "chrisbenincasa/tunarr" "singlefile" "latest" "/opt/tunarr" "*linux-arm64"
+fetch_and_deploy_gh_release "ersatztv-ffmpeg" "ErsatzTV/ErsatzTV-ffmpeg" "prebuild" "latest" "/opt/ErsatzTV-ffmpeg" "*-linuxarm64-gpl-7.1.tar.xz"
 
 msg_info "Set ErsatzTV-ffmpeg links"
 chmod +x /opt/ErsatzTV-ffmpeg/bin/*
