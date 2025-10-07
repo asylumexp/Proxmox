@@ -21,7 +21,7 @@ $STD apt-get install -y \
   ca-certificates
 msg_ok "Installed Dependencies"
 
-fetch_and_deploy_gh_release "gomft" "StarFleetCPTN/GoMFT" "singlefile" "latest" "/opt/gomft" "gomft*linux-amd64"
+fetch_and_deploy_gh_release "gomft" "StarFleetCPTN/GoMFT" "singlefile" "latest" "/opt/gomft" "gomft*linux-arm64"
 
 msg_info "Configuring ${APPLICATION}"
 JWT_SECRET_KEY=$(openssl rand -base64 24 | tr -d '/+=')

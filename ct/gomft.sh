@@ -33,7 +33,7 @@ function update_script() {
     systemctl stop gomft
     msg_ok "Stopped $APP"
 
-    fetch_and_deploy_gh_release "gomft" "StarFleetCPTN/GoMFT" "singlefile" "latest" "/opt/gomft" "gomft*linux-amd64"
+    fetch_and_deploy_gh_release "gomft" "StarFleetCPTN/GoMFT" "singlefile" "latest" "/opt/gomft" "gomft*linux-arm64"
 
     msg_info "Starting $APP"
     systemctl start gomft
