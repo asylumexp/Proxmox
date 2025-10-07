@@ -19,6 +19,8 @@ msg_ok "Installed Dependencies"
 
 fetch_and_deploy_gh_release "goaway" "pommee/goaway" "prebuild" "latest" "/opt/goaway" "goaway_*_linux_arm64.tar.gz"
 
+$STD systemctl disable --now systemd-resolved
+
 msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/goaway.service
 [Unit]
