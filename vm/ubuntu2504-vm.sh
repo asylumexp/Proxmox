@@ -171,9 +171,9 @@ pve_check() {
 }
 
 function arch_check() {
-  if [ "$(dpkg --print-architecture)" != "amd64" ]; then
-    echo -e "\n ${INFO}${YWB}This script will not work with PiMox! \n"
-    echo -e "\n ${YWB}Visit https://github.com/asylumexp/Proxmox for ARM64 support. \n"
+  if [ "$(dpkg --print-architecture)" != "arm64" ]; then
+    echo -e "\n ${INFO}${YWB}This script will not work with Proxmox! \n"
+    echo -e "\n ${YWB}Visit https://github.com/community-scripts/ProxmoxVE for AMD64 support. \n"
     echo -e "Exiting..."
     sleep 2
     exit
@@ -460,7 +460,7 @@ fi
 msg_ok "Using ${CL}${BL}$STORAGE${CL} ${GN}for Storage Location."
 msg_ok "Virtual Machine ID is ${CL}${BL}$VMID${CL}."
 msg_info "Retrieving the URL for the Ubuntu 25.04 Disk Image"
-URL=https://cloud-images.ubuntu.com/plucky/current/plucky-server-cloudimg-amd64.img
+URL=https://cloud-images.ubuntu.com/plucky/current/plucky-server-cloudimg-arm64.img
 sleep 2
 msg_ok "${CL}${BL}${URL}${CL}"
 curl -f#SL -o "$(basename "$URL")" "$URL"
