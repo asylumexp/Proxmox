@@ -17,7 +17,7 @@ msg_info "Installing Dependencies"
 $STD apt-get install -y net-tools
 msg_ok "Installed Dependencies"
 
-fetch_and_deploy_gh_release "goaway" "pommee/goaway" "prebuild" "latest" "/opt/goaway" "goaway_*_linux_amd64.tar.gz"
+fetch_and_deploy_gh_release "goaway" "pommee/goaway" "prebuild" "latest" "/opt/goaway" "goaway_*_linux_arm64.tar.gz"
 
 msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/goaway.service

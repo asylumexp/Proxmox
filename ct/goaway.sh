@@ -33,7 +33,7 @@ function update_script() {
     systemctl stop goaway
     msg_ok "Stopped Services"
 
-    fetch_and_deploy_gh_release "goaway" "pommee/goaway" "prebuild" "latest" "/opt/goaway" "goaway_*_linux_amd64.tar.gz"
+    fetch_and_deploy_gh_release "goaway" "pommee/goaway" "prebuild" "latest" "/opt/goaway" "goaway_*_linux_arm64.tar.gz"
 
     msg_info "Starting Services"
     systemctl start goaway
