@@ -4,7 +4,7 @@
 # https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 
 if ! command -v curl >/dev/null 2>&1; then
-  apk update && apk add curl openssl >/dev/null 2>&1
+  apk update && apk add curl >/dev/null 2>&1
 fi
 source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/core.func)
 load_functions
