@@ -926,7 +926,7 @@ install_script() {
     systemctl -q stop ping-instances.service
   fi
   NEXTID=$(pvesh get /cluster/nextid)
-  timezone=$(cat /etc/timezone)
+  timezone=$( (cat /etc/timezone 2>/dev/null || readlink -f /etc/localtime | sed 's|.*/zoneinfo/||') )
   header_info
   while true; do
 
