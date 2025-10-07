@@ -23,7 +23,7 @@ JAVA_VERSION="21" setup_java
 
 msg_info "Setting up ClickHouse"
 curl -fsSL "https://packages.clickhouse.com/rpm/lts/repodata/repomd.xml.key" | gpg --dearmor -o /usr/share/keyrings/clickhouse-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/clickhouse-keyring.gpg arch=amd64] https://packages.clickhouse.com/deb stable main" >/etc/apt/sources.list.d/clickhouse.list
+echo "deb [signed-by=/usr/share/keyrings/clickhouse-keyring.gpg arch=arm64] https://packages.clickhouse.com/deb stable main" >/etc/apt/sources.list.d/clickhouse.list
 $STD apt-get update
 export DEBIAN_FRONTEND=noninteractive
 $STD apt-get install -y clickhouse-server clickhouse-client
@@ -101,7 +101,7 @@ EOF
 systemctl enable -q --now clickhouse-server
 msg_ok "Configured ClickHouse"
 
-fetch_and_deploy_gh_release "signoz-schema-migrator" "SigNoz/signoz-otel-collector" "prebuild" "latest" "/opt/signoz-schema-migrator" "signoz-schema-migrator_linux_amd64.tar.gz"
+fetch_and_deploy_gh_release "signoz-schema-migrator" "SigNoz/signoz-otel-collector" "prebuild" "latest" "/opt/signoz-schema-migrator" "signoz-schema-migrator_linux_arm64.tar.gz"
 
 msg_info "Running ClickHouse migrations"
 cd /opt/signoz-schema-migrator/bin
@@ -109,7 +109,7 @@ $STD ./signoz-schema-migrator sync --dsn="tcp://localhost:9000?password=" --repl
 $STD ./signoz-schema-migrator async --dsn="tcp://localhost:9000?password=" --replication=true --up=
 msg_ok "ClickHouse Migrations Completed"
 
-fetch_and_deploy_gh_release "signoz" "SigNoz/signoz" "prebuild" "latest" "/opt/signoz" "signoz-community_linux_amd64.tar.gz"
+fetch_and_deploy_gh_release "signoz" "SigNoz/signoz" "prebuild" "latest" "/opt/signoz" "signoz-community_linux_arm64.tar.gz"
 
 msg_info "Setting up SigNoz"
 mkdir -p /var/lib/signoz
@@ -146,7 +146,7 @@ EOF
 systemctl enable -q --now signoz
 msg_ok "Setup Signoz"
 
-fetch_and_deploy_gh_release "signoz-otel-collector" "SigNoz/signoz-otel-collector" "prebuild" "latest" "/opt/signoz-otel-collector" "signoz-otel-collector_linux_amd64.tar.gz"
+fetch_and_deploy_gh_release "signoz-otel-collector" "SigNoz/signoz-otel-collector" "prebuild" "latest" "/opt/signoz-otel-collector" "signoz-otel-collector_linux_arm64.tar.gz"
 
 msg_info "Setting up SigNoz OTel Collector"
 mkdir -p /var/lib/signoz-otel-collector
