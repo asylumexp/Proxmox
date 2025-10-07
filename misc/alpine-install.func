@@ -4,7 +4,7 @@
 # https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 
 if ! command -v curl >/dev/null 2>&1; then
-  apk update && apk add curl >/dev/null 2>&1
+  apk update && apk add curl openssl >/dev/null 2>&1
 fi
 source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/core.func)
 load_functions
@@ -150,10 +150,6 @@ EOF
 
     msg_ok "Customized Container"
   fi
-  apk add --no-cacheopenssl curl >/dev/null 2>&1
-
-  apk update >/dev/null 2>&1
-  apk upgrade >/dev/null 2>&1
 
   echo "bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/ct/${app}.sh)\"" >/usr/bin/update
   chmod +x /usr/bin/update
