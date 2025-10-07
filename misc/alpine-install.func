@@ -131,7 +131,7 @@ customize() {
     passwd -d root >/dev/null 2>&1
 
     # Ensure agetty is available
-    apk add --no-cache --force-broken-world util-linux >/dev/null 2>&1
+    apk add --no-cache --force-broken-world util-linux openssl >/dev/null 2>&1
 
     # Create persistent autologin boot script
     mkdir -p /etc/local.d
