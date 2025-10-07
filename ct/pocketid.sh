@@ -64,7 +64,7 @@ function update_script() {
       cp /opt/pocket-id/.env /opt/env
     fi
 
-    fetch_and_deploy_gh_release "pocket-id" "pocket-id/pocket-id" "singlefile" "latest" "/opt/pocket-id/" "pocket-id-linux-amd64"
+    fetch_and_deploy_gh_release "pocket-id" "pocket-id/pocket-id" "singlefile" "latest" "/opt/pocket-id/" "pocket-id-linux-arm64"
     mv /opt/env /opt/pocket-id/.env
 
     msg_info "Starting $APP"
