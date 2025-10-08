@@ -148,7 +148,7 @@ EOF
 
   msg_info "Installing core dependencies"
   $STD apt-get update
-  $STD apt-get install -y sudo curl mc gnupg2 openssh-server wget
+  $STD apt-get install -y sudo curl mc gnupg2 openssh-server wget gcc
 
   source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/tools.func)
 }
