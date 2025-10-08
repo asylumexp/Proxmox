@@ -159,6 +159,7 @@ draw_dashboard() {
     local cell_w=$(( cols / (num_cols > 0 ? num_cols : 1) ))
     local content_h=$(( cell_h - 2 ))
     local content_w=$(( cell_w - 2 ))
+    local print_w=$(( cell_w - 1 ))
     if (( content_h < 2 )); then content_h=2; fi
     if (( content_w < 20 )); then content_w=20; fi
 
@@ -178,12 +179,14 @@ draw_dashboard() {
         local status="IDLE"
         local log_file=""
         local status_file=""
+        local s_line="" f2="" f3="" f4=""
         if [[ -n "$script" ]]; then
             title="$script"
             log_file="${SCRIPT_LOG_DIR}/${script}.log"
             status_file="${SCRIPT_LOG_DIR}/${script}.status"
             if [[ -f "$status_file" ]]; then
-                status=$(head -n1 "$status_file" | cut -d'|' -f1)
+                s_line=$(head -n1 "$status_file")
+                IFS='|' read -r status f2 f3 f4 <<< "$s_line"
             else
                 status="RUNNING"
             fi
@@ -191,16 +194,40 @@ draw_dashboard() {
             title="Idle Slot"
         fi
 
-        move_cursor "$top" "$left"; printf "[%s] %s\n" "$status" "$title"
+        move_cursor "$top" "$left"; printf "%-${print_w}s\n" "[$status] $title"
         local start_y=$(( top + 1 ))
-        if [[ -n "$script" && -f "$log_file" ]]; then
-            local last_line
-            last_line=$(tail -n 1 "$log_file" 2>/dev/null | sed -e $'s/\t/  /g')
-            move_cursor "$start_y" "$left"
-            printf "%-${content_w}s" "${last_line:0:$content_w}"
-        else
-            move_cursor "$start_y" "$left"; printf "%-${content_w}s" "(idle)"
-        fi
+        local display_line=""
+        case "$status" in
+            RUNNING)
+                if [[ -n "$script" && -f "$log_file" ]]; then
+                    display_line=$(tail -n 1 "$log_file" 2>/dev/null | sed -e $'s/\t/  /g')
+                else
+                    display_line="(starting)"
+                fi
+                ;;
+            QUEUED)
+                display_line="(queued)"
+                ;;
+            SKIPPED)
+                display_line="${f2:-skipped}"
+                ;;
+            FAILED)
+                display_line="Last: ${f4:-failed}"
+                ;;
+            ACCESSIBLE)
+                display_line="${f3:-accessible}"
+                ;;
+            INACCESSIBLE)
+                display_line="${f3:-inaccessible}"
+                ;;
+            NOT_TESTED)
+                display_line="Last: ${f4:-no http}"
+                ;;
+            *)
+                display_line=""
+                ;;
+        esac
+        move_cursor "$start_y" "$left"; printf "%-${print_w}s" "${display_line:0:$print_w}"
         idx=$(( idx + 1 ))
     done
 
@@ -222,7 +249,8 @@ draw_dashboard() {
         fi
     fi
     move_cursor "$footer_y" 0
-    printf "%s" "$testing_line"
+    testing_line+="  |  Running: ${#JOB_PIDS[@]}  |  Finished: ${finished_jobs}  |  Total: ${total_jobs}"
+    printf "%-${cols}s" "$testing_line"
 }
 
 # Function to extract HTTP URL from log file
@@ -501,9 +529,6 @@ while (( finished_jobs < total_jobs )); do
     # Draw UI
     if [[ "$USE_UI" == "yes" ]]; then
         draw_dashboard SCRIPT_LIST
-        # Footer with counts
-        move_cursor $(($(tput lines 2>/dev/null || echo 40)-1)) 0
-        printf "Running: %d  |  Finished: %d  |  Total: %d\r" "${#JOB_PIDS[@]}" "$finished_jobs" "$total_jobs"
     fi
 
     # Check for finished jobs
