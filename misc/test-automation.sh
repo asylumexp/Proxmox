@@ -194,17 +194,12 @@ draw_dashboard() {
         move_cursor "$top" "$left"; printf "[%s] %s\n" "$status" "$title"
         local start_y=$(( top + 1 ))
         if [[ -n "$script" && -f "$log_file" ]]; then
-            local content
-            content=$(tail -n "$content_h" "$log_file" 2>/dev/null | sed -e $'s/\t/  /g')
-            local line_no=0
-            while IFS= read -r line; do
-                move_cursor $(( start_y + line_no )) "$left"
-                printf "%s" "${line:0:$content_w}"
-                line_no=$(( line_no + 1 ))
-                (( line_no >= content_h )) && break
-            done <<< "$content"
+            local last_line
+            last_line=$(tail -n 1 "$log_file" 2>/dev/null | sed -e $'s/\t/  /g')
+            move_cursor "$start_y" "$left"
+            printf "%-${content_w}s" "${last_line:0:$content_w}"
         else
-            move_cursor "$start_y" "$left"; printf "(idle)"
+            move_cursor "$start_y" "$left"; printf "%-${content_w}s" "(idle)"
         fi
         idx=$(( idx + 1 ))
     done
