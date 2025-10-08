@@ -30,6 +30,12 @@ SCRIPT_LOG_DIR="${LOG_DIR}/scripts"
 OUTPUT_LOG="${LOG_DIR}/output.log"
 SUMMARY_LOG="${LOG_DIR}/summary.log"
 
+# Concurrency / UI controls
+MAX_CONCURRENCY="${MAX_CONCURRENCY:-4}"
+REFRESH_INTERVAL="${REFRESH_INTERVAL:-1}"
+LINES_PER_PANE="${LINES_PER_PANE:-10}"
+USE_UI="${USE_UI:-auto}"  # auto|yes|no
+
 # Result tracking
 declare -a ACCESSIBLE_CONTAINERS=()
 declare -a INACCESSIBLE_CONTAINERS=()
@@ -84,6 +90,115 @@ if [[ -z "$TEST_SCRIPTS" ]]; then
 fi
 
 log_ok "Found $(echo "$TEST_SCRIPTS" | wc -l) scripts to test"
+
+# Convert test scripts to array for scheduling
+mapfile -t SCRIPT_LIST <<< "$TEST_SCRIPTS"
+
+# Determine if we should render UI (only if stdout is a TTY)
+if [[ "$USE_UI" == "auto" ]]; then
+    if [ -t 1 ]; then
+        USE_UI="yes"
+    else
+        USE_UI="no"
+    fi
+fi
+
+# Initialize base ID for concurrent-safe allocation
+BASE_ID=$(pvesh get /cluster/nextid)
+ID_LOCK_FILE="${LOG_DIR}/.id.lock"
+ID_COUNTER_FILE="${LOG_DIR}/.id.counter"
+echo -n "${BASE_ID}" > "${ID_COUNTER_FILE}"
+
+# Allocate a unique, currently free CT ID (concurrency-safe)
+allocate_container_id() {
+    local fd id
+    exec {fd}>"${ID_LOCK_FILE}"
+    flock "${fd}"
+    id=$(cat "${ID_COUNTER_FILE}" 2>/dev/null || echo "${BASE_ID}")
+    # Find the next free ID
+    while pct config "$id" &>/dev/null; do
+        id=$((id+1))
+    done
+    # Reserve next ID for subsequent calls
+    echo -n $((id+1)) > "${ID_COUNTER_FILE}"
+    flock -u "${fd}"
+    eval "exec ${fd}>&-"
+    echo "$id"
+}
+
+# UI helpers
+hide_cursor() { tput civis 2>/dev/null || true; }
+show_cursor() { tput cnorm 2>/dev/null || true; }
+clear_screen() { tput clear 2>/dev/null || printf "\033c"; }
+move_cursor() { tput cup "$1" "$2" 2>/dev/null || printf "\033[$1;$2H"; }
+
+# Draw the dashboard for all jobs, placing each job log in a grid cell
+draw_dashboard() {
+    local -n _scripts_ref=$1
+    local total=${#_scripts_ref[@]}
+    local cols=$(tput cols 2>/dev/null || echo 120)
+    local rows=$(tput lines 2>/dev/null || echo 40)
+
+    local num_cols
+    if (( cols >= 180 )); then
+        num_cols=3
+    elif (( cols >= 100 )); then
+        num_cols=2
+    else
+        num_cols=1
+    fi
+    if (( total < num_cols )); then
+        num_cols=$total
+    fi
+    (( num_cols == 0 )) && return
+
+    local num_rows=$(( (total + num_cols - 1) / num_cols ))
+    local header_rows=2
+    local cell_h=$(( (rows - header_rows) / (num_rows > 0 ? num_rows : 1) ))
+    local cell_w=$(( cols / (num_cols > 0 ? num_cols : 1) ))
+    local content_h=$(( cell_h - 2 ))
+    local content_w=$(( cell_w - 2 ))
+    if (( content_h < 2 )); then content_h=2; fi
+    if (( content_w < 20 )); then content_w=20; fi
+
+    clear_screen
+    move_cursor 0 0; printf "Concurrent Test Runner  |  Concurrency: %s  |  %s\n" "$MAX_CONCURRENCY" "$(date +%H:%M:%S)"
+    printf "%.0s-" $(seq 1 "$cols"); printf "\n"
+
+    local idx=0
+    for script in "${_scripts_ref[@]}"; do
+        local r=$(( idx / num_cols ))
+        local c=$(( idx % num_cols ))
+        local top=$(( header_rows + r * cell_h ))
+        local left=$(( c * cell_w ))
+        local pane_title="$script"
+        local log_file="${SCRIPT_LOG_DIR}/${script}.log"
+        local status_file="${SCRIPT_LOG_DIR}/${script}.status"
+        local status="RUNNING"
+        if [[ -f "$status_file" ]]; then
+            status=$(head -n1 "$status_file" | cut -d'|' -f1)
+        fi
+
+        move_cursor "$top" "$left"; printf "[%s] %s\n" "$status" "$pane_title"
+        # Draw content (tail of log)
+        local start_y=$(( top + 1 ))
+        if [[ -f "$log_file" ]]; then
+            # Read last content_h lines and trim width
+            local content
+            content=$(tail -n "$content_h" "$log_file" 2>/dev/null | sed -e $'s/\t/  /g')
+            local line_no=0
+            while IFS= read -r line; do
+                move_cursor $(( start_y + line_no )) "$left"
+                printf "%s" "${line:0:$content_w}"
+                line_no=$(( line_no + 1 ))
+                (( line_no >= content_h )) && break
+            done <<< "$content"
+        else
+            move_cursor "$start_y" "$left"; printf "(no log yet)"
+        fi
+        idx=$(( idx + 1 ))
+    done
+}
 
 # Function to extract HTTP URL from log file
 extract_http_url() {
@@ -209,12 +324,17 @@ test_script() {
     local script_path="ct/${script_name}.sh"
     local script_log="${SCRIPT_LOG_DIR}/${script_name}.log"
     local wrapper_script="/tmp/test_wrapper_${script_name}_$$.sh"
+    local status_file="${SCRIPT_LOG_DIR}/${script_name}.status"
     
     log_info "==================== Testing: ${script_name} ===================="
     
+    # Mark as running
+    echo "RUNNING" > "$status_file"
+
     # Skip alpine scripts
     if [[ "$script_name" =~ alpine ]]; then
         log_warn "Skipping alpine script: ${script_name}"
+        echo "SKIPPED|alpine" > "$status_file"
         SKIPPED_SCRIPTS+=("${script_name} (alpine - skipped)")
         return
     fi
@@ -222,12 +342,13 @@ test_script() {
     # Check if script exists
     if [[ ! -f "$script_path" ]]; then
         log_warn "Script not found: ${script_path}"
+        echo "SKIPPED|not_found" > "$status_file"
         SKIPPED_SCRIPTS+=("${script_name} (not found)")
         return
     fi
     
     # Get next available container ID
-    local next_id=$(pvesh get /cluster/nextid)
+    local next_id=$(allocate_container_id)
     log_info "Using container ID: ${next_id}"
     
     # Set environment variables for non-interactive execution
@@ -243,11 +364,11 @@ test_script() {
     TEMP_SCRIPT=$(mktemp)
     sed 's|source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/build.func)|source misc/auto-build.func|g' "${script_path}" > "$TEMP_SCRIPT"
     
-    # Start monitoring current step
-    monitor_current_step "${script_log}" "${script_name}"
-    
+    # Ensure child uses our allocated CTID
+    export var_ctid="${next_id}"
+
+    # Run the script and capture output
     if bash "${TEMP_SCRIPT}" > "${script_log}" 2>&1; then
-        stop_monitor "${script_name}"
         rm -f "$TEMP_SCRIPT"
         log_ok "Container creation completed for ${script_name}"
         
@@ -268,13 +389,16 @@ test_script() {
             # Test the endpoint
             if test_http_endpoint "$http_url"; then
                 log_ok "HTTP endpoint is accessible: ${http_url}"
+                echo "ACCESSIBLE|${next_id}|${http_url}|${last_step}" > "$status_file"
                 ACCESSIBLE_CONTAINERS+=("${script_name}:${next_id}:${http_url}:${last_step}")
             else
                 log_error "HTTP endpoint is not accessible: ${http_url}"
+                echo "INACCESSIBLE|${next_id}|${http_url}|${last_step}" > "$status_file"
                 INACCESSIBLE_CONTAINERS+=("${script_name}:${next_id}:${http_url}:${last_step}")
             fi
         else
             log_warn "No HTTP endpoint found in output"
+            echo "NOT_TESTED|${next_id}||${last_step}" > "$status_file"
             NOT_TESTED_CONTAINERS+=("${script_name}:${next_id}:${last_step}")
         fi
         
@@ -283,13 +407,13 @@ test_script() {
         pct stop "${next_id}" 2>/dev/null || true
         
     else
-        stop_monitor "${script_name}"
         log_error "Container creation failed for ${script_name}"
         
         # Extract last completed step even on failure
         local last_step=$(extract_last_step "${script_log}")
         log_error "Last completed step: ${last_step}"
         
+        echo "FAILED|${next_id}||${last_step}" > "$status_file"
         FAILED_CONTAINERS+=("${script_name}:${next_id}:${last_step}")
         rm -f "$TEMP_SCRIPT"
         
@@ -303,16 +427,93 @@ test_script() {
     log_info "==================== Finished: ${script_name} ====================\n"
 }
 
-# Main testing loop
+# Main concurrent testing controller
 log_info "Starting automated container testing..."
 log_info "Log directory: ${LOG_DIR}"
 log_info ""
 
-while IFS= read -r script; do
-    test_script "$script"
-    # Small delay between tests
-    sleep 5
-done <<< "$TEST_SCRIPTS"
+declare -A JOB_PIDS=()
+declare -A JOB_STARTED=()
+
+total_jobs=${#SCRIPT_LIST[@]}
+started_jobs=0
+finished_jobs=0
+
+if [[ "$USE_UI" == "yes" ]]; then
+    hide_cursor
+    clear_screen
+fi
+
+while (( finished_jobs < total_jobs )); do
+    # Launch new jobs up to MAX_CONCURRENCY
+    while (( started_jobs < total_jobs )) && (( ${#JOB_PIDS[@]} < MAX_CONCURRENCY )); do
+        script="${SCRIPT_LIST[$started_jobs]}"
+        JOB_STARTED["$script"]=1
+        # Ensure log/status files exist
+        : > "${SCRIPT_LOG_DIR}/${script}.log"
+        echo "QUEUED" > "${SCRIPT_LOG_DIR}/${script}.status"
+        # Start job
+        test_script "$script" &
+        pid=$!
+        JOB_PIDS["$script"]=$pid
+        started_jobs=$(( started_jobs + 1 ))
+        # Small stagger to avoid thundering herd
+        sleep 1
+    done
+
+    # Draw UI
+    if [[ "$USE_UI" == "yes" ]]; then
+        draw_dashboard SCRIPT_LIST
+        # Footer with counts
+        move_cursor $(($(tput lines 2>/dev/null || echo 40)-1)) 0
+        printf "Running: %d  |  Finished: %d  |  Total: %d\r" "${#JOB_PIDS[@]}" "$finished_jobs" "$total_jobs"
+    fi
+
+    # Check for finished jobs
+    for s in "${!JOB_PIDS[@]}"; do
+        if ! kill -0 "${JOB_PIDS[$s]}" 2>/dev/null; then
+            unset 'JOB_PIDS[$s]'
+            finished_jobs=$(( finished_jobs + 1 ))
+        fi
+    done
+
+    sleep "$REFRESH_INTERVAL"
+done
+
+if [[ "$USE_UI" == "yes" ]]; then
+    show_cursor
+    printf "\n"
+fi
+
+# Regenerate arrays from status files for summary
+ACCESSIBLE_CONTAINERS=()
+INACCESSIBLE_CONTAINERS=()
+NOT_TESTED_CONTAINERS=()
+FAILED_CONTAINERS=()
+SKIPPED_SCRIPTS=()
+
+for script in "${SCRIPT_LIST[@]}"; do
+    status_file="${SCRIPT_LOG_DIR}/${script}.status"
+    [[ ! -f "$status_file" ]] && continue
+    IFS='|' read -r status id url last_step < "$status_file"
+    case "$status" in
+        ACCESSIBLE)
+            ACCESSIBLE_CONTAINERS+=("${script}:${id}:${url}:${last_step}")
+            ;;
+        INACCESSIBLE)
+            INACCESSIBLE_CONTAINERS+=("${script}:${id}:${url}:${last_step}")
+            ;;
+        NOT_TESTED)
+            NOT_TESTED_CONTAINERS+=("${script}:${id}:${last_step}")
+            ;;
+        FAILED)
+            FAILED_CONTAINERS+=("${script}:${id}:${last_step}")
+            ;;
+        SKIPPED)
+            SKIPPED_SCRIPTS+=("${script} ($(echo "$id"))")
+            ;;
+    esac
+done
 
 # Generate summary report
 log_info ""
