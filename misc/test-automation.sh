@@ -132,13 +132,12 @@ show_cursor() { tput cnorm 2>/dev/null || true; }
 clear_screen() { tput clear 2>/dev/null || printf "\033c"; }
 move_cursor() { tput cup "$1" "$2" 2>/dev/null || printf "\033[$1;$2H"; }
 
-# Draw the dashboard for all jobs, placing each job log in a grid cell
+# Draw the dashboard with a fixed number of panes equal to MAX_CONCURRENCY
 draw_dashboard() {
-    local -n _scripts_ref=$1
-    local total=${#_scripts_ref[@]}
     local cols=$(tput cols 2>/dev/null || echo 120)
     local rows=$(tput lines 2>/dev/null || echo 40)
 
+    # Layout: up to 3 columns depending on terminal width
     local num_cols
     if (( cols >= 180 )); then
         num_cols=3
@@ -147,14 +146,16 @@ draw_dashboard() {
     else
         num_cols=1
     fi
-    if (( total < num_cols )); then
-        num_cols=$total
+    if (( MAX_CONCURRENCY < num_cols )); then
+        num_cols=$MAX_CONCURRENCY
     fi
     (( num_cols == 0 )) && return
 
+    local total=$MAX_CONCURRENCY
     local num_rows=$(( (total + num_cols - 1) / num_cols ))
     local header_rows=2
-    local cell_h=$(( (rows - header_rows) / (num_rows > 0 ? num_rows : 1) ))
+    local footer_rows=1
+    local cell_h=$(( (rows - header_rows - footer_rows) / (num_rows > 0 ? num_rows : 1) ))
     local cell_w=$(( cols / (num_cols > 0 ? num_cols : 1) ))
     local content_h=$(( cell_h - 2 ))
     local content_w=$(( cell_w - 2 ))
@@ -166,24 +167,33 @@ draw_dashboard() {
     printf "%.0s-" $(seq 1 "$cols"); printf "\n"
 
     local idx=0
-    for script in "${_scripts_ref[@]}"; do
+    while (( idx < total )); do
         local r=$(( idx / num_cols ))
         local c=$(( idx % num_cols ))
         local top=$(( header_rows + r * cell_h ))
         local left=$(( c * cell_w ))
-        local pane_title="$script"
-        local log_file="${SCRIPT_LOG_DIR}/${script}.log"
-        local status_file="${SCRIPT_LOG_DIR}/${script}.status"
-        local status="RUNNING"
-        if [[ -f "$status_file" ]]; then
-            status=$(head -n1 "$status_file" | cut -d'|' -f1)
+
+        local script="${SLOT_SCRIPT[$idx]:-}"
+        local title=""
+        local status="IDLE"
+        local log_file=""
+        local status_file=""
+        if [[ -n "$script" ]]; then
+            title="$script"
+            log_file="${SCRIPT_LOG_DIR}/${script}.log"
+            status_file="${SCRIPT_LOG_DIR}/${script}.status"
+            if [[ -f "$status_file" ]]; then
+                status=$(head -n1 "$status_file" | cut -d'|' -f1)
+            else
+                status="RUNNING"
+            fi
+        else
+            title="Idle Slot"
         fi
 
-        move_cursor "$top" "$left"; printf "[%s] %s\n" "$status" "$pane_title"
-        # Draw content (tail of log)
+        move_cursor "$top" "$left"; printf "[%s] %s\n" "$status" "$title"
         local start_y=$(( top + 1 ))
-        if [[ -f "$log_file" ]]; then
-            # Read last content_h lines and trim width
+        if [[ -n "$script" && -f "$log_file" ]]; then
             local content
             content=$(tail -n "$content_h" "$log_file" 2>/dev/null | sed -e $'s/\t/  /g')
             local line_no=0
@@ -194,10 +204,30 @@ draw_dashboard() {
                 (( line_no >= content_h )) && break
             done <<< "$content"
         else
-            move_cursor "$start_y" "$left"; printf "(no log yet)"
+            move_cursor "$start_y" "$left"; printf "(idle)"
         fi
         idx=$(( idx + 1 ))
     done
+
+    # Footer: show currently testing scripts or next queued
+    local footer_y=$(( rows - 1 ))
+    local testing_line="Testing: "
+    local any_running=0
+    for i in $(seq 0 $(( MAX_CONCURRENCY - 1 ))); do
+        if [[ -n "${SLOT_SCRIPT[$i]:-}" ]]; then
+            testing_line+="${SLOT_SCRIPT[$i]}  "
+            any_running=1
+        fi
+    done
+    if (( any_running == 0 )); then
+        if (( started_jobs < total_jobs )); then
+            testing_line+="${SCRIPT_LIST[$started_jobs]} (queued)"
+        else
+            testing_line+="Done"
+        fi
+    fi
+    move_cursor "$footer_y" 0
+    printf "%s" "$testing_line"
 }
 
 # Function to extract HTTP URL from log file
@@ -434,6 +464,8 @@ log_info ""
 
 declare -A JOB_PIDS=()
 declare -A JOB_STARTED=()
+declare -a SLOT_SCRIPT=()
+for i in $(seq 0 $(( MAX_CONCURRENCY - 1 ))); do SLOT_SCRIPT[$i]=""; done
 
 total_jobs=${#SCRIPT_LIST[@]}
 started_jobs=0
@@ -447,8 +479,18 @@ fi
 while (( finished_jobs < total_jobs )); do
     # Launch new jobs up to MAX_CONCURRENCY
     while (( started_jobs < total_jobs )) && (( ${#JOB_PIDS[@]} < MAX_CONCURRENCY )); do
+        # Find a free slot
+        free_slot=-1
+        for i in $(seq 0 $(( MAX_CONCURRENCY - 1 ))); do
+            if [[ -z "${SLOT_SCRIPT[$i]}" ]]; then
+                free_slot=$i; break
+            fi
+        done
+        (( free_slot == -1 )) && break
+
         script="${SCRIPT_LIST[$started_jobs]}"
         JOB_STARTED["$script"]=1
+        SLOT_SCRIPT[$free_slot]="$script"
         # Ensure log/status files exist
         : > "${SCRIPT_LOG_DIR}/${script}.log"
         echo "QUEUED" > "${SCRIPT_LOG_DIR}/${script}.status"
@@ -473,6 +515,13 @@ while (( finished_jobs < total_jobs )); do
     for s in "${!JOB_PIDS[@]}"; do
         if ! kill -0 "${JOB_PIDS[$s]}" 2>/dev/null; then
             unset 'JOB_PIDS[$s]'
+            # free its slot
+            for i in $(seq 0 $(( MAX_CONCURRENCY - 1 ))); do
+                if [[ "${SLOT_SCRIPT[$i]:-}" == "$s" ]]; then
+                    SLOT_SCRIPT[$i]=""
+                    break
+                fi
+            done
             finished_jobs=$(( finished_jobs + 1 ))
         fi
     done
