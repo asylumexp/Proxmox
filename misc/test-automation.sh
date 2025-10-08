@@ -200,7 +200,15 @@ draw_dashboard() {
         case "$status" in
             RUNNING)
                 if [[ -n "$script" && -f "$log_file" ]]; then
-                    display_line=$(tail -n 1 "$log_file" 2>/dev/null | sed -e $'s/\t/  /g')
+                    local raw_last
+                    raw_last=$(tail -n 1 "$log_file" 2>/dev/null)
+                    # Strip carriage returns and ANSI escape sequences, expand tabs
+                    last_line=$(echo -n "$raw_last" | tr -d '\r' | sed -r 's/\x1B\[[0-9;]*[A-Za-z]//g' | sed -e $'s/\t/  /g')
+                    if [[ -z "${last_line//[[:space:]]/}" ]]; then
+                        display_line="(waiting for output)"
+                    else
+                        display_line="$last_line"
+                    fi
                 else
                     display_line="(starting)"
                 fi
