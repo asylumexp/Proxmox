@@ -14,66 +14,94 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt install -y \
+$STD apt-get install -y \
   git \
   apache2 \
-  libapache2-mod-wsgi-py3
+  libapache2-mod-wsgi-py3 \
+  jq
 msg_ok "Installed Dependencies"
 
-msg_info "Installing Python"
-$STD apt install -y python3-pip
-rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
-msg_ok "Installed Python"
+setup_uv
 
 NODE_VERSION="22" NODE_MODULE="yarn,sass" setup_nodejs
 
-msg_info "Setting up wger"
-$STD adduser wger --disabled-password --gecos ""
-mkdir /home/wger/db
-touch /home/wger/db/database.sqlite
-chown :www-data -R /home/wger/db
-chmod g+w /home/wger/db /home/wger/db/database.sqlite
-mkdir /home/wger/{static,media}
-chmod o+w /home/wger/media
+WGER_USER="wger"
+WGER_HOME="/home/${WGER_USER}"
+WGER_SRC="${WGER_HOME}/src"
+WGER_DB_DIR="${WGER_HOME}/db"
+WGER_STATIC="${WGER_HOME}/static"
+WGER_MEDIA="${WGER_HOME}/media"
+WGER_VENV="${WGER_HOME}/.venv"
+
+msg_info "Setting up wger user and directories"
+$STD adduser "$WGER_USER" --disabled-password --gecos ""
+mkdir -p "$WGER_DB_DIR" "$WGER_STATIC" "$WGER_MEDIA"
+touch "${WGER_DB_DIR}/database.sqlite"
+chown -R ${WGER_USER}:www-data "$WGER_HOME"
+chmod g+w "$WGER_DB_DIR" "${WGER_DB_DIR}/database.sqlite"
+chmod o+w "$WGER_MEDIA"
+msg_ok "Prepared user and directories"
+
+msg_info "Fetching latest wger release"
 temp_dir=$(mktemp -d)
-cd "$temp_dir" || exit
-RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
-curl -fsSL "https://github.com/wger-project/wger/archive/refs/tags/$RELEASE.tar.gz" -o "$RELEASE.tar.gz"
-tar xzf "$RELEASE".tar.gz
-mv wger-"$RELEASE" /home/wger/src
-cd /home/wger/src || exit
-$STD pip install -r requirements_prod.txt
-$STD pip install -e .
-$STD wger create-settings --database-path /home/wger/db/database.sqlite
-sed -i "s#home/wger/src/media#home/wger/media#g" /home/wger/src/settings.py
-sed -i "/MEDIA_ROOT = '\/home\/wger\/media'/a STATIC_ROOT = '/home/wger/static'" /home/wger/src/settings.py
-$STD wger bootstrap
-$STD python3 manage.py collectstatic
+cd "$temp_dir" || exit 1
+RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest \
+  | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
+curl -fsSL "https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz" -o "${RELEASE}.tar.gz"
+tar xzf "${RELEASE}.tar.gz"
+mv "wger-${RELEASE}" "$WGER_SRC"
+chown -R ${WGER_USER}:${WGER_USER} "$WGER_SRC"
+cd "$WGER_SRC" || exit 1
+msg_ok "Downloaded wger ${RELEASE}"
+
+msg_info "Creating uv virtual environment"
+$STD uv venv "$WGER_VENV"
+chown -R ${WGER_USER}:${WGER_USER} "$WGER_VENV"
+msg_ok "Created uv venv at ${WGER_VENV}"
+
+msg_info "Installing Python dependencies with uv"
+$STD uv pip install --python "${WGER_VENV}/bin/python" -r requirements_prod.txt
+$STD uv pip install --python "${WGER_VENV}/bin/python" -e .
+msg_ok "Installed Python deps"
+
+msg_info "Initialise wger settings & database"
+sudo -u "$WGER_USER" "${WGER_VENV}/bin/wger" create-settings --database-path "${WGER_DB_DIR}/database.sqlite"
+
+sed -i "s#home/wger/src/media#home/wger/media#g" "${WGER_SRC}/settings.py"
+sed -i "/MEDIA_ROOT = '\/home\/wger\/media'/a STATIC_ROOT = '${WGER_STATIC//\//\\/}'" "${WGER_SRC}/settings.py"
+
+sudo -u "$WGER_USER" "${WGER_VENV}/bin/wger" bootstrap
+
+sudo -u "$WGER_USER" "${WGER_VENV}/bin/python" manage.py collectstatic --noinput
+
 echo "${RELEASE}" >/opt/wger_version.txt
 msg_ok "Finished setting up wger"
 
-msg_info "Creating Service"
+msg_info "Configuring Apache (mod_wsgi)"
+a2enmod wsgi >/dev/null 2>&1 || true
+
 cat <<EOF >/etc/apache2/sites-available/wger.conf
-<Directory /home/wger/src>
+<Directory ${WGER_SRC}>
     <Files wsgi.py>
         Require all granted
     </Files>
 </Directory>
 
 <VirtualHost *:80>
+    # Run Django in the project's venv
     WSGIApplicationGroup %{GLOBAL}
-    WSGIDaemonProcess wger python-path=/home/wger/src python-home=/home/wger
+    WSGIDaemonProcess wger python-home=${WGER_VENV} python-path=${WGER_SRC}
     WSGIProcessGroup wger
-    WSGIScriptAlias / /home/wger/src/wger/wsgi.py
+    WSGIScriptAlias / ${WGER_SRC}/wger/wsgi.py
     WSGIPassAuthorization On
 
-    Alias /static/ /home/wger/static/
-    <Directory /home/wger/static>
+    Alias /static/ ${WGER_STATIC}/
+    <Directory ${WGER_STATIC}>
         Require all granted
     </Directory>
 
-    Alias /media/ /home/wger/media/
-    <Directory /home/wger/media>
+    Alias /media/ ${WGER_MEDIA}/
+    <Directory ${WGER_MEDIA}>
         Require all granted
     </Directory>
 
@@ -81,18 +109,23 @@ cat <<EOF >/etc/apache2/sites-available/wger.conf
     CustomLog /var/log/apache2/wger-access.log combined
 </VirtualHost>
 EOF
+
 $STD a2dissite 000-default.conf
 $STD a2ensite wger
 systemctl restart apache2
+msg_ok "Apache configured"
+
+msg_info "Creating wger CLI Service (optional)"
 cat <<EOF >/etc/systemd/system/wger.service
 [Unit]
-Description=wger Service
+Description=wger Service (CLI)
 After=network.target
 
 [Service]
 Type=simple
-User=root
-ExecStart=/usr/local/bin/wger start -a 0.0.0.0 -p 3000
+User=${WGER_USER}
+WorkingDirectory=${WGER_SRC}
+ExecStart=${WGER_VENV}/bin/wger start -a 0.0.0.0 -p 3000
 Restart=always
 
 [Install]
@@ -106,9 +139,9 @@ customize
 
 msg_info "Cleaning up"
 rm -rf "$temp_dir"
-$STD apt -y autoremove
-$STD apt -y autoclean
-$STD apt -y clean
+$STD apt-get -y autoremove
+$STD apt-get -y autoclean
+$STD apt-get -y clean
 msg_ok "Cleaned"
 
 motd_ssh
