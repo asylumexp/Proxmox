@@ -67,6 +67,7 @@ $STD pnpm db:migrate:apply
 msg_ok "Setup Tianji"
 
 msg_info "Setup AppRise"
+rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 $STD uv pip install apprise cryptography --system
 msg_ok "Setup AppRise"
 
