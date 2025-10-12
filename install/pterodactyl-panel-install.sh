@@ -18,7 +18,8 @@ $STD apt-get install -y \
   lsb-release \
   redis \
   apache2 \
-  composer
+  composer \
+  cron
 msg_ok "Installed Dependencies"
 
 setup_mariadb
