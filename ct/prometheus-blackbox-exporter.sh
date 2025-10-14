@@ -37,7 +37,7 @@ function update_script() {
     mv /opt/blackbox-exporter/blackbox.yml /opt
     msg_ok "Backup created"
 
-    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "blackbox-exporter" "prometheus/blackbox_exporter" "prebuild" "latest" "/opt/blackbox-exporter" "blackbox_exporter-*.linux-amd64.tar.gz"
+    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "blackbox-exporter" "prometheus/blackbox_exporter" "prebuild" "latest" "/opt/blackbox-exporter" "blackbox_exporter-*.linux-arm64.tar.gz"
 
     msg_info "Restoring backup"
     cp -r /opt/blackbox.yml /opt/blackbox-exporter
