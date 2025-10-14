@@ -6,7 +6,7 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 # Source: https://graylog.org/
 
 APP="Graylog"
-TAGS="logging"
+var_tags="${var_tags:-logging}"
 var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-8192}"
 var_disk="${var_disk:-30}"

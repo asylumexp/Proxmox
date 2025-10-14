@@ -6,7 +6,7 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 # Source: https://github.com/Lissy93/web-check
 
 APP="web-check"
-var_tags="network;analysis"
+var_tags="${var_tags:-network;analysis}"
 var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-2048}"
 var_disk="${var_disk:-12}"

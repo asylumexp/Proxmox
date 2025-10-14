@@ -43,7 +43,7 @@ curl -fsSL https://dl.packager.io/srv/zammad/zammad/key | gpg --dearmor | sudo t
 cat <<EOF | sudo tee /etc/apt/sources.list.d/zammad.sources >/dev/null
 Types: deb
 URIs: https://dl.packager.io/srv/deb/zammad/zammad/stable/debian
-Suites: 13
+Suites: 12
 Components: main
 Signed-By: /etc/apt/keyrings/pkgr-zammad.gpg
 EOF
