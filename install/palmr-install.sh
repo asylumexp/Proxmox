@@ -14,7 +14,8 @@ network_check
 update_os
 
 fetch_and_deploy_gh_release "Palmr" "kyantech/Palmr" "tarball" "latest" "/opt/palmr"
-PNPM="$(jq -r '.packageManager' /opt/palmr/package.json)" NODE_VERSION="20" NODE_MODULE="$PNPM" setup_nodejs
+PNPM="$(jq -r '.packageManager' /opt/palmr/package.json)"
+NODE_VERSION="20" NODE_MODULE="$PNPM" setup_nodejs
 
 msg_info "Configuring palmr backend"
 PALMR_DIR="/opt/palmr_data"
@@ -26,13 +27,15 @@ sed -e 's/_ENCRYPTION=true/_ENCRYPTION=false/' \
   -e '/^# ENC/s/# //' \
   -e "s/ENCRYPTION_KEY=.*$/ENCRYPTION_KEY=$PALMR_KEY/" \
   -e "s|file:.*$|file:$PALMR_DB\"|" \
-  -e '/db"$/a\# Uncomment below when using reverse proxy\
-# SECURE_SITE=true' \
+  -e "\|db\"$|a\\# Uncomment below when using a reverse proxy\\
+# SECURE_SITE=true\\
+# Uncomment and add your path if using symlinks for data storage\\
+# CUSTOM_PATH=<path-to-your-bind-mount>" \
   .env.example >./.env
 $STD pnpm install
-$STD pnpm dlx prisma generate
-$STD pnpm dlx prisma migrate deploy
-$STD pnpm dlx prisma db push
+$STD npx prisma generate
+$STD npx prisma migrate deploy
+$STD npx prisma db push
 $STD pnpm db:seed
 $STD pnpm build
 msg_ok "Configured palmr backend"

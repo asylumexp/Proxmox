@@ -39,8 +39,7 @@ function CategoryView() {
     const fetchCategories = async () => {
       try {
         // eslint-disable-next-line node/no-process-env
-        const basePath = process.env.NODE_ENV === "production" ? "/ProxmoxVE" : "";
-        const response = await fetch(`${basePath}/api/categories`);
+        const response = await fetch(`/api/categories`);
         if (!response.ok) {
           throw new Error("Failed to fetch categories");
         }
@@ -73,7 +72,13 @@ function CategoryView() {
   };
 
   const handleScriptClick = (scriptSlug: string) => {
-    router.push(`/scripts?id=${scriptSlug}`);
+    // Include category context when navigating to scripts
+    const categoryName = selectedCategoryIndex !== null ? categories[selectedCategoryIndex]?.name : null;
+    const queryParams = new URLSearchParams({ id: scriptSlug });
+    if (categoryName) {
+      queryParams.append("category", categoryName);
+    }
+    router.push(`/scripts?${queryParams.toString()}`);
   };
 
   const navigateCategory = (direction: "prev" | "next") => {

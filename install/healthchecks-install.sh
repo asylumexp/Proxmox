@@ -19,7 +19,10 @@ $STD apt-get install -y \
   libpq-dev \
   libcurl4-openssl-dev \
   libssl-dev \
-  caddy
+  caddy \
+  python3-dev \
+  python3-pip \
+  python3-venv
 msg_ok "Installed Dependencies"
 
 setup_uv

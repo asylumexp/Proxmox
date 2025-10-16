@@ -20,7 +20,7 @@ fi
 
 setup_yq
 NODE_VERSION="24" setup_nodejs
-setup_uv
+PYTHON_VERSION="3.13" setup_uv
 PG_VERSION="17" setup_postgresql
 
 msg_info "Setting up PostgreSQL"

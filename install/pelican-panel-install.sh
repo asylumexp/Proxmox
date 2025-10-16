@@ -17,7 +17,8 @@ msg_info "Installing Dependencies"
 $STD apt-get install -y \
   lsb-release \
   apache2 \
-  composer
+  composer \
+  cron
 msg_ok "Installed Dependencies"
 
 setup_mariadb

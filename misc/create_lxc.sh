@@ -279,8 +279,10 @@ fi
 if [ $PCT_OSTYPE = debian ]; then
   if [ $PCT_OSVERSION = 11 ]; then
     TEMPLATE_VARIANT=bullseye
-  else
+  elif [ $PCT_OSVERSION = 12 ]; then
     TEMPLATE_VARIANT=bookworm
+	else
+		TEMPLATE_VARIANT=trixie
   fi
 elif [ $PCT_OSTYPE = alpine ]; then
   TEMPLATE_VARIANT=3.19

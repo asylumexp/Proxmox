@@ -14,12 +14,13 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
+$STD apt install -y \
   redis \
   jq \
   make
 msg_ok "Installed Dependencies"
 
+HOST_IP=$(hostname -I | awk '{print $1}')
 NODE_VERSION="22" NODE_MODULE="pnpm@$(curl -s https://raw.githubusercontent.com/docmost/docmost/main/package.json | jq -r '.packageManager | split("@")[1]')" setup_nodejs
 PG_VERSION="16" setup_postgresql
 fetch_and_deploy_gh_release "docmost" "docmost/docmost"
@@ -48,6 +49,9 @@ mkdir data
 sed -i -e "s|APP_SECRET=.*|APP_SECRET=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | cut -c1-32)|" \
   -e "s|DATABASE_URL=.*|DATABASE_URL=postgres://$DB_USER:$DB_PASS@localhost:5432/$DB_NAME|" \
   -e "s|FILE_UPLOAD_SIZE_LIMIT=.*|FILE_UPLOAD_SIZE_LIMIT=50mb|" \
+  -e "s|DRAWIO_URL=.*|DRAWIO_URL=https://embed.diagrams.net|" \
+  -e "s|DISABLE_TELEMETRY=.*|DISABLE_TELEMETRY=true|" \
+  -e "s|APP_URL=.*|APP_URL=http://$HOST_IP:3000|" \
   /opt/docmost/.env
 export NODE_OPTIONS="--max-old-space-size=2048"
 $STD pnpm install
@@ -76,6 +80,7 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get -y autoremove
-$STD apt-get -y autoclean
+$STD apt -y autoremove
+$STD apt -y autoclean
+$STD apt -y clean
 msg_ok "Cleaned"

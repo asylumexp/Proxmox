@@ -60,6 +60,7 @@ mv browserless-"$TAG" /opt/browserless
 cd /opt/browserless
 $STD npm install
 rm -rf src/routes/{chrome,edge,firefox,webkit}
+$STD npm install typescript -g
 $STD node_modules/playwright-core/cli.js install --with-deps chromium
 $STD npm run build
 $STD npm run build:function

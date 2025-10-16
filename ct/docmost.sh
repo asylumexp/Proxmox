@@ -11,7 +11,7 @@ var_cpu="${var_cpu:-3}"
 var_ram="${var_ram:-4096}"
 var_disk="${var_disk:-8}"
 var_os="${var_os:-debian}"
-var_version="${var_version:-12}"
+var_version="${var_version:-13}"
 
 header_info "$APP"
 variables
@@ -32,9 +32,9 @@ function update_script() {
   export NODE_OPTIONS="--max_old_space_size=4096"
 
   if check_for_gh_release "docmost" "docmost/docmost"; then
-    msg_info "Stopping ${APP}"
+    msg_info "Stopping Service"
     systemctl stop docmost
-    msg_ok "${APP} Stopped"
+    msg_ok "Stopped Service"
 
     msg_info "Backing up data"
     cp /opt/docmost/.env /opt/
@@ -52,9 +52,9 @@ function update_script() {
     $STD pnpm build
     msg_ok "Updated ${APP}"
 
-    msg_info "Starting ${APP}"
+    msg_info "Starting Service"
     systemctl start docmost
-    msg_ok "Started ${APP}"
+    msg_ok "Started Service"
     msg_ok "Updated Successfully"
   fi
   exit

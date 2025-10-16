@@ -6,7 +6,7 @@
   ],
   "date_created": "2024-05-02",
   "type": "ct",
-  "updateable": false,
+  "updateable": true,
   "privileged": false,
   "interface_port": 8443,
   "documentation": null,
@@ -23,7 +23,7 @@
         "ram": 2048,
         "hdd": 8,
         "os": "debian",
-        "version": "12"
+        "version": "13"
       }
     }
   ],

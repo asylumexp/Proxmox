@@ -1,31 +1,42 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import * as Icons from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import type { Category } from "@/lib/types";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { formattedBadge } from "@/components/command-menu";
 import { basePath } from "@/config/site-config";
 import { cn } from "@/lib/utils";
+
+function getCategoryIcon(iconName: string) {
+  // Convert kebab-case to PascalCase for Lucide icon names
+  const pascalCaseName = iconName
+    .split("-")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join("");
+
+  const IconComponent = (Icons as any)[pascalCaseName];
+  return IconComponent ? <IconComponent className="size-4 text-[#0083c3] mr-2" /> : null;
+}
 
 export default function ScriptAccordion({
   items,
   selectedScript,
   setSelectedScript,
+  selectedCategory,
+  setSelectedCategory,
+  onItemSelect,
 }: {
   items: Category[];
   selectedScript: string | null;
   setSelectedScript: (script: string | null) => void;
+  selectedCategory: string | null;
+  setSelectedCategory: (category: string | null) => void;
+  onItemSelect?: () => void;
 }) {
-  const [expandedItem, setExpandedItem] = useState<string | undefined>(
-    undefined,
-  );
+  const [expandedItem, setExpandedItem] = useState<string | undefined>(undefined);
   const linkRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
 
   const handleAccordionChange = (value: string | undefined) => {
@@ -41,22 +52,34 @@ export default function ScriptAccordion({
 
   useEffect(() => {
     if (selectedScript) {
-      const category = items.find(category =>
-        category.scripts.some(script => script.slug === selectedScript),
-      );
+      let category;
+
+      // If we have a selected category, try to find the script in that specific category
+      if (selectedCategory) {
+        category = items.find(
+          cat => cat.name === selectedCategory && cat.scripts.some(script => script.slug === selectedScript),
+        );
+      }
+
+      // Fallback: if no category is selected or script not found in selected category,
+      // use the first category containing the script (backward compatibility)
+      if (!category) {
+        category = items.find(category => category.scripts.some(script => script.slug === selectedScript));
+      }
+
       if (category) {
         setExpandedItem(category.name);
         handleSelected(selectedScript);
       }
     }
-  }, [selectedScript, items, handleSelected]);
+  }, [selectedScript, selectedCategory, items, handleSelected]);
   return (
     <Accordion
       type="single"
       value={expandedItem}
       onValueChange={handleAccordionChange}
       collapsible
-      className="overflow-y-scroll max-h-[calc(100vh-225px)] overflow-x-hidden p-2"
+      className="overflow-y-scroll sm:max-h-[calc(100vh-209px)] overflow-x-hidden p-1"
     >
       {items.map(category => (
         <AccordionItem
@@ -72,20 +95,20 @@ export default function ScriptAccordion({
             )}
           >
             <div className="mr-2 flex w-full items-center justify-between">
-              <span className="pl-2 text-left">
-                {category.name}
-                {" "}
-              </span>
+              <div className="flex items-center pl-2 text-left">
+                {getCategoryIcon(category.icon)}
+                <span>
+                  {category.name}
+                  {" "}
+                </span>
+              </div>
               <span className="rounded-full bg-gray-200 px-2 py-1 text-xs text-muted-foreground hover:no-underline dark:bg-blue-800/20">
                 {category.scripts.length}
               </span>
             </div>
             {" "}
           </AccordionTrigger>
-          <AccordionContent
-            data-state={expandedItem === category.name ? "open" : "closed"}
-            className="pt-0"
-          >
+          <AccordionContent data-state={expandedItem === category.name ? "open" : "closed"} className="pt-0">
             {category.scripts
               .slice()
               .sort((a, b) => a.name.localeCompare(b.name))
@@ -94,15 +117,18 @@ export default function ScriptAccordion({
                   <Link
                     href={{
                       pathname: "/scripts",
-                      query: { id: script.slug },
+                      query: { id: script.slug, category: category.name },
                     }}
                     prefetch={false}
-                    className={`flex cursor-pointer items-center justify-between gap-1 px-1 py-1 text-muted-foreground hover:rounded-lg hover:bg-accent/60 hover:dark:bg-accent/20 ${
-                      selectedScript === script.slug
-                        ? "rounded-lg bg-accent font-semibold dark:bg-accent/30 dark:text-white"
-                        : ""
+                    className={`flex cursor-pointer items-center justify-between gap-1 px-1 py-1 text-muted-foreground hover:rounded-lg hover:bg-accent/60 hover:dark:bg-accent/20 ${selectedScript === script.slug
+                      ? "rounded-lg bg-accent font-semibold dark:bg-accent/30 dark:text-white"
+                      : ""
                     }`}
-                    onClick={() => handleSelected(script.slug)}
+                    onClick={() => {
+                      handleSelected(script.slug);
+                      setSelectedCategory(category.name);
+                      onItemSelect?.();
+                    }}
                     ref={(el) => {
                       linkRefs.current[script.slug] = el;
                     }}
@@ -113,9 +139,7 @@ export default function ScriptAccordion({
                         height={16}
                         width={16}
                         unoptimized
-                        onError={e =>
-                          ((e.currentTarget as HTMLImageElement).src
-                            = `/${basePath}/logo.png`)}
+                        onError={e => ((e.currentTarget as HTMLImageElement).src = `/${basePath}/logo.png`)}
                         alt={script.name}
                         className="mr-1 w-4 h-4 rounded-full"
                       />

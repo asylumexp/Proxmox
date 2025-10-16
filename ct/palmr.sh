@@ -33,6 +33,7 @@ function update_script() {
     msg_ok "Stopped Services"
 
     cp /opt/palmr/apps/server/.env /opt/palmr.env
+    rm -rf /opt/palmr
     fetch_and_deploy_gh_release "Palmr" "kyantech/Palmr" "tarball" "latest" "/opt/palmr"
 
     PNPM="$(jq -r '.packageManager' /opt/palmr/package.json)"
@@ -42,9 +43,9 @@ function update_script() {
     cd /opt/palmr/apps/server
     mv /opt/palmr.env /opt/palmr/apps/server/.env
     $STD pnpm install
-    $STD pnpm dlx prisma generate
-    $STD pnpm dlx prisma migrate deploy
-    $STD pnpm dlx prisma db push
+    $STD npx prisma generate
+    $STD npx prisma migrate deploy
+    $STD npx prisma db push
     $STD pnpm build
 
     cd /opt/palmr/apps/web

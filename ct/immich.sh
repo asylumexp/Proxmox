@@ -11,7 +11,7 @@ var_disk="${var_disk:-20}"
 var_cpu="${var_cpu:-4}"
 var_ram="${var_ram:-4096}"
 var_os="${var_os:-debian}"
-var_version="${var_version:-12}"
+var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
@@ -25,6 +25,13 @@ function update_script() {
   check_container_resources
   if [[ ! -d /opt/immich ]]; then
     msg_error "No ${APP} Installation Found!"
+    exit
+  fi
+  if [[ -f /etc/apt/sources.list.d/immich.list ]]; then
+    msg_error "Wrong Debian version detected!"
+    msg_error "You must upgrade your LXC to Debian Trixie before updating."
+    msg_error "Please visit https://github.com/community-scripts/ProxmoxVE/discussions/7726 for details."
+    echo "${TAB3}  If you have upgraded your LXC to Trixie and you still see this message, please open an Issue in the Community-Scripts repo."
     exit
   fi
 
@@ -72,7 +79,7 @@ function update_script() {
     msg_info "Stopping Services"
     systemctl stop immich-web
     systemctl stop immich-ml
-    msg_ok "Stopped ${APP}"
+    msg_ok "Stopped Service"
     INSTALL_DIR="/opt/${APP}"
     UPLOAD_DIR="$(sed -n '/^IMMICH_MEDIA_LOCATION/s/[^=]*=//p' /opt/immich/.env)"
     SRC_DIR="${INSTALL_DIR}/source"
@@ -84,22 +91,10 @@ function update_script() {
 
     if [[ ! -f ~/.vchord_version ]] || [[ "$VCHORD_RELEASE" != "$(cat ~/.vchord_version)" ]]; then
       msg_info "Updating VectorChord"
-      if [[ ! -f ~/.vchord_version ]] || [[ ! "$(cat ~/.vchord_version)" > "0.3.0" ]]; then
-        $STD sudo -u postgres pg_dumpall --clean --if-exists --username=postgres | gzip >/etc/postgresql/immich-db-vchord0.3.0.sql.gz
-        chown postgres /etc/postgresql/immich-db-vchord0.3.0.sql.gz
-        $STD sudo -u postgres gunzip --stdout /etc/postgresql/immich-db-vchord0.3.0.sql.gz |
-          sed -e "s/SELECT pg_catalog.set_config('search_path', '', false);/SELECT pg_catalog.set_config('search_path', 'public, pg_catalog', true);/g" \
-            -e "/vchordrq.prewarm_dim/d" |
-          sudo -u postgres psql
-      fi
       curl -fsSL "https://github.com/tensorchord/vectorchord/releases/download/${VCHORD_RELEASE}/postgresql-16-vchord_${VCHORD_RELEASE}-1_amd64.deb" -o vchord.deb
       $STD apt install -y ./vchord.deb
       $STD sudo -u postgres psql -d immich -c "ALTER EXTENSION vchord UPDATE;"
       systemctl restart postgresql
-      if [[ ! -f ~/.vchord_version ]] || [[ ! "$(cat ~/.vchord_version)" > "0.3.0" ]]; then
-        $STD sudo -u postgres psql -d immich -c "REINDEX INDEX face_index;"
-        $STD sudo -u postgres psql -d immich -c "REINDEX INDEX clip_index;"
-      fi
       echo "$VCHORD_RELEASE" >~/.vchord_version
       rm ./vchord.deb
       msg_ok "Updated VectorChord to v${VCHORD_RELEASE}"
@@ -132,9 +127,6 @@ EOF
 
     msg_info "Updating ${APP} web and microservices"
     cd "$SRC_DIR"/server
-    if [[ "$RELEASE" == "1.135.1" ]]; then
-      rm ./src/schema/migrations/1750323941566-UnsetPrewarmDimParameter.ts
-    fi
     export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
     export CI=1
     corepack enable
@@ -168,7 +160,6 @@ EOF
     mkdir -p "$ML_DIR" && chown -R immich:immich "$ML_DIR"
     chown immich:immich ./uv.lock    
     export VIRTUAL_ENV="${ML_DIR}"/ml-venv
-    $STD /usr/local/bin/uv venv "$VIRTUAL_ENV"
     if [[ -f ~/.openvino ]]; then
       msg_info "Updating HW-accelerated machine-learning"
       $STD sudo --preserve-env=VIRTUAL_ENV -nu immich uv sync --extra openvino --active -n -p python3.11 --managed-python
@@ -195,10 +186,6 @@ EOF
     ln -s "$GEO_DIR" "$APP_DIR"
 
     chown -R immich:immich "$INSTALL_DIR"
-    if [[ ! -f ~/.debian_version.bak ]]; then
-      cp /etc/debian_version ~/.debian_version.bak
-      sed -i 's/.*/13.0/' /etc/debian_version
-    fi
     msg_ok "Updated ${APP} to v${RELEASE}"
 
     msg_info "Cleaning up"
@@ -293,7 +280,6 @@ function compile_libheif() {
 
 function compile_libraw() {
   SOURCE=${SOURCE_DIR}/libraw
-  local update
   : "${LIBRAW_REVISION:=$(jq -cr '.revision' "$BASE_DIR"/server/sources/libraw.json)}"
   if [[ "$LIBRAW_REVISION" != "$(grep 'libraw' ~/.immich_library_revisions | awk '{print $2}')" ]]; then
     msg_info "Recompiling libraw"

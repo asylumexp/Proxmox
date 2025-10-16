@@ -11,7 +11,7 @@ var_cpu="${var_cpu:-1}"
 var_ram="${var_ram:-1024}"
 var_disk="${var_disk:-6}"
 var_os="${var_os:-debian}"
-var_version="${var_version:-12}"
+var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
@@ -29,32 +29,33 @@ function update_script() {
   fi
   RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
   if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
-    msg_info "Stopping $APP"
+    msg_info "Stopping Service"
     systemctl stop wger
-    msg_ok "Stopped $APP"
+    msg_ok "Stopped Service"
 
     msg_info "Updating $APP to v${RELEASE}"
     temp_file=$(mktemp)
     curl -fsSL "https://github.com/wger-project/wger/archive/refs/tags/$RELEASE.tar.gz" -o "$temp_file"
     tar xzf "$temp_file"
     cp -rf wger-"$RELEASE"/* /home/wger/src
-    cd /home/wger/src
-    python3 manage.py migrate &>/dev/null
-    yarn install &>/dev/null
-    yarn build:css:sass &>/dev/null
-    python3 manage.py collectstatic --noinput &>/dev/null
+    cd /home/wger/src || exit
+    $STD pip install -r requirements_prod.txt --ignore-installed
+    $STD pip install -e .
+    $STD python3 manage.py migrate
+    $STD python3 manage.py collectstatic --no-input
+    $STD yarn install
+    $STD yarn build:css:sass
     echo "${RELEASE}" >/opt/${APP}_version.txt
     msg_ok "Updated $APP to v${RELEASE}"
 
-    msg_info "Starting $APP"
+    msg_info "Starting Service"
     systemctl start wger
-    msg_ok "Started $APP"
+    msg_ok "Started Service"
 
     msg_info "Cleaning Up"
     rm -rf "$temp_file"
     msg_ok "Cleanup Completed"
-
-    msg_ok "Update Successful"
+    msg_ok "Updated Successfully!"
   else
     msg_ok "No update required. ${APP} is already at v${RELEASE}"
   fi

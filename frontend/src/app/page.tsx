@@ -119,11 +119,11 @@ export default function Page() {
                   We are a community-driven initiative that simplifies the setup of Proxmox Virtual Environment (VE).
                 </p>
                 <p>
-                  With 300+ scripts to help you manage your
+                  With 400+ scripts to help you manage your
                   {" "}
-                  <b>Proxmox VE environment</b>
-                  . Whether you&#39;re a seasoned
-                  user or a newcomer, we&#39;ve got you covered.
+                  <b>Proxmox VE</b>
+                  , whether you&#39;re a seasoned user or a
+                  newcomer, we&#39;ve got you covered.
                 </p>
               </div>
             </div>

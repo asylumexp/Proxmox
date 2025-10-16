@@ -17,7 +17,7 @@ msg_info "Installing Dependencies"
 $STD apt-get install -y \
   git \
   apache2 \
-  php8.2-{apcu,cli,common,curl,gd,imap,ldap,mysql,xmlrpc,xml,mbstring,bcmath,intl,zip,redis,bz2,soap} \
+  php8.4-{apcu,cli,common,curl,gd,ldap,mysql,xmlrpc,xml,mbstring,bcmath,intl,zip,redis,bz2,soap} \
   php-cas \
   libapache2-mod-php
 msg_ok "Installed Dependencies"
@@ -44,10 +44,9 @@ msg_ok "Set up database"
 msg_info "Installing GLPi"
 cd /opt
 RELEASE=$(curl -fsSL https://api.github.com/repos/glpi-project/glpi/releases/latest | grep '"tag_name"' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
-curl -fsSL "https://github.com/glpi-project/glpi/releases/download/${RELEASE}/glpi-${RELEASE}.tgz" -o "glpi-${RELEASE}.tgz"
+curl -fsSL "https://github.com/glpi-project/glpi/releases/download/${RELEASE}/glpi-${RELEASE}.tgz" -o $(basename "https://github.com/glpi-project/glpi/releases/download/${RELEASE}/glpi-${RELEASE}.tgz")
 $STD tar -xzvf glpi-${RELEASE}.tgz
 cd /opt/glpi
-$STD php bin/console db:install --db-name=$DB_NAME --db-user=$DB_USER --db-password=$DB_PASS --no-interaction
 echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
 msg_ok "Installed GLPi"
 
@@ -82,6 +81,18 @@ define('GLPI_CACHE_DIR', GLPI_VAR_DIR . '/_cache');
 define('GLPI_LOG_DIR', '/var/log/glpi');
 EOF
 msg_ok "Configured Downstream file"
+
+msg_info "Configuring GLPI Database"
+$STD /usr/bin/php /opt/glpi/bin/console db:install \
+  --db-host=localhost \
+  --db-name=$DB_NAME \
+  --db-user=$DB_USER \
+  --db-password=$DB_PASS \
+  --default-language=en_US \
+  --no-interaction \
+  --allow-superuser \
+  --force
+msg_ok "Configured GLPI Database"
 
 msg_info "Setting Folder and File Permissions"
 chown root:root /opt/glpi/ -R

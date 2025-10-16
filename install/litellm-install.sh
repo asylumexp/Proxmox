@@ -13,6 +13,12 @@ setting_up_container
 network_check
 update_os
 
+msg_info "Installing Dependencies"
+$STD apt install -y \
+  build-essential \
+  python3-dev
+msg_ok "Installed Dependencies"
+
 PG_VERSION="17" setup_postgresql
 PYTHON_VERSION="3.13" setup_uv
 
@@ -75,6 +81,7 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get -y autoremove
-$STD apt-get -y autoclean
+$STD apt -y autoremove
+$STD apt -y autoclean
+$STD apt -y clean
 msg_ok "Cleaned"

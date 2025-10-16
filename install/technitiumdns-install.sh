@@ -35,7 +35,7 @@ msg_info "Installing Technitium DNS"
 mkdir -p /opt/technitium/dns
 curl -fsSL "https://download.technitium.com/dns/DnsServerPortable.tar.gz" -o /opt/DnsServerPortable.tar.gz
 $STD tar zxvf /opt/DnsServerPortable.tar.gz -C /opt/technitium/dns/
-echo "${RELEASE}" > ~/.technitium
+echo "${RELEASE}" >~/.technitium
 msg_ok "Installed Technitium DNS"
 
 msg_info "Creating service"
@@ -48,6 +48,7 @@ customize
 
 msg_info "Cleaning up"
 rm -f /opt/DnsServerPortable.tar.gz
-$STD apt-get -y autoremove
-$STD apt-get -y autoclean
+$STD apt -y autoremove
+$STD apt -y autoclean
+$STD apt -y clean
 msg_ok "Cleaned"

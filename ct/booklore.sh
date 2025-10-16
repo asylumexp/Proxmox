@@ -9,7 +9,7 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 APP="BookLore"
 var_tags="${var_tags:-books;library}"
 var_cpu="${var_cpu:-3}"
-var_ram="${var_ram:-2048}"
+var_ram="${var_ram:-3072}"
 var_disk="${var_disk:-7}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-12}"
@@ -45,6 +45,8 @@ function update_script() {
     $STD npm install --force
     $STD npm run build --configuration=production
     msg_ok "Built Frontend"
+
+    JAVA_VERSION="25" setup_java
 
     msg_info "Building Backend"
     cd /opt/booklore/booklore-api

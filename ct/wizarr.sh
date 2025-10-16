@@ -11,7 +11,7 @@ var_cpu="${var_cpu:-1}"
 var_ram="${var_ram:-1024}"
 var_disk="${var_disk:-4}"
 var_os="${var_os:-debian}"
-var_version="${var_version:-12}"
+var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
@@ -32,37 +32,40 @@ function update_script() {
   setup_uv
 
   if check_for_gh_release "wizarr" "wizarrrr/wizarr"; then
-    msg_info "Stopping $APP"
+    msg_info "Stopping Service"
     systemctl stop wizarr
-    msg_ok "Stopped $APP"
+    msg_ok "Stopped Service"
 
     msg_info "Creating Backup"
     BACKUP_FILE="/opt/wizarr_backup_$(date +%F).tar.gz"
     $STD tar -czf "$BACKUP_FILE" /opt/wizarr/{.env,start.sh} /opt/wizarr/database/ &>/dev/null
+    rm -rf /opt/wizarr/migrations/versions/*
     msg_ok "Backup Created"
 
     fetch_and_deploy_gh_release "wizarr" "wizarrrr/wizarr"
 
-    msg_info "Updating $APP"
-    cd /opt/wizarr
-    $STD /usr/local/bin/uv lock
-    $STD /usr/local/bin/uv sync --locked
-    $STD /usr/local/bin/uv run pybabel compile -d app/translations
+    msg_info "Updating Wizarr"
+    cd /opt/wizarr || exit
+    $STD /usr/local/bin/uv sync --frozen
+    $STD /usr/local/bin/uv run --frozen pybabel compile -d app/translations
     $STD npm --prefix app/static install
     $STD npm --prefix app/static run build:css
     mkdir -p ./.cache
     $STD tar -xf "$BACKUP_FILE" --directory=/
-    $STD /usr/local/bin/uv run flask db upgrade
-    msg_ok "Updated $APP"
+    $STD /usr/local/bin/uv run --frozen flask db upgrade
+    if ! grep -q 'frozen' /opt/wizarr/start.sh; then
+      sed -i 's/run/& --frozen/' /opt/wizarr/start.sh
+    fi
+    msg_ok "Updated Wizarr"
 
-    msg_info "Starting $APP"
+    msg_info "Starting Service"
     systemctl start wizarr
-    msg_ok "Started $APP"
+    msg_ok "Started Service"
 
     msg_info "Cleaning Up"
     rm -rf "$BACKUP_FILE"
     msg_ok "Cleanup Completed"
-    msg_ok "Updated Successfully"
+    msg_ok "Updated Successfully!"
   fi
   exit
 }

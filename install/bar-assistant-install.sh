@@ -27,7 +27,7 @@ msg_ok "Installed Dependencies"
 PHP_VERSION="8.3" PHP_FPM=YES PHP_MODULE="ffi,opcache,redis,zip,pdo-sqlite,bcmath,pdo,curl,dom,fpm" setup_php
 setup_composer
 NODE_VERSION="22" setup_nodejs
-fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "binary"
+fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "singlefile" "latest" "/usr/bin" "meilisearch-linux-aarch64"
 fetch_and_deploy_gh_release "bar-assistant" "karlomikus/bar-assistant" "tarball" "latest" "/opt/bar-assistant"
 fetch_and_deploy_gh_release "vue-salt-rim" "karlomikus/vue-salt-rim" "tarball" "latest" "/opt/vue-salt-rim"
 

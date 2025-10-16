@@ -32,16 +32,16 @@ function update_script() {
   fi
 
   if check_for_gh_release "headscale" "juanfont/headscale"; then
-    msg_info "Stopping ${APP}"
+    msg_info "Stopping Service"
     systemctl stop headscale
-    msg_ok "Stopped ${APP}"
+    msg_ok "Stopped Service"
 
     fetch_and_deploy_gh_release "headscale" "juanfont/headscale" "binary"
     fetch_and_deploy_gh_release "headscale-admin" "GoodiesHQ/headscale-admin" "prebuild" "latest" "/opt/headscale-admin" "admin.zip"
 
-    msg_info "Starting ${APP}"
+    msg_info "Starting Service"
     systemctl enable -q --now headscale
-    msg_ok "Started ${APP}"
+    msg_ok "Started Service"
     msg_ok "Updated Successfully"
   fi
   exit
@@ -53,3 +53,5 @@ description
 
 msg_ok "Completed Successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
+echo -e "${INFO}${YW} Access it using the following URL:${CL}"
+echo -e "${TAB}${GATEWAY}${BGN}Headscale API: ${IP}/api (no Frontend) | headscale-admin: http://${IP}/admin/${CL}"

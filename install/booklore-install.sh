@@ -18,7 +18,7 @@ $STD apt-get install -y nginx
 msg_ok "Installed Dependencies"
 
 fetch_and_deploy_gh_release "booklore" "booklore-app/BookLore"
-JAVA_VERSION="21" setup_java
+JAVA_VERSION="25" setup_java
 NODE_VERSION="22" setup_nodejs
 setup_mariadb
 setup_yq
@@ -46,7 +46,7 @@ $STD npm run build --configuration=production
 msg_ok "Built Frontend"
 
 msg_info "Creating Environment"
-mkdir -p /opt/booklore_storage{/data,/books}
+mkdir -p /opt/booklore_storage{/data,/books,/bookdrop}
 cat <<EOF >/opt/booklore_storage/.env
 DATABASE_URL=jdbc:mariadb://localhost:3306/$DB_NAME
 DATABASE_USERNAME=$DB_USER
@@ -55,6 +55,7 @@ BOOKLORE_PORT=6060
 
 BOOKLORE_DATA_PATH=/opt/booklore_storage/data
 BOOKLORE_BOOKS_PATH=/opt/booklore_storage/books
+BOOKLORE_BOOKDROP_PATH=/opt/booklore_storage/bookdrop
 EOF
 msg_ok "Created Environment"
 

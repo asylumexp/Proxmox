@@ -30,27 +30,27 @@ function update_script() {
   BASE_URL="https://updates.networkoptix.com/default/index.html"
   RELEASE=$(curl -fsSL "$BASE_URL" | grep -oP '(?<=<b>)[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(?=</b>)' | head -n 1)
   DETAIL_PAGE=$(curl -fsSL "$BASE_URL#note_$RELEASE")
-  DOWNLOAD_URL=$(echo "$DETAIL_PAGE" | grep -oP "https://updates.networkoptix.com/default/$RELEASE/linux/nxwitness-server-[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+-linux_x64\.deb" | head -n 1)
+  DOWNLOAD_URL=$(echo "$DETAIL_PAGE" | grep -oP "https://updates.networkoptix.com/default/$RELEASE/linux/nxwitness-server-[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+-linux_arm64\.deb" | head -n 1)
   if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
-    msg_info "Stopping ${APP}"
+    msg_info "Stopping Service"
     systemctl stop networkoptix-root-tool networkoptix-mediaserver
-    msg_ok "${APP} Stopped"
+    msg_ok "Stopped Service"
 
     msg_info "Updating ${APP} to ${RELEASE}"
     cd /tmp
-curl -fsSL "$DOWNLOAD_URL" -o ""nxwitness-server-$RELEASE-linux_x64.deb""
+    curl -fsSL "$DOWNLOAD_URL" -o ""nxwitness-server-$RELEASE-linux_arm64.deb""
     export DEBIAN_FRONTEND=noninteractive
     export DEBCONF_NOWARNINGS=yes
-    $STD dpkg -i nxwitness-server-$RELEASE-linux_x64.deb
+    $STD dpkg -i nxwitness-server-$RELEASE-linux_arm64.deb
     echo "${RELEASE}" >/opt/${APP}_version.txt
     msg_ok "Updated ${APP}"
 
-    msg_info "Starting ${APP}"
+    msg_info "Starting Service"
     systemctl start networkoptix-root-tool networkoptix-mediaserver
-    msg_ok "Started ${APP}"
+    msg_ok "Started Service"
 
     msg_info "Cleaning up"
-    rm -f /tmp/nxwitness-server-$RELEASE-linux_x64.deb
+    rm -f /tmp/nxwitness-server-$RELEASE-linux_arm64.deb
     msg_ok "Cleaned"
 
     msg_ok "Updated Successfully"

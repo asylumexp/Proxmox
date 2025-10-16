@@ -8,7 +8,7 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 APP="Part-DB"
 var_tags="${var_tags:-inventory;parts}"
 var_cpu="${var_cpu:-2}"
-var_ram="${var_ram:-1024}"
+var_ram="${var_ram:-2560}"
 var_disk="${var_disk:-8}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-12}"

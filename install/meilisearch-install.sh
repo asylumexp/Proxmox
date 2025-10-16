@@ -13,7 +13,7 @@ setting_up_container
 network_check
 update_os
 
-fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "binary"
+fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "singlefile" "latest" "/usr/bin" "meilisearch-linux-aarch64"
 
 msg_info "Configuring ${APPLICATION}"
 curl -fsSL https://raw.githubusercontent.com/meilisearch/meilisearch/latest/config.toml -o /etc/meilisearch.toml

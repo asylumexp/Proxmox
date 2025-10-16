@@ -2,7 +2,7 @@ script*.py
 # General OS files
 .DS_Store
 Thumbs.db
-
+test-app/
 # Editor & IDE files (keeping .vscode settings but ignoring unnecessary metadata)
 !.vscode/
 .vscode/*.workspace

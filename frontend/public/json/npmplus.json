@@ -6,7 +6,7 @@
   ],
   "date_created": "2025-03-13",
   "type": "ct",
-  "updateable": false,
+  "updateable": true,
   "privileged": false,
   "interface_port": 81,
   "documentation": "https://github.com/ZoeyVid/NPMplus/blob/develop/README.md",
@@ -39,7 +39,7 @@
     }
   ],
   "default_credentials": {
-    "username": "root",
+    "username": "admin@example.org",
     "password": null
   },
   "notes": [
@@ -52,7 +52,7 @@
       "type": "info"
     },
     {
-      "text": "Application credentials: `cat /opt/.npm_pwd`",
+      "text": "Application credentials: `cat /opt/.npm_pwd` - if file not exist in LXC check docker logs for password with `docker logs npmplus`",
       "type": "info"
     }
   ]
