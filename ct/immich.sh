@@ -39,26 +39,8 @@ function update_script() {
   PNPM_VERSION="$(curl -fsSL "https://raw.githubusercontent.com/immich-app/immich/refs/heads/main/package.json" | jq -r '.packageManager | split("@")[1]')"
   NODE_VERSION="22" NODE_MODULE="pnpm@${PNPM_VERSION}" setup_nodejs
 
-  if [[ ! -f /etc/apt/preferences.d/preferences ]]; then
-    msg_info "Adding Debian Testing repo"
-    sed -i 's/ trixie-updates/ trixie-updates testing/g' /etc/apt/sources.list.d/debian.sources
-    cat <<EOF >/etc/apt/preferences.d/preferences
-Package: *
-Pin: release a=unstable
-Pin-Priority: 450
-
-Package: *
-Pin:release a=testing
-Pin-Priority: 450
-EOF
-    if [[ -f /etc/apt/preferences.d/immich ]]; then
-      rm /etc/apt/preferences.d/immich
-    fi
-    $STD apt-get update
-    msg_ok "Added Debian Testing repo"
-    msg_info "Installing libmimalloc3"
-    $STD apt-get install -t testing --no-install-recommends libmimalloc3
-    msg_ok "Installed libmimalloc3"
+  if dpkg -l | grep -q "libmimalloc2.0"; then
+    $STD apt-get update && $STD apt-get install -y libmimalloc3
   fi
 
   STAGING_DIR=/opt/staging
@@ -92,7 +74,7 @@ EOF
     done
     msg_ok "Image-processing libraries up to date"
   fi
-  RELEASE="2.0.1"
+  RELEASE="2.1.0"
   if check_for_gh_release "immich" "immich-app/immich" "${RELEASE}"; then
     msg_info "Stopping Services"
     systemctl stop immich-web
@@ -160,7 +142,7 @@ EOF
 
     # openapi & web build
     cd "$SRC_DIR"
-    echo "packageImportMethod: hardlink" >>./pnpm-workspace.yaml
+    echo "packageImportMethod: hardlink" >>./pnpm-workspace.yaml    
     $STD pnpm --filter @immich/sdk --filter immich-web --frozen-lockfile --force install
     $STD pnpm --filter @immich/sdk --filter immich-web build
     cp -a web/build "$APP_DIR"/www
@@ -176,7 +158,7 @@ EOF
 
     cd "$SRC_DIR"/machine-learning
     mkdir -p "$ML_DIR" && chown -R immich:immich "$ML_DIR"
-    chown immich:immich ./uv.lock
+    chown immich:immich ./uv.lock    
     export VIRTUAL_ENV="${ML_DIR}"/ml-venv
     if [[ -f ~/.openvino ]]; then
       msg_info "Updating HW-accelerated machine-learning"
@@ -209,7 +191,7 @@ EOF
     msg_info "Cleaning up"
     $STD apt-get -y autoremove
     $STD apt-get -y autoclean
-    $STD apt clean -y
+    $STD apt clean -y    
     msg_ok "Cleaned"
     systemctl restart immich-ml immich-web
   fi
@@ -320,7 +302,7 @@ function compile_libraw() {
 function compile_imagemagick() {
   SOURCE=$SOURCE_DIR/imagemagick
   : "${IMAGEMAGICK_REVISION:=$(jq -cr '.revision' "$BASE_DIR"/server/sources/imagemagick.json)}"
-  if [[ "$IMAGEMAGICK_REVISION" != "$(grep 'imagemagick' ~/.immich_library_revisions | awk '{print $2}')" ]] ||
+   if [[ "$IMAGEMAGICK_REVISION" != "$(grep 'imagemagick' ~/.immich_library_revisions | awk '{print $2}')" ]] ||
     ! grep -q 'DMAGICK_LIBRAW' /usr/local/lib/ImageMagick-7*/config-Q16HDRI/configure.xml; then
     msg_info "Recompiling ImageMagick"
     if [[ -d "$SOURCE" ]]; then rm -rf "$SOURCE"; fi
