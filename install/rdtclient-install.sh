@@ -63,6 +63,7 @@ customize
 
 msg_info "Cleaning up"
 rm -f ~/packages-microsoft-prod.deb
-$STD apt-get -y autoremove
-$STD apt-get -y autoclean
+$STD apt -y autoremove
+$STD apt -y autoclean
+$STD apt -y clean
 msg_ok "Cleaned"

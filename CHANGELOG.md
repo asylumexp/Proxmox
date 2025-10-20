@@ -10,7 +10,106 @@
 > [!CAUTION]
 Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit the project's popularity for potentially malicious purposes.
 
+## 2025-10-20
+
+## 2025-10-19
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - rwMarkable: Increase RAM [@vhsdream](https://github.com/vhsdream) ([#8482](https://github.com/community-scripts/ProxmoxVE/pull/8482))
+    - changedetection: fix: update [@CrazyWolf13](https://github.com/CrazyWolf13) ([#8480](https://github.com/community-scripts/ProxmoxVE/pull/8480))
+
+## 2025-10-18
+
+### 🆕 New Scripts
+
+  - Open-Archiver ([#8452](https://github.com/community-scripts/ProxmoxVE/pull/8452))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Cronicle: Dont copy init.d service file [@tremor021](https://github.com/tremor021) ([#8451](https://github.com/community-scripts/ProxmoxVE/pull/8451))
+
+  - #### 🔧 Refactor
+
+    - Refactor: Nginx Proxy Manager [@MickLesk](https://github.com/MickLesk) ([#8453](https://github.com/community-scripts/ProxmoxVE/pull/8453))
+
+## 2025-10-17
+
+### 🚀 Updated Scripts
+
+  - Revert back to debian 12 template for various apps [@tremor021](https://github.com/tremor021) ([#8431](https://github.com/community-scripts/ProxmoxVE/pull/8431))
+
+  - #### 🐞 Bug Fixes
+
+    - [FIX]Pulse: replace policykit-1 with polkitd [@vhsdream](https://github.com/vhsdream) ([#8439](https://github.com/community-scripts/ProxmoxVE/pull/8439))
+    - MySpeed: Fix build step [@tremor021](https://github.com/tremor021) ([#8427](https://github.com/community-scripts/ProxmoxVE/pull/8427))
+
+  - #### ✨ New Features
+
+    - GLPI: Bump to Debian 13 base [@tremor021](https://github.com/tremor021) ([#8443](https://github.com/community-scripts/ProxmoxVE/pull/8443))
+
+  - #### 🔧 Refactor
+
+    - refactor: fix pve-scripts local install script [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#8418](https://github.com/community-scripts/ProxmoxVE/pull/8418))
+
+### 🌐 Website
+
+  - #### 📝 Script Information
+
+    - PLANKA: Fix config path [@tremor021](https://github.com/tremor021) ([#8422](https://github.com/community-scripts/ProxmoxVE/pull/8422))
+
+## 2025-10-16
+
+### 🚀 Updated Scripts
+
+  - post-pve/post-pbs: Disable 'pve-enterprise' and 'ceph enterprise' repositories [@MickLesk](https://github.com/MickLesk) ([#8399](https://github.com/community-scripts/ProxmoxVE/pull/8399))
+
+  - #### 🐞 Bug Fixes
+
+    - fix: changedetection: fix for tsc and esbuild not found [@CrazyWolf13](https://github.com/CrazyWolf13) ([#8407](https://github.com/community-scripts/ProxmoxVE/pull/8407))
+    - paperless-ngx: remove unneeded deps, use static ghostscript [@MickLesk](https://github.com/MickLesk) ([#8397](https://github.com/community-scripts/ProxmoxVE/pull/8397))
+    - UmlautAdaptarr: Revert back to bookworm repo [@tremor021](https://github.com/tremor021) ([#8392](https://github.com/community-scripts/ProxmoxVE/pull/8392))
+
+  - #### 🔧 Refactor
+
+    - Enhance nginx proxy manager install script [@MickLesk](https://github.com/MickLesk) ([#8400](https://github.com/community-scripts/ProxmoxVE/pull/8400))
+
+## 2025-10-15
+
+### 🆕 New Scripts
+
+  - LimeSurvey ([#8364](https://github.com/community-scripts/ProxmoxVE/pull/8364))
+- Guardian ([#8365](https://github.com/community-scripts/ProxmoxVE/pull/8365))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Update omada-install.sh to use correct libssl version [@punctualwesley](https://github.com/punctualwesley) ([#8380](https://github.com/community-scripts/ProxmoxVE/pull/8380))
+    - zigbee2mqtt: Use hardlinks for PNPM packages [@mikeage](https://github.com/mikeage) ([#8357](https://github.com/community-scripts/ProxmoxVE/pull/8357))
+
+  - #### ✨ New Features
+
+    - Bump Q to S-Scripts to Debian 13 (Trixie) [@MickLesk](https://github.com/MickLesk) ([#8366](https://github.com/community-scripts/ProxmoxVE/pull/8366))
+    - Bump O to P-Scripts to Debian 13 (Trixie) [@MickLesk](https://github.com/MickLesk) ([#8367](https://github.com/community-scripts/ProxmoxVE/pull/8367))
+    - Bump L to N-Scripts to Debian 13 (Trixie) [@MickLesk](https://github.com/MickLesk) ([#8368](https://github.com/community-scripts/ProxmoxVE/pull/8368))
+    - Immich: v2.1.0 - VectorChord 0.5+ support [@vhsdream](https://github.com/vhsdream) ([#8348](https://github.com/community-scripts/ProxmoxVE/pull/8348))
+
 ## 2025-10-14
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - MediaManager: Use managed Python 3.13 [@vhsdream](https://github.com/vhsdream) ([#8343](https://github.com/community-scripts/ProxmoxVE/pull/8343))
+
+  - #### 🔧 Refactor
+
+    - Update cockpit installation/update [@burgerga](https://github.com/burgerga) ([#8346](https://github.com/community-scripts/ProxmoxVE/pull/8346))
 
 ## 2025-10-13
 

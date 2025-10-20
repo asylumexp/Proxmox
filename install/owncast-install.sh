@@ -14,9 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies (Patience)"
-$STD apt-get install -y ffmpeg
-$STD apt-get install -y wget
-$STD apt-get install -y openssh-server
+$STD apt install -y ffmpeg
 msg_ok "Installed Dependencies"
 
 fetch_and_deploy_gh_release "owncast" "owncast/owncast" "prebuild" "latest" "/opt/owncast" "owncast*linux-arm64.zip"
@@ -42,6 +40,7 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get -y autoremove
-$STD apt-get -y autoclean
+$STD apt -y autoremove
+$STD apt -y autoclean
+$STD apt -y clean
 msg_ok "Cleaned"

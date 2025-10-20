@@ -16,7 +16,6 @@ update_os
 msg_info "Installing Dependencies"
 $STD apt-get install -y git
 $STD apt-get install -y dpkg-dev
-$STD apt-get install -y dpkg-dev
 
 msg_info "Installing Proxmox Backup Server (Patience)"
 export DEBIAN_FRONTEND=noninteractive
@@ -30,6 +29,7 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get -y autoremove
-$STD apt-get -y autoclean
+$STD apt -y autoremove
+$STD apt -y autoclean
+$STD apt -y clean
 msg_ok "Cleaned"

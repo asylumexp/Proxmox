@@ -14,7 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y python3-lxml
+$STD apt install -y python3-lxml
 curl -fsSL "http://archive.ubuntu.com/ubuntu/pool/universe/l/lxml-html-clean/python3-lxml-html-clean_0.1.1-1_all.deb" -o /opt/python3-lxml-html-clean.deb
 $STD dpkg -i /opt/python3-lxml-html-clean.deb
 msg_ok "Installed Dependencies"
@@ -58,12 +58,11 @@ sed -i \
   -e "s|^;*db_password *=.*|db_password = $DB_PASS|" \
   /etc/odoo/odoo.conf
 $STD sudo -u odoo odoo -c /etc/odoo/odoo.conf -d odoo -i base --stop-after-init
-systemctl restart odoo
 echo "${LATEST_VERSION}" >/opt/${APPLICATION}_version.txt
 msg_ok "Configured Odoo"
 
 msg_info "Restarting Odoo"
-
+systemctl restart odoo
 msg_ok "Restarted Odoo"
 
 motd_ssh
@@ -72,6 +71,7 @@ customize
 msg_info "Cleaning up"
 rm -f /opt/odoo.deb
 rm -f /opt/python3-lxml-html-clean.deb
-$STD apt-get autoremove
-$STD apt-get autoclean
+$STD apt -y autoremove
+$STD apt -y autoclean
+$STD apt -y clean
 msg_ok "Cleaned"

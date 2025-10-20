@@ -14,7 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
+$STD apt install -y \
   lsb-release \
   redis \
   apache2 \
@@ -24,16 +24,22 @@ msg_ok "Installed Dependencies"
 
 setup_mariadb
 
-msg_info "Adding PHP8.4 Repository"
+msg_info "Adding PHP Repository"
 $STD curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb
 $STD dpkg -i /tmp/debsuryorg-archive-keyring.deb
-$STD sh -c 'echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
-$STD apt-get update
-msg_ok "Added PHP8.4 Repository"
+cat <<EOF >/etc/apt/sources.list.d/php.sources
+Types: deb
+URIs: https://packages.sury.org/php/
+Suites: $(lsb_release -sc)
+Components: main
+Signed-By: /usr/share/keyrings/deb.sury.org-php.gpg
+EOF
+$STD apt update
+msg_ok "Added PHP Repository"
 
 msg_info "Installing PHP"
-$STD apt-get remove -y php8.2*
-$STD apt-get install -y \
+$STD apt remove -y php8.2*
+$STD apt install -y \
   php8.4 \
   php8.4-{gd,mysql,mbstring,bcmath,xml,curl,zip,intl,fpm} \
   libapache2-mod-php8.4
@@ -137,6 +143,7 @@ customize
 msg_info "Cleaning up"
 rm -rf "/opt/pterodactyl-panel/panel.tar.gz"
 rm -rf "/tmp/debsuryorg-archive-keyring.deb"
-$STD apt-get -y autoremove
-$STD apt-get -y autoclean
+$STD apt -y autoremove
+$STD apt -y autoclean
+$STD apt -y clean
 msg_ok "Cleaned"

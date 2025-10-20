@@ -14,7 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies (Patience)"
-$STD apt-get install -y \
+$STD apt install -y \
   redis \
   build-essential \
   imagemagick \
@@ -22,8 +22,7 @@ $STD apt-get install -y \
   optipng \
   libpq-dev \
   libmagic-dev \
-  mime-support \
-  libzbar0 \
+  libzbar0t64 \
   poppler-utils \
   default-libmysqlclient-dev \
   automake \
@@ -31,37 +30,22 @@ $STD apt-get install -y \
   pkg-config \
   libtiff-dev \
   libpng-dev \
-  libleptonica-dev
+  libleptonica-dev \
+  unpaper \
+  icc-profiles-free \
+  qpdf \
+  libleptonica6 \
+  libxml2 \
+  pngquant \
+  zlib1g \
+  tesseract-ocr \
+  tesseract-ocr-eng \
+  ghostscript
 msg_ok "Installed Dependencies"
 
 PG_VERSION="16" setup_postgresql
 PYTHON_VERSION="3.13" setup_uv
 fetch_and_deploy_gh_release "paperless" "paperless-ngx/paperless-ngx" "prebuild" "latest" "/opt/paperless" "paperless*tar.xz"
-fetch_and_deploy_gh_release "jbig2enc" "ie13/jbig2enc" "tarball" "latest" "/opt/jbig2enc"
-setup_gs
-
-msg_info "Installing OCR Dependencies (Patience)"
-$STD apt-get install -y \
-  unpaper \
-  icc-profiles-free \
-  qpdf \
-  liblept5 \
-  libxml2 \
-  pngquant \
-  zlib1g \
-  tesseract-ocr \
-  tesseract-ocr-eng
-msg_ok "Installed OCR Dependencies"
-
-msg_info "Setup JBIG2"
-cd /opt/jbig2enc
-$STD bash ./autogen.sh
-$STD bash ./configure
-$STD make
-$STD make install
-cd /
-rm -rf /opt/jbig2enc
-msg_ok "Installed JBIG2"
 
 msg_info "Setting up PostgreSQL database"
 DB_NAME=paperlessdb
@@ -126,7 +110,11 @@ $STD uv run python -m nltk.downloader -d /usr/share/nltk_data snowball_data
 $STD uv run python -m nltk.downloader -d /usr/share/nltk_data stopwords
 $STD uv run python -m nltk.downloader -d /usr/share/nltk_data punkt_tab || \
 $STD uv run python -m nltk.downloader -d /usr/share/nltk_data punkt
-sed -i -e 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml
+for policy_file in /etc/ImageMagick-6/policy.xml /etc/ImageMagick-7/policy.xml; do
+  if [[ -f "$policy_file" ]]; then
+    sed -i -e 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' "$policy_file"
+  fi
+done
 msg_ok "Installed Natural Language Toolkit"
 
 msg_info "Creating Services"
@@ -202,6 +190,7 @@ customize
 msg_info "Cleaning up"
 rm -rf /opt/paperless/docker
 rm -rf /tmp/ghostscript*
-$STD apt-get -y autoremove
-$STD apt-get -y autoclean
+$STD apt -y autoremove
+$STD apt -y autoclean
+$STD apt -y clean
 msg_ok "Cleaned"

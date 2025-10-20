@@ -14,7 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies (Patience)"
-$STD apt-get install -y \
+$STD apt install -y \
   exiftool \
   ffmpeg \
   libheif1 \
@@ -37,7 +37,7 @@ msg_info "Installing PhotoPrism (Patience)"
 mkdir -p /opt/photoprism/{cache,config,photos,storage,temp}
 mkdir -p /opt/photoprism/photos/{originals,import}
 mkdir -p /opt/photoprism_backups
-LIBHEIF_URL=$(curl -fsSL "https://dl.photoprism.app/dist/libheif/" | grep -oP "libheif-$(lsb_release -cs)-arm64-v[0-9\.]+\.tar\.gz" | sort -V | tail -n 1)
+LIBHEIF_URL=$(curl -fsSL "https://dl.photoprism.app/dist/libheif/" | grep -oP "libheif-bookworm-arm64-v[0-9\.]+\.tar\.gz" | sort -V | tail -n 1)
 curl -fsSL "https://dl.photoprism.app/dist/libheif/$LIBHEIF_URL" -o /tmp/libheif.tar.gz
 tar -xzf /tmp/libheif.tar.gz -C /usr/local
 ldconfig
@@ -156,6 +156,7 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get -y autoremove
-$STD apt-get -y autoclean
+$STD apt -y autoremove
+$STD apt -y autoclean
+$STD apt -y clean
 msg_ok "Cleaned"
