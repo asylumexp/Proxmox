@@ -27,17 +27,17 @@ function update_script() {
     exit 1
   fi
 
-  set +o pipefail && RELEASE=$(curl -fsSL https://teamspeak.com/en/downloads/#server | sed -n 's/.teamspeak3-server_linux_amd64-([0-9]+.[0-9]+.[0-9]+)./\1/p' | head -1) && set -o pipefail
+  set +o pipefail && RELEASE=$(curl -fsSL https://teamspeak.com/en/downloads/#server | sed -n 's/.teamspeak3-server_linux_arm64-([0-9]+.[0-9]+.[0-9]+)./\1/p' | head -1) && set -o pipefail
 
   if [ "${RELEASE}" != "$(cat ~/.teamspeak-server)" ] || [ ! -f ~/.teamspeak-server ]; then
     msg_info "Updating ${APP} LXC"
     $STD apk -U upgrade
     $STD service teamspeak stop
-    curl -fsSL "https://files.teamspeak-services.com/releases/server/${RELEASE}/teamspeak3-server_linux_amd64-${RELEASE}.tar.bz2" -o ts3server.tar.bz2
+    curl -fsSL "https://files.teamspeak-services.com/releases/server/${RELEASE}/teamspeak3-server_linux_arm64-${RELEASE}.tar.bz2" -o ts3server.tar.bz2
     tar -xf ./ts3server.tar.bz2
-    cp -ru teamspeak3-server_linux_amd64/* /opt/teamspeak-server/
+    cp -ru teamspeak3-server_linux_arm64/* /opt/teamspeak-server/
     rm -f ~/ts3server.tar.bz*
-    rm -rf teamspeak3-server_linux_amd64
+    rm -rf teamspeak3-server_linux_arm64
     echo "${RELEASE}" >~/.teamspeak-server
     $STD service teamspeak start
     msg_ok "Updated Successfully"

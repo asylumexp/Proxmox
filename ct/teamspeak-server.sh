@@ -28,16 +28,16 @@ function update_script() {
     exit
   fi
 
-  RELEASE=$(curl -fsSL https://teamspeak.com/en/downloads/#server | grep -oP 'teamspeak3-server_linux_amd64-\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+  RELEASE=$(curl -fsSL https://teamspeak.com/en/downloads/#server | grep -oP 'teamspeak3-server_linux_arm64-\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
   if [[ "${RELEASE}" != "$(cat ~/.teamspeak-server 2>/dev/null)" ]] || [[ ! -f ~/.teamspeak-server ]]; then
     msg_info "Stopping Service"
     systemctl stop teamspeak-server
     msg_ok "Stopped Service"
 
     msg_info "Updating Teamspeak Server"
-    curl -fsSL "https://files.teamspeak-services.com/releases/server/${RELEASE}/teamspeak3-server_linux_amd64-${RELEASE}.tar.bz2" -o ts3server.tar.bz2
+    curl -fsSL "https://files.teamspeak-services.com/releases/server/${RELEASE}/teamspeak3-server_linux_arm64-${RELEASE}.tar.bz2" -o ts3server.tar.bz2
     tar -xf ./ts3server.tar.bz2
-    cp -ru teamspeak3-server_linux_amd64/* /opt/teamspeak-server/
+    cp -ru teamspeak3-server_linux_arm64/* /opt/teamspeak-server/
     rm -f ~/ts3server.tar.bz*
     echo "${RELEASE}" >~/.teamspeak-server
     msg_ok "Updated Teamspeak Server"

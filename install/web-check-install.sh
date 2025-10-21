@@ -49,7 +49,7 @@ Types: deb
 URIs: http://dl.google.com/linux/chrome/deb/
 Suites: stable
 Components: main
-Architectures: amd64
+Architectures: arm64
 Signed-By: /usr/share/keyrings/google-chrome-keyring.gpg
 EOF
 $STD apt update

@@ -69,7 +69,7 @@ After=network.target
 Type=simple
 User=crafty
 WorkingDirectory=/opt/crafty-controller/crafty/crafty-4
-Environment=PATH=/usr/lib/jvm/temurin-21-jre-amd64/bin:/opt/crafty-controller/crafty/.venv/bin:$PATH
+Environment=PATH=/usr/lib/jvm/temurin-21-jre-arm64/bin:/opt/crafty-controller/crafty/.venv/bin:$PATH
 ExecStart=/opt/crafty-controller/crafty/.venv/bin/python3 main.py -d
 Restart=on-failure
 

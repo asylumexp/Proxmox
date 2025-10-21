@@ -34,7 +34,7 @@ function update_script() {
     systemctl stop lidarr
     msg_ok "Service stopped"
 
-    fetch_and_deploy_gh_release "lidarr" "Lidarr/Lidarr" "prebuild" "latest" "/opt/Lidarr" "Lidarr.master*linux-core-x64.tar.gz"
+    fetch_and_deploy_gh_release "lidarr" "Lidarr/Lidarr" "prebuild" "latest" "/opt/Lidarr" "Lidarr.master*linux-core-arm64.tar.gz"
     chmod 775 /opt/Lidarr
 
     msg_info "Starting service"

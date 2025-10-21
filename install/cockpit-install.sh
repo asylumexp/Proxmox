@@ -48,7 +48,7 @@ Types: deb
 URIs: https://repo.45drives.com/enterprise/debian
 Suites: bookworm
 Components: main
-Architectures: amd64
+Architectures: arm64
 Signed-By: /usr/share/keyrings/45drives-archive-keyring.gpg
 EOF
 

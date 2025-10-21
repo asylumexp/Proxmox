@@ -38,9 +38,9 @@ function update_script() {
       cd /opt
       RELEASE=$(curl -fsSL https://api.github.com/repos/caddyserver/xcaddy/releases/latest | grep "tag_name" | awk -F '"' '{print $4}')
       VERSION="${RELEASE#v}"
-      curl -fsSL "https://github.com/caddyserver/xcaddy/releases/download/${RELEASE}/xcaddy_${VERSION}_linux_amd64.deb" -o "xcaddy_${VERSION}_linux_amd64.deb"
-      $STD dpkg -i "xcaddy_${VERSION}_linux_amd64.deb"
-      rm -f "xcaddy_${VERSION}_linux_amd64.deb"
+      curl -fsSL "https://github.com/caddyserver/xcaddy/releases/download/${RELEASE}/xcaddy_${VERSION}_linux_arm64.deb" -o "xcaddy_${VERSION}_linux_arm64.deb"
+      $STD dpkg -i "xcaddy_${VERSION}_linux_arm64.deb"
+      rm -f "xcaddy_${VERSION}_linux_arm64.deb"
       $STD xcaddy build
       msg_ok "Updated xCaddy"
    fi

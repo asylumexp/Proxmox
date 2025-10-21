@@ -23,7 +23,7 @@ $STD apt install -y \
   openssh-server
 msg_ok "Installed Dependencies"
 
-fetch_and_deploy_gh_release "teddycloud" "toniebox-reverse-engineering/teddycloud" "prebuild" "latest" "/opt/teddycloud" "teddycloud.amd64.release*.zip"
+fetch_and_deploy_gh_release "teddycloud" "toniebox-reverse-engineering/teddycloud" "prebuild" "latest" "/opt/teddycloud" "teddycloud.arm64.release*.zip"
 
 msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/teddycloud.service

@@ -33,7 +33,7 @@ function update_script() {
     systemctl stop mediamtx
     msg_ok "Service stopped"
 
-    fetch_and_deploy_gh_release "mediamtx" "bluenviron/mediamtx" "prebuild" "latest" "/opt/mediamtx" "mediamtx*linux_amd64.tar.gz"
+    fetch_and_deploy_gh_release "mediamtx" "bluenviron/mediamtx" "prebuild" "latest" "/opt/mediamtx" "mediamtx*linux_arm64.tar.gz"
 
     msg_info "Starting service"
     systemctl start mediamtx

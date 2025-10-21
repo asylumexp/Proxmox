@@ -34,7 +34,7 @@ function update_script() {
 
     mkdir -p /opt/backup/
     mv /opt/configarr/{config.yml,secrets.yml,.env} /opt/backup/
-    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "configarr" "raydak-labs/configarr" "prebuild" "latest" "/opt/configarr" "configarr-linux-x64.tar.xz"
+    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "configarr" "raydak-labs/configarr" "prebuild" "latest" "/opt/configarr" "configarr-linux-arm64.tar.xz"
     mv /opt/backup/{config.yml,secrets.yml,.env} /opt/configarr/
     rm -rf /opt/backup
 

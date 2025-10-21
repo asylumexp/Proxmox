@@ -34,7 +34,7 @@ function update_script() {
     msg_ok "Service stopped"
 
     rm -rf /usr/local/bin/gitea
-    fetch_and_deploy_gh_release "gitea" "go-gitea/gitea" "singlefile" "latest" "/usr/local/bin" "gitea-*-linux-amd64"
+    fetch_and_deploy_gh_release "gitea" "go-gitea/gitea" "singlefile" "latest" "/usr/local/bin" "gitea-*-linux-arm64"
     chmod +x /usr/local/bin/gitea
 
     msg_info "Starting service"

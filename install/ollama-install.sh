@@ -30,28 +30,6 @@ rm -f "$temp_file"
 set -o pipefail
 msg_ok "Installed Golang"
 
-msg_info "Setting up Intel® Repositories"
-mkdir -p /usr/share/keyrings
-curl -fsSL https://repositories.intel.com/gpu/intel-graphics.key | gpg --dearmor -o /usr/share/keyrings/intel-graphics.gpg
-cat <<EOF >/etc/apt/sources.list.d/intel-gpu.sources
-Types: deb
-URIs: https://repositories.intel.com/gpu/ubuntu
-Suites: jammy
-Components: client
-Architectures: amd64 i386
-Signed-By: /usr/share/keyrings/intel-graphics.gpg
-EOF
-curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor -o /usr/share/keyrings/oneapi-archive-keyring.gpg
-cat <<EOF >/etc/apt/sources.list.d/oneAPI.sources
-Types: deb
-URIs: https://apt.repos.intel.com/oneapi
-Suites: all
-Components: main
-Signed-By: /usr/share/keyrings/oneapi-archive-keyring.gpg
-EOF
-$STD apt update
-msg_ok "Set up Intel® Repositories"
-
 msg_info "Setting Up Hardware Acceleration"
 $STD apt-get -y install {va-driver-all,ocl-icd-libopencl1,vainfo}
 if [[ "$CTTYPE" == "0" ]]; then

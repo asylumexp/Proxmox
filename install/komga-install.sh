@@ -35,7 +35,7 @@ After=syslog.target network.target
 [Service]
 Type=simple
 WorkingDirectory=/opt/komga/
-Environment=LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
+Environment=LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu
 ExecStart=/usr/bin/java --enable-native-access=ALL-UNNAMED -jar -Xmx2g komga.jar
 TimeoutStopSec=20
 KillMode=process

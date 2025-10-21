@@ -20,11 +20,11 @@ $STD apk add --no-cache \
   libc6-compat
 msg_ok "Installed dependencies"
 
-RELEASE=$(curl -fsSL https://teamspeak.com/en/downloads/#server | sed -n 's/.*teamspeak3-server_linux_amd64-\([0-9.]\+\).*/\1/p' | head -1)
+RELEASE=$(curl -fsSL https://teamspeak.com/en/downloads/#server | sed -n 's/.*teamspeak3-server_linux_arm64-\([0-9.]\+\).*/\1/p' | head -1)
 msg_info "Installing Teamspeak Server v${RELEASE}"
 mkdir -p /opt/teamspeak-server
 cd /opt/teamspeak-server
-curl -fsSL "https://files.teamspeak-services.com/releases/server/${RELEASE}/teamspeak3-server_linux_amd64-${RELEASE}.tar.bz2" -o ts3server.tar.bz2
+curl -fsSL "https://files.teamspeak-services.com/releases/server/${RELEASE}/teamspeak3-server_linux_arm64-${RELEASE}.tar.bz2" -o ts3server.tar.bz2
 tar xf ts3server.tar.bz2 --strip-components=1
 mkdir -p logs data lib
 mv *.so lib

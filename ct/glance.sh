@@ -34,7 +34,7 @@ function update_script() {
     msg_ok "Stopped Service"
 
     rm -f /opt/glance/glance
-    fetch_and_deploy_gh_release "glance" "glanceapp/glance" "prebuild" "latest" "/opt/glance" "glance-linux-amd64.tar.gz"
+    fetch_and_deploy_gh_release "glance" "glanceapp/glance" "prebuild" "latest" "/opt/glance" "glance-linux-arm64.tar.gz"
 
     msg_info "Starting Service"
     systemctl start glance

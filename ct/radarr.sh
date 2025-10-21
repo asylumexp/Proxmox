@@ -35,7 +35,7 @@ function update_script() {
     msg_ok "Stopped Service"
 
     rm -rf /opt/Radarr
-    fetch_and_deploy_gh_release "Radarr" "Radarr/Radarr" "prebuild" "latest" "/opt/Radarr" "Radarr.master*linux-core-x64.tar.gz"
+    fetch_and_deploy_gh_release "Radarr" "Radarr/Radarr" "prebuild" "latest" "/opt/Radarr" "Radarr.master*linux-core-arm64.tar.gz"
     chmod 775 /opt/Radarr
 
     msg_info "Starting Service"

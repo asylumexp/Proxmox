@@ -32,7 +32,7 @@ function update_script() {
     systemctl stop ipfs
     msg_ok "Stopped service"
 
-    fetch_and_deploy_gh_release "kubo" "ipfs/kubo" "prebuild" "latest" "/usr/local/kubo" "kubo*linux-amd64.tar.gz"
+    fetch_and_deploy_gh_release "kubo" "ipfs/kubo" "prebuild" "latest" "/usr/local/kubo" "kubo*linux-arm64.tar.gz"
 
     msg_info "Starting service"
     systemctl start ipfs

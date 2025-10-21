@@ -33,7 +33,7 @@ function update_script() {
     systemctl stop autobrr
     msg_ok "Stopped Service"
 
-    fetch_and_deploy_gh_release "autobrr" "autobrr/autobrr" "prebuild" "latest" "/usr/local/bin" "autobrr_*_linux_x86_64.tar.gz"
+    fetch_and_deploy_gh_release "autobrr" "autobrr/autobrr" "prebuild" "latest" "/usr/local/bin" "autobrr_*_linux_arm64.tar.gz"
 
     msg_info "Starting Service"
     systemctl start autobrr

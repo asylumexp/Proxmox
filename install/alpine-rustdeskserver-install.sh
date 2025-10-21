@@ -16,9 +16,9 @@ update_os
 RELEASE=$(curl -s https://api.github.com/repos/rustdesk/rustdesk-server/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
 msg_info "Installing RustDesk Server v${RELEASE}"
 temp_file1=$(mktemp)
-curl -fsSL "https://github.com/rustdesk/rustdesk-server/releases/download/${RELEASE}/rustdesk-server-linux-amd64.zip" -o "$temp_file1"
+curl -fsSL "https://github.com/rustdesk/rustdesk-server/releases/download/${RELEASE}/rustdesk-server-linux-arm64.zip" -o "$temp_file1"
 $STD unzip "$temp_file1"
-mv amd64 /opt/rustdesk-server
+mv arm64 /opt/rustdesk-server
 mkdir -p /root/.config/rustdesk
 cd /opt/rustdesk-server
 ./rustdesk-utils genkeypair > /tmp/rustdesk_keys.txt
@@ -33,7 +33,7 @@ msg_ok "Installed RustDesk Server v${RELEASE}"
 APIRELEASE=$(curl -s https://api.github.com/repos/lejianwen/rustdesk-api/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 msg_info "Installing RustDesk API v${APIRELEASE}"
 temp_file2=$(mktemp)
-curl -fsSL "https://github.com/lejianwen/rustdesk-api/releases/download/v${APIRELEASE}/linux-amd64.tar.gz" -o "$temp_file2"
+curl -fsSL "https://github.com/lejianwen/rustdesk-api/releases/download/v${APIRELEASE}/linux-arm64.tar.gz" -o "$temp_file2"
 $STD tar zxvf "$temp_file2"
 mv release /opt/rustdesk-api
 cd /opt/rustdesk-api
