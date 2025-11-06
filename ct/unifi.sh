@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source <(curl -fsSL https://raw.githubusercontent.com/andrzejpolis/Proxmox/refs/heads/patch-1/misc/build.func)
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/build.func)
 # Copyright (c) 2021-2025 tteck
 # Author: tteck (tteckster)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
