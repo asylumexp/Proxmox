@@ -38,16 +38,8 @@ if ! grep -q -m1 'avx[^ ]*' /proc/cpuinfo; then
     curl -fsSL "https://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl1.1_1.1.1w-0+deb11u4_arm64.deb" -o "libssl1.1_1.1.1w-0+deb11u4_arm64.deb"
     $STD dpkg -i libssl1.1_1.1.1w-0+deb11u4_arm64.deb
   fi
-  curl -fsSL "https://www.mongodb.org/static/pgp/server-4.4.asc" | gpg --dearmor -o /usr/share/keyrings/mongodb-server-4.4.gpg
-  cat <<EOF | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.sources >/dev/null
-Types: deb
-URIs: https://repo.mongodb.org/apt/debian
-Suites: buster/mongodb-org/4.4
-Components: main
-Signed-By: /usr/share/keyrings/mongodb-server-4.4.gpg
-EOF
-  $STD apt update
-  $STD apt install -y mongodb-org
+  curl -fsSL "https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/4.4/multiverse/binary-arm64/mongodb-org-server_4.4.18_arm64.deb" -o "mongodb-org-server_4.4.18_arm64.deb"
+  $STD dpkg -i mongodb-org-server_4.4.18_arm64.deb
 else
   msg_info "Installing MongoDB 7.0"
   curl -fsSL "https://www.mongodb.org/static/pgp/server-7.0.asc" | gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
