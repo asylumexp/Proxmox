@@ -26,13 +26,13 @@ function update_script() {
 
   if [[ ! -f /etc/itsm-ng/config_db.php ]]; then
     msg_error "No ${APP} Installation Found!"
-    exit 1
+    exit
   fi
 
   msg_info "Updating ${APP} LXC"
   $STD apt-get update
   $STD apt-get -y upgrade
-  msg_ok "Updated Successfully"
+  msg_ok "Updated successfully!"
 
   exit
 }

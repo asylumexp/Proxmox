@@ -24,15 +24,19 @@ $STD apt-get install -y chromium-common
 $STD apt-mark hold chromium
 msg_ok "Installed Dependencies"
 
-msg_info "Updating Python3"
-$STD apt-get install -y \
-  python3 \
-  python3-dev \
-  python3-pip
-rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
-msg_ok "Updated Python3"
+msg_info "Installing Chrome"
+setup_deb822_repo \
+  "google-chrome" \
+  "https://dl.google.com/linux/linux_signing_key.pub" \
+  "https://dl.google.com/linux/chrome/deb/" \
+  "stable"
+$STD apt update
+$STD apt install -y google-chrome-stable
+# remove google-chrome.list added by google-chrome-stable
+rm /etc/apt/sources.list.d/google-chrome.list
+msg_ok "Installed Chrome"
 
-fetch_and_deploy_gh_release "flaresolverr" "FlareSolverr/FlareSolverr" "prebuild" "v3.3.25" "/opt/flaresolverr" "flaresolverr_linux_arm64.tar.gz"
+fetch_and_deploy_gh_release "flaresolverr" "FlareSolverr/FlareSolverr" "prebuild" "v3.4.3" "/opt/flaresolverr" "flaresolverr_linux_arm64.tar.gz"
 
 msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/flaresolverr.service

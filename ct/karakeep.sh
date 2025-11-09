@@ -96,7 +96,7 @@ function update_script() {
     $STD apt-get autoremove -y
     $STD apt-get autoclean -y
     msg_ok "Cleaned"
-    msg_ok "Updated Successfully"
+    msg_ok "Updated successfully!"
   fi
   exit
 }

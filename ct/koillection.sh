@@ -59,7 +59,7 @@ function update_script() {
     msg_info "Cleaning up"
     rm -r /opt/koillection-backup
     msg_ok "Cleaned"
-    msg_ok "Updated Successfully"
+    msg_ok "Updated successfully!"
   fi
   exit
 }

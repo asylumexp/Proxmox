@@ -22,8 +22,8 @@ $STD apt-get install -y openssh-server
 msg_ok "Installed Dependencies"
 
 msg_info "Installing ASP.NET Core Runtime"
-curl -SL -o dotnet.tar.gz https://download.visualstudio.microsoft.com/download/pr/1e449990-2934-47ee-97fb-b78f0e587c98/1c92c33593932f7a86efa5aff18960ed/dotnet-sdk-8.0.204-linux-arm64.tar.gz
-curl -SL -o aspnet.tar.gz https://download.visualstudio.microsoft.com/download/pr/80ec12e5-b26f-466c-a20c-f96772ea709d/606e7203912400b44cb35d6fcecf60bf/aspnetcore-runtime-8.0.4-linux-arm64.tar.gz
+curl -SL -o dotnet.tar.gz https://builds.dotnet.microsoft.com/dotnet/Sdk/9.0.306/dotnet-sdk-9.0.306-linux-arm64.tar.gz
+curl -SL -o aspnet.tar.gz https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/9.0.10/aspnetcore-runtime-9.0.10-linux-arm64.tar.gz
 $STD mkdir -p /usr/share/dotnet
 $STD tar -zxf dotnet.tar.gz -C /usr/share/dotnet
 $STD tar -zxf aspnet.tar.gz -C /usr/share/dotnet
@@ -35,20 +35,15 @@ msg_info "Installing Technitium DNS"
 mkdir -p /opt/technitium/dns
 curl -fsSL "https://download.technitium.com/dns/DnsServerPortable.tar.gz" -o /opt/DnsServerPortable.tar.gz
 $STD tar zxvf /opt/DnsServerPortable.tar.gz -C /opt/technitium/dns/
+rm -f /opt/DnsServerPortable.tar.gz
 echo "${RELEASE}" >~/.technitium
 msg_ok "Installed Technitium DNS"
 
 msg_info "Creating service"
 cp /opt/technitium/dns/systemd.service /etc/systemd/system/technitium.service
-systemctl enable -q --now technitium
+systemctl enable -q --now technitium 
 msg_ok "Service created"
 
 motd_ssh
 customize
-
-msg_info "Cleaning up"
-rm -f /opt/DnsServerPortable.tar.gz
-$STD apt -y autoremove
-$STD apt -y autoclean
-$STD apt -y clean
-msg_ok "Cleaned"
+cleanup_lxc

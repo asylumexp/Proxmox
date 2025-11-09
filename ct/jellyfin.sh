@@ -9,7 +9,7 @@ APP="Jellyfin"
 var_tags="${var_tags:-media}"
 var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-2048}"
-var_disk="${var_disk:-8}"
+var_disk="${var_disk:-16}"
 var_os="${var_os:-ubuntu}"
 var_version="${var_version:-24.04}"
 var_unprivileged="${var_unprivileged:-0}"
@@ -27,11 +27,29 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  msg_info "Updating ${APP} LXC"
-  $STD apt-get update
-  $STD apt-get -y upgrade
-  $STD apt-get -y --with-new-pkgs upgrade jellyfin jellyfin-server
-  msg_ok "Updated ${APP} LXC"
+
+  if ! grep -qEi 'ubuntu' /etc/os-release; then
+    msg_info "Updating Intel Dependencies"
+    rm -f ~/.intel-* || true
+    fetch_and_deploy_gh_release "intel-igc-core-2" "intel/intel-graphics-compiler" "binary" "latest" "" "intel-igc-core-2_*_amd64.deb"
+    fetch_and_deploy_gh_release "intel-igc-opencl-2" "intel/intel-graphics-compiler" "binary" "latest" "" "intel-igc-opencl-2_*_amd64.deb"
+    fetch_and_deploy_gh_release "intel-libgdgmm12" "intel/compute-runtime" "binary" "latest" "" "libigdgmm12_*_amd64.deb"
+    fetch_and_deploy_gh_release "intel-opencl-icd" "intel/compute-runtime" "binary" "latest" "" "intel-opencl-icd_*_amd64.deb"
+    msg_ok "Updated Intel Dependencies"
+  fi
+
+  msg_info "Updating Jellyfin"
+  if ! dpkg -s libjemalloc2 >/dev/null 2>&1; then
+    $STD apt install -y libjemalloc2
+  fi
+  if [[ ! -f /usr/lib/libjemalloc.so ]]; then
+    ln -sf /usr/lib/x86_64-linux-gnu/libjemalloc.so.2 /usr/lib/libjemalloc.so
+  fi
+  $STD apt update
+  $STD apt -y upgrade
+  $STD apt -y --with-new-pkgs upgrade jellyfin jellyfin-server
+  msg_ok "Updated Jellyfin"
+  msg_ok "Updated successfully!"
   exit
 }
 

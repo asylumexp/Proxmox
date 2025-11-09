@@ -3,15 +3,15 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: Slaviša Arežina (tremor021)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
-# Source: https://github.com/StarFleetCPTN/GoMFT
+# Source: https://infisical.com/
 
-APP="GoMFT"
-var_tags="${var_tags:-backup}"
-var_cpu="${var_cpu:-1}"
-var_ram="${var_ram:-512}"
-var_disk="${var_disk:-4}"
+APP="Infisical"
+var_tags="${var_tags:-auth}"
+var_cpu="${var_cpu:-2}"
+var_ram="${var_ram:-2048}"
+var_disk="${var_disk:-6}"
 var_os="${var_os:-debian}"
-var_version="${var_version:-12}"
+var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
@@ -23,23 +23,30 @@ function update_script() {
   header_info
   check_container_storage
   check_container_resources
-
-  if [[ ! -d "/opt/gomft" ]]; then
+  if [[ ! -d /etc/infisical ]]; then
     msg_error "No ${APP} Installation Found!"
     exit
   fi
-  if check_for_gh_release "gomft" "StarFleetCPTN/GoMFT"; then
-    msg_info "Stopping $APP"
-    systemctl stop gomft
-    msg_ok "Stopped $APP"
 
-    fetch_and_deploy_gh_release "gomft" "StarFleetCPTN/GoMFT" "singlefile" "latest" "/opt/gomft" "gomft*linux-arm64"
+  msg_info "Stopping service"
+  $STD infisical-ctl stop
+  msg_ok "Service stopped"
 
-    msg_info "Starting $APP"
-    systemctl start gomft
-    msg_ok "Started $APP"
-    msg_ok "Update Successful"
-  fi
+  msg_info "Creating backup"
+  DB_PASS=$(grep -Po '(?<=^Database Password:\s).*' ~/infisical.creds | head -n1)
+  PGPASSWORD=$DB_PASS pg_dump -U infisical -h localhost -d infisical_db > /opt/infisical_backup.sql
+  msg_ok "Created backup"
+
+  msg_info "Updating Infisical"
+  $STD apt update
+  $STD apt install -y infisical-core
+  $STD infisical-ctl reconfigure
+  msg_ok "Updated Infisical"
+
+  msg_info "Starting service"
+  infisical-ctl start
+  msg_ok "Started service"
+  msg_ok "Updated successfully"
   exit
 }
 
