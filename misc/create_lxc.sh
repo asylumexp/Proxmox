@@ -2,17 +2,17 @@
 
 # Copyright (c) 2021-2025 tteck
 # Author: tteck (tteckster)
-# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
+# License: MIT | https://github.com/the-guong/Proxmox/raw/main/LICENSE
 
 # This sets verbose mode if the global variable is set to "yes"
 # if [ "$VERBOSE" == "yes" ]; then set -x; fi
 
 if command -v curl >/dev/null 2>&1; then
-  source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/core.func)
+  source <(curl -fsSL https://raw.githubusercontent.com/the-guong/Proxmox/main/misc/core.func)
   load_functions
   #echo "(create-lxc.sh) Loaded core.func via curl"
 elif command -v wget >/dev/null 2>&1; then
-  source <(wget -qO- https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/core.func)
+  source <(wget -qO- https://raw.githubusercontent.com/the-guong/Proxmox/main/misc/core.func)
   load_functions
   #echo "(create-lxc.sh) Loaded core.func via wget"
 fi
@@ -305,7 +305,7 @@ if [ -d "/var/lib/vz/template/cache" ]; then
   if [ ! -f "$TEMPLATE_PATH" ]; then
     if [ $PCT_OSTYPE = debian ]; then
       msg_info "Downloading LXC Template"
-      wget -q $(curl -s https://api.github.com/repos/asylumexp/debian-ifupdown2-lxc/releases/latest | grep download | grep debian-$TEMPLATE_VARIANT-arm64-rootfs.tar.xz | cut -d\" -f4) -O "$TEMPLATE_PATH" -q || exit "A problem occurred while downloading the LXC template."
+      wget -q $(curl -s https://api.github.com/repos/the-guong/debian-ifupdown2-lxc/releases/latest | grep download | grep debian-$TEMPLATE_VARIANT-arm64-rootfs.tar.xz | cut -d\" -f4) -O "$TEMPLATE_PATH" -q || exit "A problem occurred while downloading the LXC template."
       msg_ok "Downloaded LXC Template"
     else
       templateurl="https://jenkins.linuxcontainers.org/job/image-$PCT_OSTYPE/architecture=arm64,release=$TEMPLATE_VARIANT,variant=default/lastStableBuild/artifact/rootfs.tar.xz"

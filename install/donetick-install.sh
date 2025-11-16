@@ -2,7 +2,7 @@
 
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: fstof
-# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
+# License: MIT | https://github.com/the-guong/Proxmox/raw/main/LICENSE
 # Source: https://github.com/donetick/donetick
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"

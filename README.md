@@ -1,7 +1,7 @@
 <div align="center">
   <p align="center">
     <a href="#">
-      <img src="https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/images/logo.png" height="100px" />
+      <img src="https://raw.githubusercontent.com/the-guong/Proxmox/main/misc/images/logo.png" height="100px" />
     </a>
   </p>
 </div>
@@ -10,14 +10,14 @@
 
 <p align="center">
   <a href="https://pimox-scripts.com">Website</a> | 
-  <a href="https://github.com/asylumexp/Proxmox/blob/main/.github/CONTRIBUTING.md">Contribute</a> |
-  <a href="https://github.com/asylumexp/Proxmox/blob/main/USER_SUBMITTED_GUIDES.md">Guides</a> |
-  <a href="https://github.com/asylumexp/Proxmox/blob/main/CHANGELOG.md">Changelog</a> |
+  <a href="https://github.com/the-guong/Proxmox/blob/main/.github/CONTRIBUTING.md">Contribute</a> |
+  <a href="https://github.com/the-guong/Proxmox/blob/main/USER_SUBMITTED_GUIDES.md">Guides</a> |
+  <a href="https://github.com/the-guong/Proxmox/blob/main/CHANGELOG.md">Changelog</a> |
   <a href="https://ko-fi.com/D1D7EP4GF">Support (tteck)</a>
 </p>
 
 <p align="center">
-<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/asylumexp/proxmox?style=flat">
+<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/the-guong/proxmox?style=flat">
 
 ## </p>
 

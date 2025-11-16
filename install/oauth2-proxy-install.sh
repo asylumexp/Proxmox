@@ -2,7 +2,7 @@
 
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: bvdberg01
-# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
+# License: MIT | https://github.com/the-guong/Proxmox/raw/main/LICENSE
 # Source: https://github.com/oauth2-proxy/oauth2-proxy/
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"

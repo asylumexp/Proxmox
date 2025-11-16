@@ -2,7 +2,7 @@
 
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: tlissak
-# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
+# License: MIT | https://github.com/the-guong/Proxmox/raw/main/LICENSE
 # Source: https://typesense.org/
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"

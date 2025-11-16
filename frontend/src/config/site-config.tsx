@@ -9,7 +9,7 @@ export const basePath = process.env.BASE_PATH || "";
 
 export const navbarLinks = [
   {
-    href: `https://github.com/asylumexp/Proxmox`,
+    href: `https://github.com/the-guong/Proxmox`,
     event: "Github",
     icon: <FaGithub className="h-4 w-4" />,
     text: "GitHub",
@@ -21,14 +21,14 @@ export const navbarLinks = [
     text: "Discord",
   },
   {
-    href: `https://github.com/asylumexp/Proxmox/blob/main/CHANGELOG.md`,
+    href: `https://github.com/the-guong/Proxmox/blob/main/CHANGELOG.md`,
     event: "Change Log",
     icon: <Scroll className="h-4 w-4" />,
     text: "Changelog",
     mobileHidden: true,
   },
   {
-    href: `https://github.com/asylumexp/Proxmox/discussions`,
+    href: `https://github.com/the-guong/Proxmox/discussions`,
     event: "Discussions",
     icon: <MessagesSquare className="h-4 w-4" />,
     text: "Discussions",

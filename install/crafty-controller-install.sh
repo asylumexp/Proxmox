@@ -2,7 +2,7 @@
 
 # Copyright (c) 2021-2025 community-scripts
 # Author: CrazyWolf13
-# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
+# License: MIT | https://github.com/the-guong/Proxmox/raw/main/LICENSE
 # Source: https://docs.craftycontrol.com/pages/getting-started/installation/linux/
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"

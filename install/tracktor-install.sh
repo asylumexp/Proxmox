@@ -2,7 +2,7 @@
 
 # Copyright (c) 2025 Community Scripts ORG
 # Author: CrazyWolf13
-# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
+# License: MIT | https://github.com/the-guong/Proxmox/raw/main/LICENSE
 # Source: https://tracktor.bytedge.in
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"

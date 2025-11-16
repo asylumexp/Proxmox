@@ -3,7 +3,7 @@
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: MickLesk
 # Adapted from onethree7 (https://github.com/onethree7/proxmox-lxc-privilege-converter)
-# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
+# License: MIT | https://github.com/the-guong/Proxmox/raw/main/LICENSE
 
 if ! command -v curl >/dev/null 2>&1; then
   printf "\r\e[2K%b" '\033[93m Setup Source \033[m' >&2

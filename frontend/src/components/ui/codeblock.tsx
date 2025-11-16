@@ -73,7 +73,7 @@ function handleCopy(type: string, value: string) {
             <div>
               <Button className="text-white">
                 <Link
-                  href={`https://github.com/asylumexp/Proxmox`}
+                  href={`https://github.com/the-guong/Proxmox`}
                   data-umami-event="Star on Github"
                   target="_blank"
                 >

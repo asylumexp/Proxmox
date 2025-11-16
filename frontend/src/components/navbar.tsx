@@ -32,7 +32,7 @@ function Navbar() {
     <>
       <div
         className={`fixed left-0 top-0 z-50 flex w-screen justify-center px-4 xl:px-0 ${isScrolled ? "glass border-b bg-background/50" : ""
-        }`}
+          }`}
       >
         <div className="flex h-20 w-full max-w-[1440px] items-center justify-between sm:flex-row">
           <Link
@@ -57,7 +57,7 @@ function Navbar() {
             </div>
             <div className="flex sm:gap-2">
               <CommandMenu />
-              <GitHubStarsButton username="asylumexp" repo="Proxmox" className="hidden md:flex" />
+              <GitHubStarsButton username="the-guong" repo="Proxmox" className="hidden md:flex" />
               {navbarLinks.map(({ href, event, icon, text, mobileHidden }) => (
                 <TooltipProvider key={event}>
                   <Tooltip delayDuration={100}>

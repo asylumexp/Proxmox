@@ -11,12 +11,12 @@ import {
 import { Button } from "@/components/ui/button";
 
 function generateInstallSourceUrl(slug: string) {
-  const baseUrl = `https://raw.githubusercontent.com/asylumexp/Proxmox/main`;
+  const baseUrl = `https://raw.githubusercontent.com/the-guong/Proxmox/main`;
   return `${baseUrl}/install/${slug}-install.sh`;
 }
 
 function generateSourceUrl(slug: string, type: string) {
-  const baseUrl = `https://raw.githubusercontent.com/asylumexp/Proxmox/main`;
+  const baseUrl = `https://raw.githubusercontent.com/the-guong/Proxmox/main`;
 
   switch (type) {
     case "vm":
@@ -33,7 +33,7 @@ function generateSourceUrl(slug: string, type: string) {
 }
 
 function generateUpdateUrl(slug: string) {
-  const baseUrl = `https://raw.githubusercontent.com/asylumexp/Proxmox/main`;
+  const baseUrl = `https://raw.githubusercontent.com/the-guong/Proxmox/main`;
   return `${baseUrl}/ct/${slug}.sh`;
 }
 

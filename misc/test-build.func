@@ -1,7 +1,7 @@
 # Copyright (c) 2021-2025 tteck
 # Author: tteck (tteckster)
 # License: MIT
-# https://github.com/asylumexp/Proxmox/raw/main/LICENSE
+# https://github.com/the-guong/Proxmox/raw/main/LICENSE
 
 variables() {
   NSAPP=$(echo ${APP,,} | tr -d ' ')                # This function sets the NSAPP variable by converting the value of the APP variable to lowercase and removing any spaces.
@@ -13,7 +13,7 @@ variables() {
   RANDOM_UUID="$(cat /proc/sys/kernel/random/uuid)" # generates a random UUID and sets it to the RANDOM_UUID variable.
 }
 
-source <(curl -s https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/api.func)
+source <(curl -s https://raw.githubusercontent.com/the-guong/Proxmox/main/misc/api.func)
 
 # This function sets various color variables using ANSI escape codes for formatting text in the terminal.
 color() {
@@ -67,7 +67,7 @@ catch_errors() {
 
 # This function is called when an error occurs. It receives the exit code, line number, and command that caused the error, and displays an error message.
 error_handler() {
-  source /dev/stdin <<<$(wget -qLO - https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/api.func)
+  source /dev/stdin <<<$(wget -qLO - https://raw.githubusercontent.com/the-guong/Proxmox/main/misc/api.func)
   if [ -n "$SPINNER_PID" ] && ps -p $SPINNER_PID >/dev/null; then kill $SPINNER_PID >/dev/null; fi
   printf "\e[?25h"
   local exit_code="$?"
@@ -249,7 +249,7 @@ maxkeys_check() {
 arch_check() {
   if [ "$(dpkg --print-architecture)" != "arm64" ]; then
     echo -e "\n ${INFO}${YWB}This script will not work on non arm64 systems! \n"
-    echo -e "\n ${YWB}Visit https://github.com/asylumexp/Proxmox for AMD64 support. \n"
+    echo -e "\n ${YWB}Visit https://github.com/the-guong/Proxmox for AMD64 support. \n"
     echo -e "Exiting..."
     sleep 2
     exit
@@ -289,7 +289,7 @@ update_motd_ip() {
 # Function to download & save header files
 get_header() {
     local app_name=$(echo "${APP,,}" | tr -d ' ')
-    local header_url="https://raw.githubusercontent.com/asylumexp/Proxmox/main/ct/headers/${app_name}"
+    local header_url="https://raw.githubusercontent.com/the-guong/Proxmox/main/ct/headers/${app_name}"
     local local_header_path="/usr/local/community-scripts/headers/${app_name}"
 
     mkdir -p "$(dirname "$local_header_path")"
@@ -1007,9 +1007,9 @@ build_container() {
   TEMP_DIR=$(mktemp -d)
   pushd $TEMP_DIR >/dev/null
   if [ "$var_os" == "alpine" ]; then
-    export FUNCTIONS_FILE_PATH="$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/alpine-install.func)"
+    export FUNCTIONS_FILE_PATH="$(curl -fsSL https://raw.githubusercontent.com/the-guong/Proxmox/main/misc/alpine-install.func)"
   else
-    export FUNCTIONS_FILE_PATH="$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/install.func)"
+    export FUNCTIONS_FILE_PATH="$(curl -fsSL https://raw.githubusercontent.com/the-guong/Proxmox/main/misc/install.func)"
   fi
   export RANDOM_UUID="$RANDOM_UUID"
   export CACHER="$APT_CACHER"
@@ -1041,7 +1041,7 @@ build_container() {
     $PW
   "
   # This executes create_lxc.sh and creates the container and .conf file
-  bash -c "$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/ct/create_lxc.sh)" || exit $?
+  bash -c "$(curl -fsSL https://raw.githubusercontent.com/the-guong/Proxmox/main/ct/create_lxc.sh)" || exit $?
 
   LXC_CONFIG=/etc/pve/lxc/${CTID}.conf
   if [ "$CT_TYPE" == "0" ]; then
@@ -1103,7 +1103,7 @@ http://dl-cdn.alpinelinux.org/alpine/latest-stable/community
 EOF'
     pct exec "$CTID" -- ash -c "apk add bash >/dev/null"
   fi
-  lxc-attach -n "$CTID" -- bash -c "$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/install/$var_install.sh)" || exit $?
+  lxc-attach -n "$CTID" -- bash -c "$(curl -fsSL https://raw.githubusercontent.com/the-guong/Proxmox/main/install/$var_install.sh)" || exit $?
 
 }
 
@@ -1116,7 +1116,7 @@ description() {
     cat <<EOF
 <div align='center'>
   <a href='https://pimox-scripts.com' target='_blank' rel='noopener noreferrer'>
-    <img src='https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/images/logo-81x112.png' alt='Logo' style='width:81px;height:112px;'/>
+    <img src='https://raw.githubusercontent.com/the-guong/Proxmox/main/misc/images/logo-81x112.png' alt='Logo' style='width:81px;height:112px;'/>
   </a>
 
   <h2 style='font-size: 24px; margin: 20px 0;'>${APP} LXC</h2>
@@ -1129,15 +1129,15 @@ description() {
   
   <span style='margin: 0 10px;'>
     <i class="fa fa-github fa-fw" style="color: #f5f5f5;"></i>
-    <a href='https://github.com/asylumexp/Proxmox' target='_blank' rel='noopener noreferrer' style='text-decoration: none; color: #00617f;'>GitHub</a>
+    <a href='https://github.com/the-guong/Proxmox' target='_blank' rel='noopener noreferrer' style='text-decoration: none; color: #00617f;'>GitHub</a>
   </span>
   <span style='margin: 0 10px;'>
     <i class="fa fa-comments fa-fw" style="color: #f5f5f5;"></i>
-    <a href='https://github.com/asylumexp/Proxmox/discussions' target='_blank' rel='noopener noreferrer' style='text-decoration: none; color: #00617f;'>Discussions</a>
+    <a href='https://github.com/the-guong/Proxmox/discussions' target='_blank' rel='noopener noreferrer' style='text-decoration: none; color: #00617f;'>Discussions</a>
   </span>
   <span style='margin: 0 10px;'>
     <i class="fa fa-exclamation-circle fa-fw" style="color: #f5f5f5;"></i>
-    <a href='https://github.com/asylumexp/Proxmox/issues' target='_blank' rel='noopener noreferrer' style='text-decoration: none; color: #00617f;'>Issues</a>
+    <a href='https://github.com/the-guong/Proxmox/issues' target='_blank' rel='noopener noreferrer' style='text-decoration: none; color: #00617f;'>Issues</a>
   </span>
 </div>
 EOF

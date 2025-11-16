@@ -1,0 +1,32 @@
+{
+    "name": "Proxmox — Shell Dev Container (prebuilt)",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "workspaceFolder": "/workspaces/Proxmox",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/Proxmox,type=bind,consistency=cached",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "eamodio.gitlens",
+                "ms-vscode.cpptools",
+                "timonwong.shellcheck",
+                "foxundermoon.shell-format"
+            ],
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash",
+                "editor.formatOnSave": true
+            }
+        }
+    },
+    "postCreateCommand": "echo 'Devcontainer ready: shell tooling installed.'",
+    "remoteUser": "vscode",
+    "forwardPorts": [
+        8000,
+        8080
+    ],
+    "mounts": [
+        "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    ]
+}

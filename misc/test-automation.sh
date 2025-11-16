@@ -2,7 +2,7 @@
 
 # Copyright (c) 2021-2025 tteck
 # Author: tteck (tteckster)
-# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
+# License: MIT | https://github.com/the-guong/Proxmox/raw/main/LICENSE
 # Automated Container Testing Script
 
 set -eEuo pipefail
@@ -363,7 +363,7 @@ ORIGINAL_SCRIPT="ORIGINAL_SCRIPT_PATH"
 
 # Create temp file with modified source
 TEMP_SCRIPT=$(mktemp)
-sed 's|https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/build.func|file://'"${SCRIPT_DIR}"'/misc/auto-build.func|g' "$ORIGINAL_SCRIPT" > "$TEMP_SCRIPT"
+sed 's|https://raw.githubusercontent.com/the-guong/Proxmox/main/misc/build.func|file://'"${SCRIPT_DIR}"'/misc/auto-build.func|g' "$ORIGINAL_SCRIPT" > "$TEMP_SCRIPT"
 
 # Execute the modified script
 bash "$TEMP_SCRIPT"
@@ -423,7 +423,7 @@ test_script() {
     
     # Temporarily replace build.func reference in script
     TEMP_SCRIPT=$(mktemp)
-    sed 's|source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/build.func)|source misc/auto-build.func|g' "${script_path}" > "$TEMP_SCRIPT"
+    sed 's|source <(curl -fsSL https://raw.githubusercontent.com/the-guong/Proxmox/main/misc/build.func)|source misc/auto-build.func|g' "${script_path}" > "$TEMP_SCRIPT"
     
     # Ensure child uses our allocated CTID
     export var_ctid="${next_id}"

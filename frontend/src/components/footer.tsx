@@ -14,7 +14,7 @@ export default function Footer() {
             Website built by the community. The source code is available on
             {" "}
             <Link
-              href="https://github.com/asylumexp/Proxmox/tree/main/frontend"
+              href="https://github.com/the-guong/Proxmox/tree/main/frontend"
               target="_blank"
               rel="noreferrer"
               className="font-semibold underline-offset-2 duration-300 hover:underline"

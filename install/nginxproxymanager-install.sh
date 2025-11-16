@@ -2,7 +2,7 @@
 
 # Copyright (c) 2021-2025 Community-Scripts ORG
 # Author: tteck (tteckster) | Co-Author: CrazyWolf13
-# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
+# License: MIT | https://github.com/the-guong/Proxmox/raw/main/LICENSE
 # Source: https://nginxproxymanager.com/
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
