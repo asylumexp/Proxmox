@@ -11,7 +11,7 @@ var_cpu="${var_cpu:-1}"
 var_ram="${var_ram:-512}"
 var_disk="${var_disk:-2}"
 var_os="${var_os:-debian}"
-var_version="${var_version:-12}"
+var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
 
 header_info "$APP"
@@ -20,19 +20,29 @@ color
 catch_errors
 
 function update_script() {
-   header_info
-   check_container_storage
-   check_container_resources
-   if [[ ! -f /etc/apt/sources.list.d/grafana.list ]]; then
-      msg_error "No ${APP} Installation Found!"
-      exit
-   fi
+  header_info
+  check_container_storage
+  check_container_resources
 
-   msg_info "Updating ${APP}"
-   $STD apt-get update
-   $STD apt-get -y upgrade
-   msg_ok "Updated successfully!"
-   exit
+  if ! dpkg -s grafana >/dev/null 2>&1; then
+    msg_error "No ${APP} Installation Found!"
+    exit 1
+  fi
+
+  if [[ -f /etc/apt/sources.list.d/grafana.list ]] || [[ ! -f /etc/apt/sources.list.d/grafana.sources ]]; then
+    setup_deb822_repo \
+      "grafana" \
+      "https://apt.grafana.com/gpg.key" \
+      "https://apt.grafana.com" \
+      "stable" \
+      "main"
+  fi
+
+  msg_info "Updating Grafana LXC"
+  $STD apt update
+  $STD apt --only-upgrade install -y grafana
+  msg_ok "Updated successfully!"
+  exit
 }
 
 start

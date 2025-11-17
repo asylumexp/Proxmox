@@ -23,9 +23,18 @@ function update_script() {
   header_info
   check_container_storage
   check_container_resources
-  if [[ ! -f /etc/apt/sources.list.d/evcc-stable.list ]]; then
+  if ! command -v evcc >/dev/null 2>&1; then
     msg_error "No ${APP} Installation Found!"
-    exit
+    exit 1
+  fi
+
+  if [[ -f /etc/apt/sources.list.d/evcc-stable.list ]]; then
+    setup_deb822_repo \
+      "evcc-stable" \
+      "https://dl.evcc.io/public/evcc/stable/gpg.EAD5D0E07B0EC0FD.key" \
+      "https://dl.evcc.io/public/evcc/stable/deb/debian/" \
+      "$(get_os_info codename)" \
+      "main"
   fi
   msg_info "Updating evcc LXC"
   $STD apt update
