@@ -20,7 +20,7 @@
       "script": "ct/netvisor.sh",
       "resources": {
         "cpu": 2,
-        "ram": 2048,
+        "ram": 3072,
         "hdd": 6,
         "os": "Debian",
         "version": "13"
@@ -34,6 +34,10 @@
   "notes": [
     {
       "text": "The integrated daemon config is located at `/root/.config/daemon/config.json`",
+      "type": "info"
+    },
+    {
+      "text": "When using a reverse proxy, edit `/opt/netvisor/ui/build/_app/env.js`: add 443 to `PUBLIC_SERVER_PORT` and remove 'default' from `PUBLIC_SERVER_HOSTNAME`.",
       "type": "info"
     }
   ]

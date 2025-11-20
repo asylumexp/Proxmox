@@ -3115,7 +3115,8 @@ function setup_mariadb_db() {
 
   $STD mariadb -u root -e "FLUSH PRIVILEGES;"
 
-  local CREDS_FILE="${MARIADB_DB_CREDS_FILE:-${HOME}/${APPLICATION}.creds}"
+  local app_name="${APPLICATION,,}"
+  local CREDS_FILE="${MARIADB_DB_CREDS_FILE:-${HOME}/${app_name}.creds}"
   {
     echo "MariaDB Credentials"
     echo "Database: $MARIADB_DB_NAME"
@@ -3803,10 +3804,73 @@ function setup_postgresql() {
   local SUITE
   case "$DISTRO_CODENAME" in
   trixie | forky | sid)
+    # For Debian Testing/Unstable, try PostgreSQL repo first, fallback to native packages
     if verify_repo_available "https://apt.postgresql.org/pub/repos/apt" "trixie-pgdg"; then
       SUITE="trixie-pgdg"
+
+      setup_deb822_repo \
+        "pgdg" \
+        "https://www.postgresql.org/media/keys/ACCC4CF8.asc" \
+        "https://apt.postgresql.org/pub/repos/apt" \
+        "$SUITE" \
+        "main"
+
+      if ! $STD apt update; then
+        msg_warn "Failed to update PostgreSQL repository, falling back to native packages"
+        SUITE=""
+      fi
     else
-      SUITE="bookworm-pgdg"
+      SUITE=""
+    fi
+
+    # If no repo or packages not installable, use native Debian packages
+    if [[ -z "$SUITE" ]] || ! apt-cache show "postgresql-${PG_VERSION}" 2>/dev/null | grep -q "Version:"; then
+      msg_info "Using native Debian packages for $DISTRO_CODENAME"
+
+      # Install ssl-cert dependency if available
+      if apt-cache search "^ssl-cert$" 2>/dev/null | grep -q .; then
+        $STD apt install -y ssl-cert 2>/dev/null || true
+      fi
+
+      if ! $STD apt install -y postgresql postgresql-client 2>/dev/null; then
+        msg_error "Failed to install native PostgreSQL packages"
+        return 1
+      fi
+
+      if ! command -v psql >/dev/null 2>&1; then
+        msg_error "PostgreSQL installed but psql command not found"
+        return 1
+      fi
+
+      # Restore database backup if we upgraded from previous version
+      if [[ -n "$CURRENT_PG_VERSION" ]]; then
+        msg_info "Restoring PostgreSQL databases from backup..."
+        $STD runuser -u postgres -- psql </var/lib/postgresql/backup_$(date +%F)_v${CURRENT_PG_VERSION}.sql 2>/dev/null || {
+          msg_warn "Failed to restore database backup - this may be expected for major version upgrades"
+        }
+      fi
+
+      $STD systemctl enable --now postgresql 2>/dev/null || true
+
+      # Get actual installed version
+      INSTALLED_VERSION="$(psql -V 2>/dev/null | awk '{print $3}' | cut -d. -f1)"
+
+      # Add PostgreSQL binaries to PATH
+      if ! grep -q '/usr/lib/postgresql' /etc/environment 2>/dev/null; then
+        echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/'"${INSTALLED_VERSION}"'/bin"' >/etc/environment
+      fi
+
+      cache_installed_version "postgresql" "$INSTALLED_VERSION"
+      msg_ok "Setup PostgreSQL $INSTALLED_VERSION (native)"
+
+      # Install optional modules if specified
+      if [[ -n "$PG_MODULES" ]]; then
+        IFS=',' read -ra MODULES <<<"$PG_MODULES"
+        for module in "${MODULES[@]}"; do
+          $STD apt install -y "postgresql-${INSTALLED_VERSION}-${module}" 2>/dev/null || true
+        done
+      fi
+      return 0
     fi
     ;;
   *)
@@ -3970,7 +4034,8 @@ function setup_postgresql_db() {
   fi
 
   # Save credentials
-  local CREDS_FILE="${PG_DB_CREDS_FILE:-${HOME}/${APPLICATION}.creds}"
+  local app_name="${APPLICATION,,}"
+  local CREDS_FILE="${PG_DB_CREDS_FILE:-${HOME}/${app_name}.creds}"
   {
     echo "PostgreSQL Credentials"
     echo "Database: $PG_DB_NAME"

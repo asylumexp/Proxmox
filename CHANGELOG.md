@@ -10,7 +10,66 @@
 > [!CAUTION]
 Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit the project's popularity for potentially malicious purposes.
 
+## 2025-11-20
+
+## 2025-11-19
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - HotFix: Fix NetVisor env var [@vhsdream](https://github.com/vhsdream) ([#9286](https://github.com/community-scripts/ProxmoxVE/pull/9286))
+    - Jotty: reduce RAM requirement [@vhsdream](https://github.com/vhsdream) ([#9272](https://github.com/community-scripts/ProxmoxVE/pull/9272))
+    - Nginx Proxy Manager: Pin version to v2.13.4 [@tremor021](https://github.com/tremor021) ([#9259](https://github.com/community-scripts/ProxmoxVE/pull/9259))
+
+  - #### ✨ New Features
+
+    - PVE 9.1 version support [@MickLesk](https://github.com/MickLesk) ([#9280](https://github.com/community-scripts/ProxmoxVE/pull/9280))
+    - force disable IPv6 if IPV6_METHOD = none [@MickLesk](https://github.com/MickLesk) ([#9277](https://github.com/community-scripts/ProxmoxVE/pull/9277))
+
+  - #### 💥 Breaking Changes
+
+    - NetVisor: v0.10.0 fixes [@vhsdream](https://github.com/vhsdream) ([#9255](https://github.com/community-scripts/ProxmoxVE/pull/9255))
+
+## 2025-11-18
+
+### 🚀 Updated Scripts
+
+  - librenms: Fix password to short [@michelroegl-brunner](https://github.com/michelroegl-brunner) ([#9236](https://github.com/community-scripts/ProxmoxVE/pull/9236))
+
+  - #### 🐞 Bug Fixes
+
+    - Huntarr: Downgrade Python to 3.12 [@MickLesk](https://github.com/MickLesk) ([#9246](https://github.com/community-scripts/ProxmoxVE/pull/9246))
+    - kasm: fix release fetching [@MickLesk](https://github.com/MickLesk) ([#9244](https://github.com/community-scripts/ProxmoxVE/pull/9244))
+
 ## 2025-11-17
+
+### 🆕 New Scripts
+
+  - Passbolt ([#9226](https://github.com/community-scripts/ProxmoxVE/pull/9226))
+- Domain-Locker ([#9214](https://github.com/community-scripts/ProxmoxVE/pull/9214))
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Domain Monitor: Fix encryption key length in install script [@tremor021](https://github.com/tremor021) ([#9239](https://github.com/community-scripts/ProxmoxVE/pull/9239))
+    - NetVisor: add build deps, increase RAM [@vhsdream](https://github.com/vhsdream) ([#9205](https://github.com/community-scripts/ProxmoxVE/pull/9205))
+    - fix: restart apache2 after installing zabbix config [@AlphaLawless](https://github.com/AlphaLawless) ([#9206](https://github.com/community-scripts/ProxmoxVE/pull/9206))
+
+  - #### ✨ New Features
+
+    - [core]: harmonize app_name for creds [@MickLesk](https://github.com/MickLesk) ([#9224](https://github.com/community-scripts/ProxmoxVE/pull/9224))
+
+  - #### 💥 Breaking Changes
+
+    - Refactor: paperless-ngx (Breaking Change Inside) [@MickLesk](https://github.com/MickLesk) ([#9223](https://github.com/community-scripts/ProxmoxVE/pull/9223))
+
+### 🧰 Maintenance
+
+  - #### 📂 Github
+
+    - github: add verbose mode check to bug report template [@MickLesk](https://github.com/MickLesk) ([#9234](https://github.com/community-scripts/ProxmoxVE/pull/9234))
 
 ## 2025-11-16
 
