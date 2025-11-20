@@ -30,6 +30,7 @@ function update_script() {
   fi
 
   if check_for_gh_release "Radarr" "Radarr/Radarr"; then
+    apt-get install -y libicu76 &>/dev/null
     msg_info "Stopping Service"
     systemctl stop radarr
     msg_ok "Stopped Service"
