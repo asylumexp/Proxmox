@@ -28,6 +28,7 @@ function update_script() {
     exit
   fi
   if check_for_gh_release "bazarr" "morpheus65535/bazarr"; then
+    apt-get install -y libicu76 &>/dev/null
     msg_info "Stopping Service"
     systemctl stop bazarr
     msg_ok "Stopped Service"

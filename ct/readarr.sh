@@ -30,6 +30,7 @@ function update_script() {
   msg_info "Updating $APP LXC"
   $STD apt update
   $STD apt -y upgrade
+  apt-get install -y libicu76 &>/dev/null
   msg_ok "Updated $APP LXC"
   msg_ok "Updated successfully!"
   exit

@@ -28,7 +28,7 @@ function update_script() {
     exit
   fi
   if check_for_gh_release "recyclarr" "recyclarr/recyclarr"; then
-
+    apt-get install -y libicu76 &>/dev/null
     msg_info "Stopping Service"
     systemctl stop recyclarr
     msg_ok "Stopped Service"

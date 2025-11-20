@@ -17,7 +17,8 @@ msg_info "Installing Dependencies"
 $STD apt install -y \
   sqlite3 \
   libchromaprint-tools \
-  mediainfo
+  mediainfo \
+	libicu76
 msg_ok "Installed Dependencies"
 
 fetch_and_deploy_gh_release "lidarr" "Lidarr/Lidarr" "prebuild" "latest" "/opt/Lidarr" "Lidarr.master*linux-core-arm64.tar.gz"

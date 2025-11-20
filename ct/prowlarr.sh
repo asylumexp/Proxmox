@@ -28,6 +28,7 @@ function update_script() {
     exit
   fi
   if check_for_gh_release "prowlarr" "Prowlarr/Prowlarr"; then
+    apt-get install -y libicu76 &>/dev/null
     msg_info "Stopping Service"
     systemctl stop prowlarr
     msg_ok "Stopped Service"

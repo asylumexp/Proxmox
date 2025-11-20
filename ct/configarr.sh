@@ -28,6 +28,7 @@ function update_script() {
     exit
   fi
   if check_for_gh_release "configarr" "raydak-labs/configarr"; then
+    apt-get install -y libicu76 &>/dev/null
     msg_info "Stopping Service"
     systemctl stop configarr-task.timer
     msg_ok "Stopped Service"

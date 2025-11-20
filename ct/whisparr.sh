@@ -30,6 +30,7 @@ function update_script() {
   msg_info "Updating Whisparr"
   $STD apt update
   $STD apt -y upgrade
+	apt-get install -y libicu76 &>/dev/null
   msg_ok "Updated Whisparr"
   msg_ok "Updated successfully!"
   exit

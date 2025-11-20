@@ -27,6 +27,7 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
+  apt-get install -y libicu76 &>/dev/null
   msg_info "Stopping Service"
   systemctl stop sonarr
   msg_ok "Stopped Service"

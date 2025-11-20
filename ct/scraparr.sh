@@ -29,6 +29,7 @@ function update_script() {
     exit
   fi
   if check_for_gh_release "scraparr" "thecfu/scraparr"; then
+	  apt-get install -y libicu76 &>/dev/null
     msg_info "Stopping Services"
     systemctl stop scraparr
     msg_ok "Services Stopped"

@@ -30,6 +30,7 @@ function update_script() {
   fi
 
   if check_for_gh_release "lidarr" "Lidarr/Lidarr"; then
+    apt-get install -y libicu76 &>/dev/null
     msg_info "Stopping service"
     systemctl stop lidarr
     msg_ok "Service stopped"

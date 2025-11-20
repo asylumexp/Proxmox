@@ -32,6 +32,7 @@ function update_script() {
   PYTHON_VERSION="3.12" setup_uv
 
   if check_for_gh_release "huntarr" "plexguide/Huntarr.io"; then
+    apt-get install -y libicu76 &>/dev/null
     msg_info "Stopping Service"
     systemctl stop huntarr
     msg_ok "Stopped Service"

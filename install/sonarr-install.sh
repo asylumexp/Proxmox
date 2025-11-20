@@ -14,7 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt install -y sqlite3
+$STD apt install -y sqlite3 libicu76
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Sonarr v4"
