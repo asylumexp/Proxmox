@@ -82,7 +82,7 @@ function update_script() {
     cd /opt/karakeep/packages/db
     $STD pnpm migrate
     $STD pnpm store prune
-    sed -i "s/^SERVER_VERSION=.*$/SERVER_VERSION=${CHECK_UPDATE_RELEASE}/" /etc/karakeep/karakeep.env
+    sed -i "s/^SERVER_VERSION=.*$/SERVER_VERSION=${CHECK_UPDATE_RELEASE#v}/" /etc/karakeep/karakeep.env
     msg_ok "Updated Karakeep"
 
     msg_info "Starting Services"

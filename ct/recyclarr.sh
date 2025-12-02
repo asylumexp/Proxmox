@@ -28,16 +28,11 @@ function update_script() {
     exit
   fi
   if check_for_gh_release "recyclarr" "recyclarr/recyclarr"; then
-    apt-get install -y libicu76 &>/dev/null
-    msg_info "Stopping Service"
-    systemctl stop recyclarr
-    msg_ok "Stopped Service"
+		apt-get install -y libicu76 &>/dev/null
+    msg_info "Updating ${APP}"
 
     fetch_and_deploy_gh_release "recyclarr" "recyclarr/recyclarr" "prebuild" "latest" "/usr/local/bin" "recyclarr-linux-arm64.tar.xz"
 
-    msg_info "Starting Service"
-    systemctl start recyclarr
-    msg_ok "Started Service"
     msg_ok "Updated successfully!"
   fi
   exit

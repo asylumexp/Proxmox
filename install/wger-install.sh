@@ -44,36 +44,20 @@ msg_ok "Prepared user and directories"
 
 msg_info "Fetching latest wger release"
 temp_dir=$(mktemp -d)
-cd "$temp_dir" || exit 1
-RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest \
-  | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
-curl -fsSL "https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz" -o "${RELEASE}.tar.gz"
-tar xzf "${RELEASE}.tar.gz"
-mv "wger-${RELEASE}" "$WGER_SRC"
-chown -R ${WGER_USER}:${WGER_USER} "$WGER_SRC"
-cd "$WGER_SRC" || exit 1
-msg_ok "Downloaded wger ${RELEASE}"
-
-msg_info "Creating uv virtual environment"
-$STD uv venv "$WGER_VENV"
-chown -R ${WGER_USER}:${WGER_USER} "$WGER_VENV"
-msg_ok "Created uv venv at ${WGER_VENV}"
-
-msg_info "Installing Python dependencies with uv"
-$STD uv pip install --python "${WGER_VENV}/bin/python" -r requirements_prod.txt
-$STD uv pip install --python "${WGER_VENV}/bin/python" -e .
-msg_ok "Installed Python deps"
-
-msg_info "Initialise wger settings & database"
-sudo -u "$WGER_USER" "${WGER_VENV}/bin/wger" create-settings --database-path "${WGER_DB_DIR}/database.sqlite"
-
-sed -i "s#home/wger/src/media#home/wger/media#g" "${WGER_SRC}/settings.py"
-sed -i "/MEDIA_ROOT = '\/home\/wger\/media'/a STATIC_ROOT = '${WGER_STATIC//\//\\/}'" "${WGER_SRC}/settings.py"
-
-sudo -u "$WGER_USER" "${WGER_VENV}/bin/wger" bootstrap
-
-sudo -u "$WGER_USER" "${WGER_VENV}/bin/python" manage.py collectstatic --noinput
-
+cd "$temp_dir" || exit
+RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
+curl -fsSL "https://github.com/wger-project/wger/archive/refs/tags/$RELEASE.tar.gz" -o "$RELEASE.tar.gz"
+tar xzf "$RELEASE".tar.gz
+mv wger-"$RELEASE" /home/wger/src
+cd /home/wger/src || exit
+$STD pip install -r requirements_prod.txt --ignore-installed
+$STD pip install -e .
+$STD wger create-settings --database-path /home/wger/db/database.sqlite
+sed -i "s#home/wger/src/media#home/wger/media#g" /home/wger/src/settings.py
+sed -i "/MEDIA_ROOT = '\/home\/wger\/media'/a STATIC_ROOT = '/home/wger/static'" /home/wger/src/settings.py
+$STD wger bootstrap
+$STD python3 manage.py collectstatic
+rm -rf "$temp_dir"
 echo "${RELEASE}" >/opt/wger_version.txt
 msg_ok "Finished setting up wger"
 
@@ -136,13 +120,4 @@ msg_ok "Created Service"
 
 motd_ssh
 customize
-
-msg_info "Cleaning up"
-rm -rf "$temp_dir"
-$STD apt-get -y autoremove
-$STD apt-get -y autoclean
-$STD apt-get -y clean
-msg_ok "Cleaned"
-
-motd_ssh
-customize
+cleanup_lxc

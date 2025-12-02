@@ -2,8 +2,8 @@
 
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: CrazyWolf13
-# License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
-# Source: https://github.com/CrazyWolf13/domain-locker
+# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# Source: https://github.com/Lissy93/domain-locker
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
