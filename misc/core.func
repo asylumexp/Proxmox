@@ -315,7 +315,7 @@ pve_check() {
 # - Provides link to AMD64-compatible scripts
 # ------------------------------------------------------------------------------
 arch_check() {
-  if [ "$(dpkg --print-architecture)" != "amd64" ]; then
+  if [ "$(dpkg --print-architecture)" != "arm64" ]; then
     echo -e "\n ${INFO}${YWB}This script will not work on amd64! \n"
     echo -e "\n ${YWB}Visit https://github.com/community-scripts/ProxmoxVE for AMD64 support. \n"
     echo -e "Exiting..."
