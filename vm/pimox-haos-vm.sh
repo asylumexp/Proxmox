@@ -165,8 +165,8 @@ pve_check() {
 }
 
 function arch_check() {
-  if [ "$(dpkg --print-architecture)" != "amd64" ]; then
-    echo -e "\n ${INFO}${YWB}This script will not work on AMD64! \n"
+  if [ "$(dpkg --print-architecture)" != "aarch64" ]; then
+    echo -e "\n ${INFO}${YWB}This script will not work on AMD64! \n"%
     echo -e "Exiting..."
     sleep 2
     exit
