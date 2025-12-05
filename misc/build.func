@@ -3154,6 +3154,99 @@ create_lxc_container() {
     esac
   }
 
+  resolve_template_storage_path() {
+    local storage="$1"
+    local name="$2"
+    local path=""
+
+    path=$(pvesm path "${storage}:vztmpl/${name}" 2>/dev/null || true)
+    if [[ -z "$path" ]]; then
+      local storage_base
+      storage_base=$(awk -v s="$storage" '$1==s {f=1} f && /path/ {print $2; exit}' /etc/pve/storage.cfg)
+      if [[ -n "$storage_base" ]]; then
+        path="${storage_base%/}/template/cache/$name"
+      fi
+    fi
+
+    if [[ -z "$path" ]]; then
+      path="/var/lib/vz/template/cache/$name"
+    fi
+
+    echo "$path"
+  }
+
+  arm64_template_variant() {
+    local os="$1"
+    local version="$2"
+
+    case "$os" in
+    debian)
+      case "$version" in
+      11 | 11.*) echo "bullseye" ;;
+      12 | 12.*) echo "bookworm" ;;
+      13 | 13.*) echo "trixie" ;;
+      *) echo "trixie" ;;
+      esac
+      ;;
+    alpine)
+       echo "3.19"
+      ;;
+    ubuntu)
+      case "$version" in
+      20.04* | focal) echo "focal" ;;
+      24.04* | noble) echo "noble" ;;
+      24.10* | oracular) echo "oracular" ;;
+      *) echo "jammy" ;;
+      esac
+      ;;
+    *)
+      echo ""
+      return 1
+      ;;
+    esac
+  }
+
+  download_arm64_template() {
+    local os="$1"
+    local variant="$2"
+    local dest="$3"
+    local dest_dir
+
+    dest_dir=$(dirname "$dest")
+    mkdir -p "$dest_dir" || {
+      msg_error "Unable to create template directory '$dest_dir'."
+      exit 207
+    }
+
+    if [[ "$os" == "debian" ]]; then
+      local api_url="https://api.github.com/repos/asylumexp/debian-ifupdown2-lxc/releases/latest"
+      local release_json download_url
+      release_json=$(curl -fsSL "$api_url") || {
+        msg_error "Unable to query Debian template release metadata."
+        exit 207
+      }
+      download_url=$(grep -Eo "https://[^\"]*debian-${variant}-arm64-rootfs\.tar\.xz" <<<"$release_json" | head -n1)
+      if [[ -z "$download_url" ]]; then
+        msg_error "Could not find Debian ${variant} ARM64 template download URL."
+        exit 207
+      }
+      msg_info "Downloading Debian ${variant} ARM64 template"
+      if ! wget -q "$download_url" -O "$dest"; then
+        msg_error "A problem occurred while downloading the Debian ARM64 template."
+        exit 208
+      fi
+    else
+      local template_url="https://jenkins.linuxcontainers.org/job/image-${os}/architecture=arm64,release=${variant},variant=default/lastStableBuild/artifact/rootfs.tar.xz"
+      msg_info "Downloading ${os^} ${variant} ARM64 template"
+      if ! wget -q "$template_url" -O "$dest"; then
+        msg_error "A problem occurred while downloading the ${os} ARM64 template."
+        exit 208
+      fi
+    fi
+
+    msg_ok "Downloaded LXC Template"
+  }
+
   # ------------------------------------------------------------------------------
   # Required input variables
   # ------------------------------------------------------------------------------
@@ -3270,263 +3363,40 @@ create_lxc_container() {
   # ------------------------------------------------------------------------------
   # Template discovery & validation
   # ------------------------------------------------------------------------------
-  TEMPLATE_SEARCH="${PCT_OSTYPE}-${PCT_OSVERSION:-}"
-  case "$PCT_OSTYPE" in
-  debian | ubuntu) TEMPLATE_PATTERN="-standard_" ;;
-  alpine | fedora | rocky | centos) TEMPLATE_PATTERN="-default_" ;;
-  *) TEMPLATE_PATTERN="" ;;
-  esac
+  msg_info "Preparing template"
 
-  msg_info "Searching for template '$TEMPLATE_SEARCH'"
-
-  # Build regex patterns outside awk/grep for clarity
-  SEARCH_PATTERN="^${TEMPLATE_SEARCH}"
-
-  mapfile -t LOCAL_TEMPLATES < <(
-    pveam list "$TEMPLATE_STORAGE" 2>/dev/null |
-      awk -v search="${SEARCH_PATTERN}" -v pattern="${TEMPLATE_PATTERN}" '$1 ~ search && $1 ~ pattern {print $1}' |
-      sed 's|.*/||' | sort -t - -k 2 -V
-  )
-
-  pveam update >/dev/null 2>&1 || msg_warn "Could not update template catalog (pveam update failed)."
-
-  msg_ok "Template search completed"
-
-  set +u
-  mapfile -t ONLINE_TEMPLATES < <(pveam available -section system 2>/dev/null | grep -E '\.(tar\.zst|tar\.xz|tar\.gz)$' | awk '{print $2}' | grep -E "${SEARCH_PATTERN}.*${TEMPLATE_PATTERN}" | sort -t - -k 2 -V 2>/dev/null || true)
-  set -u
-
-  ONLINE_TEMPLATE=""
-  [[ ${#ONLINE_TEMPLATES[@]} -gt 0 ]] && ONLINE_TEMPLATE="${ONLINE_TEMPLATES[-1]}"
-
-  if [[ ${#ONLINE_TEMPLATES[@]} -gt 0 ]]; then
-    count=0
-    for idx in "${!ONLINE_TEMPLATES[@]}"; do
-      ((count++))
-      [[ $count -ge 3 ]] && break
-    done
+  CUSTOM_TEMPLATE_VARIANT=$(arm64_template_variant "$PCT_OSTYPE" "${PCT_OSVERSION:-}")
+  if [[ -z "$CUSTOM_TEMPLATE_VARIANT" ]]; then
+    msg_error "No template mapping for ${PCT_OSTYPE} ${PCT_OSVERSION:-latest}"
+    exit 207
   fi
 
-  if [[ ${#LOCAL_TEMPLATES[@]} -gt 0 ]]; then
-    TEMPLATE="${LOCAL_TEMPLATES[-1]}"
-    TEMPLATE_SOURCE="local"
+  TEMPLATE="${PCT_OSTYPE}-${CUSTOM_TEMPLATE_VARIANT}-rootfs.tar.xz"
+  TEMPLATE_PATH="$(resolve_template_storage_path "$TEMPLATE_STORAGE" "$TEMPLATE")"
+  TEMPLATE_SOURCE="custom-arm64"
+
+  if [[ ! -f "$TEMPLATE_PATH" ]]; then
+    download_arm64_template "$PCT_OSTYPE" "$CUSTOM_TEMPLATE_VARIANT" "$TEMPLATE_PATH"
   else
-    TEMPLATE="$ONLINE_TEMPLATE"
-    TEMPLATE_SOURCE="online"
+    msg_ok "Template ${BL}$TEMPLATE${CL} found locally."
   fi
 
-  # If still no template, try to find alternatives
-  if [[ -z "$TEMPLATE" ]]; then
-    echo ""
-    echo "[DEBUG] No template found for ${PCT_OSTYPE} ${PCT_OSVERSION}, searching for alternatives..."
-
-    # Get all available versions for this OS type
-    mapfile -t AVAILABLE_VERSIONS < <(
-      pveam available -section system 2>/dev/null |
-        grep -E '\.(tar\.zst|tar\.xz|tar\.gz)$' |
-        awk -F'\t' '{print $1}' |
-        grep "^${PCT_OSTYPE}-" |
-        sed -E "s/.*${PCT_OSTYPE}-([0-9]+(\.[0-9]+)?).*/\1/" |
-        sort -u -V 2>/dev/null
-    )
-
-    if [[ ${#AVAILABLE_VERSIONS[@]} -gt 0 ]]; then
-      echo ""
-      echo "${BL}Available ${PCT_OSTYPE} versions:${CL}"
-      for i in "${!AVAILABLE_VERSIONS[@]}"; do
-        echo "  [$((i + 1))] ${AVAILABLE_VERSIONS[$i]}"
-      done
-      echo ""
-      read -p "Select version [1-${#AVAILABLE_VERSIONS[@]}] or press Enter to cancel: " choice
-
-      if [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -le ${#AVAILABLE_VERSIONS[@]} ]]; then
-        PCT_OSVERSION="${AVAILABLE_VERSIONS[$((choice - 1))]}"
-        TEMPLATE_SEARCH="${PCT_OSTYPE}-${PCT_OSVERSION}"
-        SEARCH_PATTERN="^${TEMPLATE_SEARCH}-"
-
-        mapfile -t ONLINE_TEMPLATES < <(
-          pveam available -section system 2>/dev/null |
-            grep -E '\.(tar\.zst|tar\.xz|tar\.gz)$' |
-            awk -F'\t' '{print $1}' |
-            grep -E "${SEARCH_PATTERN}.*${TEMPLATE_PATTERN}" |
-            sort -t - -k 2 -V 2>/dev/null || true
-        )
-
-        if [[ ${#ONLINE_TEMPLATES[@]} -gt 0 ]]; then
-          TEMPLATE="${ONLINE_TEMPLATES[-1]}"
-          TEMPLATE_SOURCE="online"
-        else
-          msg_error "No templates available for ${PCT_OSTYPE} ${PCT_OSVERSION}"
-          exit 225
-        fi
-      else
-        msg_custom "🚫" "${YW}" "Installation cancelled"
-        exit 0
-      fi
-    else
-      msg_error "No ${PCT_OSTYPE} templates available at all"
-      exit 225
-    fi
+  if [[ "$(stat -c%s "$TEMPLATE_PATH")" -lt 1000000 ]]; then
+    msg_warn "Template file too small – re-downloading."
+    rm -f "$TEMPLATE_PATH"
+    download_arm64_template "$PCT_OSTYPE" "$CUSTOM_TEMPLATE_VARIANT" "$TEMPLATE_PATH"
   fi
 
-  TEMPLATE_PATH="$(pvesm path $TEMPLATE_STORAGE:vztmpl/$TEMPLATE 2>/dev/null || true)"
-  if [[ -z "$TEMPLATE_PATH" ]]; then
-    TEMPLATE_BASE=$(awk -v s="$TEMPLATE_STORAGE" '$1==s {f=1} f && /path/ {print $2; exit}' /etc/pve/storage.cfg)
-    [[ -n "$TEMPLATE_BASE" ]] && TEMPLATE_PATH="$TEMPLATE_BASE/template/cache/$TEMPLATE"
+  if ! tar -tf "$TEMPLATE_PATH" &>/dev/null; then
+    msg_warn "Template appears corrupted – re-downloading."
+    rm -f "$TEMPLATE_PATH"
+    download_arm64_template "$PCT_OSTYPE" "$CUSTOM_TEMPLATE_VARIANT" "$TEMPLATE_PATH"
   fi
 
-  # If we still don't have a path but have a valid template name, construct it
-  if [[ -z "$TEMPLATE_PATH" && -n "$TEMPLATE" ]]; then
-    TEMPLATE_PATH="/var/lib/vz/template/cache/$TEMPLATE"
-  fi
-
-  [[ -n "$TEMPLATE_PATH" ]] || {
-    if [[ -z "$TEMPLATE" ]]; then
-      msg_error "Template ${PCT_OSTYPE} ${PCT_OSVERSION} not available"
-
-      # Get available versions
-      mapfile -t AVAILABLE_VERSIONS < <(
-        pveam available -section system 2>/dev/null |
-          grep "^${PCT_OSTYPE}-" |
-          sed -E 's/.*'"${PCT_OSTYPE}"'-([0-9]+\.[0-9]+).*/\1/' |
-          grep -E '^[0-9]+\.[0-9]+$' |
-          sort -u -V 2>/dev/null || sort -u
-      )
-
-      if [[ ${#AVAILABLE_VERSIONS[@]} -gt 0 ]]; then
-        echo -e "\n${BL}Available versions:${CL}"
-        for i in "${!AVAILABLE_VERSIONS[@]}"; do
-          echo "  [$((i + 1))] ${AVAILABLE_VERSIONS[$i]}"
-        done
-
-        echo ""
-        read -p "Select version [1-${#AVAILABLE_VERSIONS[@]}] or Enter to exit: " choice
-
-        if [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -le ${#AVAILABLE_VERSIONS[@]} ]]; then
-          export var_version="${AVAILABLE_VERSIONS[$((choice - 1))]}"
-          export PCT_OSVERSION="$var_version"
-          msg_ok "Switched to ${PCT_OSTYPE} ${var_version}"
-
-          # Retry template search with new version
-          TEMPLATE_SEARCH="${PCT_OSTYPE}-${PCT_OSVERSION:-}"
-          SEARCH_PATTERN="^${TEMPLATE_SEARCH}-"
-
-          mapfile -t LOCAL_TEMPLATES < <(
-            pveam list "$TEMPLATE_STORAGE" 2>/dev/null |
-              awk -v search="${SEARCH_PATTERN}" -v pattern="${TEMPLATE_PATTERN}" '$1 ~ search && $1 ~ pattern {print $1}' |
-              sed 's|.*/||' | sort -t - -k 2 -V
-          )
-          mapfile -t ONLINE_TEMPLATES < <(
-            pveam available -section system 2>/dev/null |
-              grep -E '\.(tar\.zst|tar\.xz|tar\.gz)$' |
-              awk -F'\t' '{print $1}' |
-              grep -E "${SEARCH_PATTERN}.*${TEMPLATE_PATTERN}" |
-              sort -t - -k 2 -V 2>/dev/null || true
-          )
-          ONLINE_TEMPLATE=""
-          [[ ${#ONLINE_TEMPLATES[@]} -gt 0 ]] && ONLINE_TEMPLATE="${ONLINE_TEMPLATES[-1]}"
-
-          if [[ ${#LOCAL_TEMPLATES[@]} -gt 0 ]]; then
-            TEMPLATE="${LOCAL_TEMPLATES[-1]}"
-            TEMPLATE_SOURCE="local"
-          else
-            TEMPLATE="$ONLINE_TEMPLATE"
-            TEMPLATE_SOURCE="online"
-          fi
-
-          TEMPLATE_PATH="$(pvesm path $TEMPLATE_STORAGE:vztmpl/$TEMPLATE 2>/dev/null || true)"
-          if [[ -z "$TEMPLATE_PATH" ]]; then
-            TEMPLATE_BASE=$(awk -v s="$TEMPLATE_STORAGE" '$1==s {f=1} f && /path/ {print $2; exit}' /etc/pve/storage.cfg)
-            [[ -n "$TEMPLATE_BASE" ]] && TEMPLATE_PATH="$TEMPLATE_BASE/template/cache/$TEMPLATE"
-          fi
-
-          # If we still don't have a path but have a valid template name, construct it
-          if [[ -z "$TEMPLATE_PATH" && -n "$TEMPLATE" ]]; then
-            TEMPLATE_PATH="/var/lib/vz/template/cache/$TEMPLATE"
-          fi
-
-          [[ -n "$TEMPLATE_PATH" ]] || {
-            msg_error "Template still not found after version change"
-            exit 220
-          }
-        else
-          msg_custom "🚫" "${YW}" "Installation cancelled"
-          exit 1
-        fi
-      else
-        msg_error "No ${PCT_OSTYPE} templates available"
-        exit 220
-      fi
-    fi
-  }
-
-  # Validate that we found a template
-  if [[ -z "$TEMPLATE" ]]; then
-    msg_error "No template found for ${PCT_OSTYPE} ${PCT_OSVERSION}"
-    msg_custom "ℹ️" "${YW}" "Please check:"
-    msg_custom "  •" "${YW}" "Is pveam catalog available? (run: pveam available -section system)"
-    msg_custom "  •" "${YW}" "Does the template exist for your OS version?"
-    exit 225
-  fi
+  msg_ok "Template ${BL}$TEMPLATE${CL} is ready."
 
   msg_ok "Template ${BL}$TEMPLATE${CL} [$TEMPLATE_SOURCE]"
   msg_debug "Resolved TEMPLATE_PATH=$TEMPLATE_PATH"
-
-  NEED_DOWNLOAD=0
-  if [[ ! -f "$TEMPLATE_PATH" ]]; then
-    msg_info "Template not present locally – will download."
-    NEED_DOWNLOAD=1
-  elif [[ ! -r "$TEMPLATE_PATH" ]]; then
-    msg_error "Template file exists but is not readable – check permissions."
-    exit 221
-  elif [[ "$(stat -c%s "$TEMPLATE_PATH")" -lt 1000000 ]]; then
-    if [[ -n "$ONLINE_TEMPLATE" ]]; then
-      msg_warn "Template file too small (<1MB) – re-downloading."
-      NEED_DOWNLOAD=1
-    else
-      msg_warn "Template looks too small, but no online version exists. Keeping local file."
-    fi
-  elif ! tar -tf "$TEMPLATE_PATH" &>/dev/null; then
-    if [[ -n "$ONLINE_TEMPLATE" ]]; then
-      msg_warn "Template appears corrupted – re-downloading."
-      NEED_DOWNLOAD=1
-    else
-      msg_warn "Template appears corrupted, but no online version exists. Keeping local file."
-    fi
-  else
-    $STD msg_ok "Template $TEMPLATE is present and valid."
-  fi
-
-  if [[ "$TEMPLATE_SOURCE" == "local" && -n "$ONLINE_TEMPLATE" && "$TEMPLATE" != "$ONLINE_TEMPLATE" ]]; then
-    msg_warn "Local template is outdated: $TEMPLATE (latest available: $ONLINE_TEMPLATE)"
-    if whiptail --yesno "A newer template is available:\n$ONLINE_TEMPLATE\n\nDo you want to download and use it instead?" 12 70; then
-      TEMPLATE="$ONLINE_TEMPLATE"
-      NEED_DOWNLOAD=1
-    else
-      msg_custom "ℹ️" "${BL}" "Continuing with local template $TEMPLATE"
-    fi
-  fi
-
-  if [[ "$NEED_DOWNLOAD" -eq 1 ]]; then
-    [[ -f "$TEMPLATE_PATH" ]] && rm -f "$TEMPLATE_PATH"
-    for attempt in {1..3}; do
-      msg_info "Attempt $attempt: Downloading template $TEMPLATE to $TEMPLATE_STORAGE"
-      if pveam download "$TEMPLATE_STORAGE" "$TEMPLATE" >/dev/null 2>&1; then
-        msg_ok "Template download successful."
-        break
-      fi
-      if [[ $attempt -eq 3 ]]; then
-        msg_error "Failed after 3 attempts. Please check network access, permissions, or manually run:\n  pveam download $TEMPLATE_STORAGE $TEMPLATE"
-        exit 222
-      fi
-      sleep $((attempt * 5))
-    done
-  fi
-
-  if ! pveam list "$TEMPLATE_STORAGE" 2>/dev/null | grep -q "$TEMPLATE"; then
-    msg_error "Template $TEMPLATE not available in storage $TEMPLATE_STORAGE after download."
-    exit 223
-  fi
 
   # ------------------------------------------------------------------------------
   # Dynamic preflight for Debian 13.x: offer upgrade if available (no hard mins)
@@ -3578,15 +3448,11 @@ create_lxc_container() {
     if [[ ! -s "$TEMPLATE_PATH" || "$(stat -c%s "$TEMPLATE_PATH")" -lt 1000000 ]]; then
       msg_warn "Template file too small or missing – re-downloading."
       rm -f "$TEMPLATE_PATH"
-      pveam download "$TEMPLATE_STORAGE" "$TEMPLATE"
+      download_arm64_template "$PCT_OSTYPE" "$CUSTOM_TEMPLATE_VARIANT" "$TEMPLATE_PATH"
     elif ! tar -tf "$TEMPLATE_PATH" &>/dev/null; then
-      if [[ -n "$ONLINE_TEMPLATE" ]]; then
-        msg_warn "Template appears corrupted – re-downloading."
-        rm -f "$TEMPLATE_PATH"
-        pveam download "$TEMPLATE_STORAGE" "$TEMPLATE"
-      else
-        msg_warn "Template appears corrupted, but no online version exists. Skipping re-download."
-      fi
+      msg_warn "Template appears corrupted – re-downloading."
+      rm -f "$TEMPLATE_PATH"
+      download_arm64_template "$PCT_OSTYPE" "$CUSTOM_TEMPLATE_VARIANT" "$TEMPLATE_PATH"
     fi
 
     # Retry after repair
@@ -3597,7 +3463,7 @@ create_lxc_container() {
         LOCAL_TEMPLATE_PATH="/var/lib/vz/template/cache/$TEMPLATE"
         if [[ ! -f "$LOCAL_TEMPLATE_PATH" ]]; then
           msg_info "Downloading template to local..."
-          pveam download local "$TEMPLATE" >/dev/null 2>&1
+          download_arm64_template "$PCT_OSTYPE" "$CUSTOM_TEMPLATE_VARIANT" "$LOCAL_TEMPLATE_PATH"
         fi
         if ! pct create "$CTID" "local:vztmpl/${TEMPLATE}" $PCT_OPTIONS >>"$LOGFILE" 2>&1; then
           # Local fallback also failed - check for LXC stack version issue
