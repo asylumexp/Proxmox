@@ -3229,7 +3229,7 @@ create_lxc_container() {
       if [[ -z "$download_url" ]]; then
         msg_error "Could not find Debian ${variant} ARM64 template download URL."
         exit 207
-      }
+      fi
       msg_info "Downloading Debian ${variant} ARM64 template"
       if ! wget -q "$download_url" -O "$dest"; then
         msg_error "A problem occurred while downloading the Debian ARM64 template."
