@@ -31,5 +31,10 @@
     "username": null,
     "password": null
   },
-  "notes": []
+  "notes": [
+    {
+      "text": "Show Login Credentials, type `cat ~/valkey.creds` in the LXC console",
+      "type": "info"
+    }
+  ]
 }
