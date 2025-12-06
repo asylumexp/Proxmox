@@ -270,7 +270,6 @@ function extract_xz_with_pv() {
 function default_settings() {
   BRANCH="$stable"
   VMID=$(get_valid_nextid)
-  MACHINE="q35"
   FORMAT=""
   DISK_SIZE="32G"
   HN="haos-${BRANCH}"
@@ -284,7 +283,6 @@ function default_settings() {
   START_VM="yes"
   METHOD="default"
   echo -e "${CONTAINERID}${BOLD}${DGN}Virtual Machine ID: ${BGN}${VMID}${CL}"
-  echo -e "${CONTAINERTYPE}${BOLD}${DGN}Machine Type: ${BGN}q35${CL}"
   echo -e "${DISKSIZE}${BOLD}${DGN}Disk Size: ${BGN}${DISK_SIZE}${CL}"
   echo -e "${HOSTNAME}${BOLD}${DGN}Hostname: ${BGN}${HN}${CL}"
   echo -e "${OS}${BOLD}${DGN}CPU Model: ${BGN}KVM64${CL}"
@@ -328,23 +326,6 @@ function advanced_settings() {
       exit-script
     fi
   done
-
-  if MACH=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "MACHINE TYPE" --radiolist --cancel-button Exit-Script "Choose Machine Type" 10 58 2 \
-    "q35" "Modern (PCIe, UEFI, default)" ON \
-    "i440fx" "Legacy (older compatibility)" OFF \
-    3>&1 1>&2 2>&3); then
-    if [ "$MACH" = "q35" ]; then
-      echo -e "${CONTAINERTYPE}${BOLD}${DGN}Machine Type: ${BGN}q35${CL}"
-      FORMAT=""
-      MACHINE=" -machine q35"
-    else
-      echo -e "${CONTAINERTYPE}${BOLD}${DGN}Machine Type: ${BGN}i440fx${CL}"
-      FORMAT=",efitype=4m"
-      MACHINE=""
-    fi
-  else
-    exit-script
-  fi
 
   if DISK_SIZE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set Disk Size in GiB (e.g., 10, 20)" 8 58 "$DISK_SIZE" --title "DISK SIZE" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
     DISK_SIZE=$(echo "$DISK_SIZE" | tr -d ' ')
@@ -563,7 +544,7 @@ msg_ok "${CL}${BL}${URL}${CL}"
 download_and_validate_xz "$URL" "$CACHE_FILE"
 
 msg_info "Creating Home Assistant OS VM shell"
-qm create "$VMID" -machine q35 -bios ovmf -agent 1 -tablet 0 -localtime 1 ${CPU_TYPE} \
+qm create "$VMID" -bios ovmf -agent 1 -tablet 0 -localtime 1 ${CPU_TYPE} \
   -cores "$CORE_COUNT" -memory "$RAM_SIZE" -name "$HN" -tags community-script \
   -net0 "virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU" -onboot 1 -ostype l26 -scsihw virtio-scsi-pci >/dev/null
 msg_ok "Created VM shell"
