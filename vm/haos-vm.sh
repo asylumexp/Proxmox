@@ -26,8 +26,9 @@ METHOD=""
 NSAPP="homeassistant-os"
 var_os="homeassistant"
 DISK_SIZE="32G"
+CPU_TYPE="-cpu host" # arm64 guests require host CPU model
 
-# Obtener versiones de HAOS para generic-aarch64 (arm64) desde los JSON de canal
+# Get HAOS versions for generic-aarch64 (arm64) from the channel JSONs
 for version in "${VERSIONS[@]}"; do
   eval "$version=$(curl -fsSL https://raw.githubusercontent.com/home-assistant/version/master/${version}.json \
       | sed -n 's/.*"generic-aarch64": *"\([^"]*\)".*/\1/p')"
@@ -275,7 +276,7 @@ function default_settings() {
   FORMAT=""
   DISK_SIZE="32G"
   HN="haos-${BRANCH}"
-  CPU_TYPE=""
+  DISK_CACHE="cache=writethrough,"
   CORE_COUNT="2"
   RAM_SIZE="4096"
   BRG="vmbr0"
@@ -287,7 +288,7 @@ function default_settings() {
   echo -e "${CONTAINERID}${BOLD}${DGN}Virtual Machine ID: ${BGN}${VMID}${CL}"
   echo -e "${DISKSIZE}${BOLD}${DGN}Disk Size: ${BGN}${DISK_SIZE}${CL}"
   echo -e "${HOSTNAME}${BOLD}${DGN}Hostname: ${BGN}${HN}${CL}"
-  echo -e "${OS}${BOLD}${DGN}CPU Model: ${BGN}KVM64${CL}"
+  echo -e "${OS}${BOLD}${DGN}CPU Model: ${BGN}Host${CL}"
   echo -e "${CPUCORE}${BOLD}${DGN}CPU Cores: ${BGN}${CORE_COUNT}${CL}"
   echo -e "${RAMSIZE}${BOLD}${DGN}RAM Size: ${BGN}${RAM_SIZE}${CL}"
   echo -e "${BRIDGE}${BOLD}${DGN}Bridge: ${BGN}${BRG}${CL}"
@@ -371,23 +372,7 @@ function advanced_settings() {
     exit-script
   fi
 
-  if CPU_TYPE1=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "CPU MODEL" --radiolist "Choose CPU Model" --cancel-button Exit-Script 10 58 2 \
-    "KVM64" "Default – safe for migration/compatibility" ON \
-    "Host" "Use host CPU features (faster, no migration)" OFF \
-    3>&1 1>&2 2>&3); then
-    case "$CPU_TYPE1" in
-    Host)
-      echo -e "${OS}${BOLD}${DGN}CPU Model: ${BGN}Host${CL}"
-      CPU_TYPE=" -cpu host"
-      ;;
-    *)
-      echo -e "${OS}${BOLD}${DGN}CPU Model: ${BGN}KVM64${CL}"
-      CPU_TYPE=""
-      ;;
-    esac
-  else
-    exit-script
-  fi
+  echo -e "${OS}${BOLD}${DGN}CPU Model: ${BGN}Host${CL}"
 
   if CORE_COUNT=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Allocate CPU Cores" 8 58 2 --title "CORE COUNT" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
     if [ -z $CORE_COUNT ]; then
@@ -579,7 +564,7 @@ DISK_REF="$(printf '%s\n' "$IMPORT_OUT" | sed -n "s/.*successfully imported disk
 msg_ok "Imported disk (${CL}${BL}${DISK_REF}${CL})"
 
 msg_info "Attaching HAOS disk as scsi0"
-qm set "$VMID" --scsi0 "${DISK_REF},ssd=1,discard=on" >/dev/null
+qm set "$VMID" --scsi0 "${DISK_REF},${DISK_CACHE}ssd=1,discard=on" >/dev/null
 
 msg_info "Setting boot order"
 qm set "$VMID" --boot order=scsi0 --serial0 socket >/dev/null
