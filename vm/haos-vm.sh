@@ -557,24 +557,31 @@ if qm disk import --help >/dev/null 2>&1; then
 else
   IMPORT_CMD=(qm importdisk)
 fi
+
+msg_info "Creating EFI disk"
+qm set "$VMID" --efidisk0 "${STORAGE}:0,efitype=4m,size=64M" >/dev/null
+
+msg_info "Importing HAOS disk (will become disk-1)"
 IMPORT_OUT="$("${IMPORT_CMD[@]}" "$VMID" "$FILE_IMG" "$STORAGE" --format raw 2>&1 || true)"
-DISK_REF="$(printf '%s\n' "$IMPORT_OUT" | sed -n "s/.*successfully imported disk '\([^']\+\)'.*/\1/p" | tr -d "\r\"'")"
+DISK_REF="$(printf '%s\n' "$IMPORT_OUT" | sed -n "s/.*successfully imported disk '\([^']\+\)'.*/\1/p")"
+
 [[ -z "$DISK_REF" ]] && DISK_REF="$(pvesm list "$STORAGE" | awk -v id="$VMID" '$5 ~ ("vm-"id"-disk-") {print $1":"$5}' | sort | tail -n1)"
 [[ -z "$DISK_REF" ]] && {
   msg_error "Unable to determine imported disk reference."
   echo "$IMPORT_OUT"
   exit 1
 }
+
 msg_ok "Imported disk (${CL}${BL}${DISK_REF}${CL})"
+
+msg_info "Attaching HAOS disk as scsi0"
+qm set "$VMID" --scsi0 "${DISK_REF},ssd=1,discard=on" >/dev/null
+
+msg_info "Setting boot order"
+qm set "$VMID" --boot order=scsi0 --serial0 socket >/dev/null
 
 rm -f "$FILE_IMG"
 
-msg_info "Attaching EFI and root disk"
-qm set "$VMID" \
-  --efidisk0 "${STORAGE}:0,efitype=4m" \
-  --scsi0 "${DISK_REF},ssd=1,discard=on" \
-  --boot order=scsi0 \
-  --serial0 socket >/dev/null
 qm set "$VMID" --agent enabled=1 >/dev/null
 msg_ok "Attached EFI and root disk"
 
