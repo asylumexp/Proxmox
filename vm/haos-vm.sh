@@ -27,8 +27,10 @@ NSAPP="homeassistant-os"
 var_os="homeassistant"
 DISK_SIZE="32G"
 
+# Obtener versiones de HAOS para generic-aarch64 (arm64) desde los JSON de canal
 for version in "${VERSIONS[@]}"; do
-  eval "$version=$(curl -fsSL https://raw.githubusercontent.com/home-assistant/version/master/stable.json | grep '"ova"' | cut -d '"' -f 4)"
+  eval "$version=$(curl -fsSL https://raw.githubusercontent.com/home-assistant/version/master/${version}.json \
+      | sed -n 's/.*"generic-aarch64": *"\([^"]*\)".*/\1/p')"
 done
 YW=$(echo "\033[33m")
 BL=$(echo "\033[36m")
@@ -527,16 +529,18 @@ msg_ok "Using ${CL}${BL}$STORAGE${CL} ${GN}for Storage Location."
 msg_ok "Virtual Machine ID is ${CL}${BL}$VMID${CL}."
 
 var_version="${BRANCH}"
-msg_info "Retrieving the URL for Home Assistant ${BRANCH} Disk Image"
+msg_info "Retrieving the URL for Home Assistant ${BRANCH} Disk Image (generic-aarch64)"
+
+# Use generic-aarch64 (arm64), instead of ova (x86_64)
 if [ "$BRANCH" == "$dev" ]; then
-  URL="https://os-artifacts.home-assistant.io/${BRANCH}/haos_ova-${BRANCH}.qcow2.xz"
+  URL="https://os-artifacts.home-assistant.io/${BRANCH}/haos_generic-aarch64-${BRANCH}.qcow2.xz"
 else
-  URL="https://github.com/home-assistant/operating-system/releases/download/${BRANCH}/haos_ova-${BRANCH}.qcow2.xz"
+  URL="https://github.com/home-assistant/operating-system/releases/download/${BRANCH}/haos_generic-aarch64-${BRANCH}.qcow2.xz"
 fi
 
 CACHE_DIR="/var/lib/vz/template/cache"
 CACHE_FILE="$CACHE_DIR/$(basename "$URL")"
-FILE_IMG="/var/lib/vz/template/tmp/${CACHE_FILE##*/%.xz}" # .qcow2
+FILE_IMG="/var/lib/vz/template/tmp/$(basename "${CACHE_FILE%.xz}")"
 
 mkdir -p "$CACHE_DIR" "$(dirname "$FILE_IMG")"
 msg_ok "${CL}${BL}${URL}${CL}"
@@ -558,7 +562,7 @@ else
   IMPORT_CMD=(qm importdisk)
 fi
 
-msg_info "Creating EFI disk"
+msg_info "Creating EFI disk first (must be disk-0)"
 qm set "$VMID" --efidisk0 "${STORAGE}:0,efitype=4m,size=64M" >/dev/null
 
 msg_info "Importing HAOS disk (will become disk-1)"
