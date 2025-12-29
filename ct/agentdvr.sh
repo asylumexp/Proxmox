@@ -29,7 +29,7 @@ function update_script() {
     exit
   fi
 
-  RELEASE=$(curl -fsSL "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=Linux64&fromVersion=0" | grep -o 'https://.*\.zip')
+  RELEASE=$(curl -fsSL "https://www.ispyconnect.com/api/Agent/DownloadLocation4?platform=LinuxARM64&fromVersion=0" | tr -d '\r' | grep -Eo 'https://[^"[:space:]]+\.zip' | head -n1)
   if [[ "${RELEASE}" != "$(cat ~/.agentdvr 2>/dev/null)" ]] || [[ ! -f ~/.agentdvr ]]; then
     msg_info "Stopping service"
     systemctl stop AgentDVR
