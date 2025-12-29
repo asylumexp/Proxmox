@@ -3189,7 +3189,7 @@ create_lxc_container() {
       esac
       ;;
     alpine)
-       echo "3.19"
+       echo "3.22"
       ;;
     ubuntu)
       case "$version" in
