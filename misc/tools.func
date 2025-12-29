@@ -2566,45 +2566,24 @@ function setup_gs() {
 #   - Sets up Hardware Acceleration
 #
 # Notes:
-#   - Some things are fetched from intel repositories due to not being in debian repositories.
+#   - arm64-focused: installs generic DRM/VA/V4L2 userspace when device nodes are present.
 # ------------------------------------------------------------------------------
 function setup_hwaccel() {
-  # Check if GPU passthrough is enabled (device nodes must exist)
-  # /dev/dri = Intel iGPU, AMD GPU (open-source drivers)
-  # /dev/nvidia* = NVIDIA proprietary drivers
-  # /dev/kfd = AMD ROCm compute
-  if [[ ! -d /dev/dri && ! -e /dev/nvidia0 && ! -e /dev/kfd ]]; then
-    msg_warn "No GPU passthrough detected (/dev/dri, /dev/nvidia*, /dev/kfd not found) - skipping hardware acceleration setup"
+
+
+  # Device nodes must exist (passed through from host)
+  local has_dri=false has_v4l2=false has_nvidia=false has_kfd=false
+  [[ -d /dev/dri ]] && has_dri=true
+  compgen -G "/dev/video*" >/dev/null 2>&1 && has_v4l2=true
+  [[ -e /dev/nvidia0 ]] && has_nvidia=true
+  [[ -e /dev/kfd ]] && has_kfd=true
+
+  if [[ "$has_dri" != true && "$has_v4l2" != true && "$has_nvidia" != true && "$has_kfd" != true ]]; then
+    msg_warn "No accelerator device nodes detected (/dev/dri, /dev/video*, /dev/nvidia*, /dev/kfd) - skipping"
     return 0
   fi
 
-  msg_info "Setup Hardware Acceleration"
-
-  if ! command -v lspci &>/dev/null; then
-    $STD apt -y update || {
-      msg_error "Failed to update package list"
-      return 1
-    }
-    $STD apt -y install pciutils || {
-      msg_error "Failed to install pciutils"
-      return 1
-    }
-  fi
-
-  # Detect GPU vendor (Intel, AMD, NVIDIA)
-  local gpu_vendor gpu_info
-  gpu_info=$(lspci 2>/dev/null | grep -Ei 'vga|3d|display' || echo "")
-  gpu_vendor=$(echo "$gpu_info" | grep -Eo 'Intel|AMD|NVIDIA' | head -n1 || echo "")
-
-  # Detect CPU vendor (relevant for AMD APUs)
-  local cpu_vendor
-  cpu_vendor=$(lscpu 2>/dev/null | grep -i 'Vendor ID' | awk '{print $3}' 2>/dev/null || echo "")
-
-  if [[ -z "$gpu_vendor" && -z "$cpu_vendor" ]]; then
-    msg_warn "No GPU or CPU vendor detected - skipping hardware acceleration setup"
-    msg_ok "Setup Hardware Acceleration (skipped - no GPU detected)"
-    return 0
-  fi
+  msg_info "Setup Hardware Acceleration (arm64)"
 
   # Detect OS with fallbacks
   local os_id os_codename os_version
@@ -2617,136 +2596,45 @@ function setup_hwaccel() {
   # Determine if we are in a privileged LXC container
   local in_ct="${CTTYPE:-0}"
 
-  case "$gpu_vendor" in
-  Intel)
-    # Detect Intel GPU generation for driver selection
-    # Gen 9+ (Skylake and newer) benefit from non-free drivers
-    local intel_gen=""
-    local needs_nonfree=false
+  ensure_apt_working || return 1
 
-    # Check for specific Intel GPU models that need non-free drivers
-    if echo "$gpu_info" | grep -Ei 'HD Graphics [56][0-9]{2}|UHD Graphics|Iris|Arc|DG[12]' &>/dev/null; then
-      needs_nonfree=true
-      intel_gen="gen9+"
-    fi
+  # Install generic arm64 userspace for /dev/dri and/or /dev/video* accelerators.
+  # This intentionally avoids non-arm64 vendor stacks.
+  local pkgs=(
+    libdrm2
+    libva2
+    libva-drm2
+    vainfo
+  )
 
-    if [[ "$os_id" == "ubuntu" ]]; then
-      # Ubuntu: Use packages from Ubuntu repos
-      $STD apt -y install \
-        va-driver-all \
-        ocl-icd-libopencl1 \
-        intel-opencl-icd \
-        vainfo \
-        libmfx-gen1.2 \
-        intel-gpu-tools || {
-        msg_error "Failed to install Intel GPU dependencies"
-        return 1
-      }
-      # Try to install intel-media-va-driver for newer GPUs
-      $STD apt -y install intel-media-va-driver 2>/dev/null || true
+  if [[ "$has_dri" == true ]]; then
+    pkgs+=(
+      mesa-va-drivers
+      mesa-vdpau-drivers
+      mesa-opencl-icd
+      ocl-icd-libopencl1
+      clinfo
+    )
+  fi
 
-    elif [[ "$os_id" == "debian" ]]; then
-      # Debian: Check version and install appropriate drivers
-      if [[ "$needs_nonfree" == true ]]; then
-        # Add non-free repo for intel-media-va-driver-non-free
-        if [[ "$os_codename" == "bookworm" ]]; then
-          # Debian 12 Bookworm
-          if [[ ! -f /etc/apt/sources.list.d/non-free.list && ! -f /etc/apt/sources.list.d/non-free.sources ]]; then
-            cat <<EOF >/etc/apt/sources.list.d/non-free.sources
-Types: deb
-URIs: http://deb.debian.org/debian
-Suites: bookworm bookworm-updates
-Components: non-free non-free-firmware
-EOF
-            $STD apt update
-          fi
-          $STD apt -y install \
-            intel-media-va-driver-non-free \
-            ocl-icd-libopencl1 \
-            intel-opencl-icd \
-            vainfo \
-            libmfx-gen1.2 \
-            intel-gpu-tools || {
-            msg_warn "Non-free driver install failed, falling back to open drivers"
-            needs_nonfree=false
-          }
+  if [[ "$has_v4l2" == true ]]; then
+    pkgs+=(
+      v4l-utils
+      libv4l-0
+    )
+  fi
 
-        elif [[ "$os_codename" == "trixie" || "$os_codename" == "sid" ]]; then
-          # Debian 13 Trixie / Sid
-          if [[ ! -f /etc/apt/sources.list.d/non-free.sources ]]; then
-            cat <<'EOF' >/etc/apt/sources.list.d/non-free.sources
-Types: deb
-URIs: http://deb.debian.org/debian
-Suites: trixie trixie-updates
-Components: non-free non-free-firmware
+  ensure_dependencies "${pkgs[@]}" || {
+    msg_error "Failed to install hardware acceleration dependencies"
+    return 1
+  }
 
-Types: deb
-URIs: http://deb.debian.org/debian-security
-Suites: trixie-security
-Components: non-free non-free-firmware
-EOF
-            $STD apt update
-          fi
-          $STD apt -y install \
-            intel-media-va-driver-non-free \
-            ocl-icd-libopencl1 \
-            mesa-opencl-icd \
-            mesa-va-drivers \
-            libvpl2 \
-            vainfo \
-            libmfx-gen1.2 \
-            intel-gpu-tools 2>/dev/null || {
-            msg_warn "Non-free driver install failed, falling back to open drivers"
-            needs_nonfree=false
-          }
-        fi
-      fi
+  # If this is a PCIe AMD GPU on arm64, try to install AMD firmware/userspace extras.
+  local vendor_hex=""
+  [[ -r /sys/class/drm/card0/device/vendor ]] && vendor_hex=$(</sys/class/drm/card0/device/vendor)
 
-      # Fallback to open drivers or older Intel GPUs
-      if [[ "$needs_nonfree" == false ]]; then
-        # Fetch latest Intel drivers from GitHub for Debian
-        fetch_and_deploy_gh_release "intel-igc-core" "intel/intel-graphics-compiler" "binary" "latest" "" "intel-igc-core-2_*_amd64.deb" || {
-          msg_warn "Failed to deploy Intel IGC core 2"
-        }
-        fetch_and_deploy_gh_release "intel-igc-opencl" "intel/intel-graphics-compiler" "binary" "latest" "" "intel-igc-opencl-2_*_amd64.deb" || {
-          msg_warn "Failed to deploy Intel IGC OpenCL 2"
-        }
-        fetch_and_deploy_gh_release "libigdgmm12" "intel/compute-runtime" "binary" "latest" "" "libigdgmm12_*_amd64.deb" || {
-          msg_warn "Failed to deploy Intel GDGMM12"
-        }
-        fetch_and_deploy_gh_release "intel-opencl-icd" "intel/compute-runtime" "binary" "latest" "" "intel-opencl-icd_*_amd64.deb" || {
-          msg_warn "Failed to deploy Intel OpenCL ICD"
-        }
-
-        $STD apt -y install \
-          va-driver-all \
-          ocl-icd-libopencl1 \
-          mesa-opencl-icd \
-          mesa-va-drivers \
-          vainfo \
-          intel-gpu-tools || {
-          msg_error "Failed to install Intel GPU dependencies"
-          return 1
-        }
-      fi
-    fi
-    ;;
-
-  AMD)
-    $STD apt -y install \
-      mesa-va-drivers \
-      mesa-vdpau-drivers \
-      mesa-opencl-icd \
-      ocl-icd-libopencl1 \
-      vainfo \
-      clinfo 2>/dev/null || {
-      msg_error "Failed to install AMD GPU dependencies"
-      return 1
-    }
-
-    # For AMD GPUs, firmware-amd-graphics requires non-free repositories
+  if [[ "$vendor_hex" == "0x1002" || "$vendor_hex" == "0x1022" ]]; then
     if [[ "$os_id" == "debian" ]]; then
-      # Add non-free-firmware repository if not already present
       if [[ ! -f /etc/apt/sources.list.d/non-free-firmware.sources ]]; then
         if [[ "$os_codename" == "bookworm" ]]; then
           cat <<EOF >/etc/apt/sources.list.d/non-free-firmware.sources
@@ -2776,46 +2664,19 @@ EOF
         $STD apt update
       fi
 
-      # Install AMD firmware and libdrm
       $STD apt -y install libdrm-amdgpu1 firmware-amd-graphics 2>/dev/null || {
-        msg_warn "Failed to install AMD firmware - may need manual installation"
+        msg_warn "Failed to install AMD firmware packages"
       }
     elif [[ "$os_id" == "ubuntu" ]]; then
-      # For Ubuntu, firmware-amd-graphics does not exist (it's Debian-specific from non-free-firmware)
-      # Ubuntu includes AMD firmware in linux-firmware package which is installed by default
-      # Only install libdrm-amdgpu1 for userspace driver support
-      $STD apt -y install libdrm-amdgpu1 2>/dev/null || {
-        msg_warn "Failed to install libdrm-amdgpu1 - may need manual installation"
-      }
-    else
-      # For other distributions, try without adding repositories
       $STD apt -y install libdrm-amdgpu1 2>/dev/null || true
     fi
-    ;;
+  fi
 
-  NVIDIA)
-    # NVIDIA needs manual driver setup or passthrough from host
-    msg_warn "NVIDIA GPU detected - driver must be installed manually or passed through from host"
-    # Install basic VA-API support for potential hybrid setups
-    $STD apt -y install va-driver-all vainfo 2>/dev/null || true
-    ;;
+  if [[ "$has_nvidia" == true ]]; then
+    msg_warn "NVIDIA device nodes detected - userspace driver stack must be provided from host/manual install"
+  fi
 
-  *)
-    # No discrete GPU detected - check for AMD APU
-    if [[ "$cpu_vendor" == "AuthenticAMD" ]]; then
-      $STD apt -y install \
-        mesa-va-drivers \
-        mesa-vdpau-drivers \
-        mesa-opencl-icd \
-        ocl-icd-libopencl1 \
-        vainfo 2>/dev/null || true
-    else
-      msg_warn "No supported GPU vendor detected - skipping GPU driver installation"
-    fi
-    ;;
-  esac
-
-  # Set permissions for /dev/dri (only in privileged containers and if /dev/dri exists)
+  # Set permissions for accelerator nodes (only in privileged containers)
   if [[ "$in_ct" == "0" && -d /dev/dri ]]; then
     chgrp video /dev/dri 2>/dev/null || true
     chmod 755 /dev/dri 2>/dev/null || true
@@ -2831,6 +2692,12 @@ EOF
       sed -i "s/^video:x:[0-9]*:/video:x:$host_video_gid:/" /etc/group 2>/dev/null || true
       sed -i "s/^render:x:[0-9]*:/render:x:$host_render_gid:/" /etc/group 2>/dev/null || true
     fi
+  fi
+
+  if [[ "$in_ct" == "0" && "$has_v4l2" == true ]]; then
+    chgrp video /dev/video* 2>/dev/null || true
+    chmod 660 /dev/video* 2>/dev/null || true
+    $STD adduser "$(id -u -n)" video 2>/dev/null || true
   fi
 
   cache_installed_version "hwaccel" "1.0"
