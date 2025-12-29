@@ -28,6 +28,7 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
+  setup_mariadb
   if check_for_gh_release "bookstack" "BookStackApp/BookStack"; then
     msg_info "Stopping Apache2"
     systemctl stop apache2
@@ -51,7 +52,7 @@ function update_script() {
     msg_info "Configuring BookStack"
     cd /opt/bookstack
     export COMPOSER_ALLOW_SUPERUSER=1
-    $STD composer install --no-dev
+    $STD /usr/local/bin/composer install --no-dev
     $STD php artisan migrate --force
     chown www-data:www-data -R /opt/bookstack /opt/bookstack/bootstrap/cache /opt/bookstack/public/uploads /opt/bookstack/storage
     chmod -R 755 /opt/bookstack /opt/bookstack/bootstrap/cache /opt/bookstack/public/uploads /opt/bookstack/storage

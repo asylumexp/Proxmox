@@ -21,18 +21,15 @@ $STD apt-get install -y \
   imagemagick
 msg_ok "Installed Dependencies"
 
-msg_info "Installing Hardware Acceleration"
-$STD apt-get -y install {va-driver-all,ocl-icd-libopencl1,vainfo}
-msg_ok "Installed and Set Up Hardware Acceleration"
+setup_hwaccel
 
-msg_info "Installing ASP.NET Core 7 SDK"
+msg_info "Installing ASP.NET Core Runtime"
 curl -SL -o aspnet.tar.gz https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/8.0.16/aspnetcore-runtime-8.0.16-linux-arm64.tar.gz
 $STD mkdir -p /usr/share/dotnet
 $STD tar -zxf aspnet.tar.gz -C /usr/share/dotnet
 ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
 $STD rm -f aspnet.tar.gz
-msg_ok "Installed ASP.NET Core 7 SDK"
-
+msg_ok "Installed ASP.NET Core Runtime"
 
 msg_info "Setup ${APPLICATION}"
 $STD ln -svf /usr/bin/ffmpeg /usr/local/bin/ffmpeg

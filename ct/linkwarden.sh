@@ -42,8 +42,20 @@ function update_script() {
 
     fetch_and_deploy_gh_release "linkwarden" "linkwarden/linkwarden"
 
-    msg_info "Updating ${APP}"
+    msg_info "Updating Linkwarden"
     cd /opt/linkwarden
+    yarn_ver="4.12.0"
+    if [[ -f package.json ]]; then
+      pkg_manager=$(jq -r '.packageManager // empty' package.json 2>/dev/null || true)
+      if [[ -n "$pkg_manager" && "$pkg_manager" == yarn@* ]]; then
+        yarn_spec="${pkg_manager#yarn@}"
+        yarn_ver="${yarn_spec%%+*}"
+      fi
+    fi
+    if command -v corepack >/dev/null 2>&1; then
+      $STD corepack enable
+      $STD corepack prepare "yarn@${yarn_ver}" --activate || true
+    fi
     $STD yarn
     $STD npx playwright install-deps
     $STD yarn playwright install
@@ -52,10 +64,10 @@ function update_script() {
     $STD yarn web:build
     $STD yarn prisma:deploy
     [ -d /opt/data.bak ] && mv /opt/data.bak /opt/linkwarden/data
-    rm -rf ~/.cargo/registry ~/.cargo/git ~/.cargo/.package-cache ~/.rustup
+    rm -rf ~/.cargo/registry ~/.cargo/git ~/.cargo/.package-cache
     rm -rf /root/.cache/yarn
     rm -rf /opt/linkwarden/.next/cache
-    msg_ok "Updated ${APP}"
+    msg_ok "Updated Linkwarden"
 
     msg_info "Starting Service"
     systemctl start linkwarden

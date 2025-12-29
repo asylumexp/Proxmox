@@ -13,25 +13,12 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Setting Up Hardware Acceleration"
-if [[ "$CTTYPE" == "0" ]]; then
-  $STD adduser "$(id -un)" video
-  $STD adduser "$(id -un)" render
-fi
-msg_ok "Base Hardware Acceleration Set Up"
+setup_hwaccel
 
-
-msg_info "Installing Hardware Acceleration"
-$STD apt -y install \
-  ocl-icd-libopencl1 \   # OpenCL loader
-  mesa-opencl-icd \      # Mesa (Rusticl) OpenCL for GPUs Mesa supports
-  clinfo \               # OpenCL capability probe
-  libva2 libva-drm2 \    # VA-API userspace
-  vainfofi
-msg_ok "Installed and Set Up Hardware Acceleration"
-
-fetch_and_deploy_gh_release "tunarr" "chrisbenincasa/tunarr" "singlefile" "latest" "/opt/tunarr" "*linux-arm64"
-fetch_and_deploy_gh_release "ersatztv-ffmpeg" "ErsatzTV/ErsatzTV-ffmpeg" "prebuild" "latest" "/opt/ErsatzTV-ffmpeg" "*-linuxarm64-gpl-7.1.tar.xz"
+fetch_and_deploy_gh_release "tunarr" "chrisbenincasa/tunarr" "prebuild" "latest" "/opt/tunarr" "*linux-arm64.tar.gz"
+cd /opt/tunarr
+mv tunarr* tunarr
+fetch_and_deploy_gh_release "ersatztv-ffmpeg" "ErsatzTV/ErsatzTV-ffmpeg" "prebuild" "latest" "/opt/ErsatzTV-ffmpeg" "*-linuarm64-gpl-7.1.tar.xz"
 
 msg_info "Set ErsatzTV-ffmpeg links"
 chmod +x /opt/ErsatzTV-ffmpeg/bin/*

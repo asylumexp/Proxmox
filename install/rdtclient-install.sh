@@ -35,11 +35,10 @@ msg_ok "Installed ASP.NET Core Runtime"
 
 fetch_and_deploy_gh_release "rdt-client" "rogerfar/rdt-client" "prebuild" "latest" "/opt/rdtc" "RealDebridClient.zip"
 
-msg_info "Configuring rdtclient"
+msg_info "Setting up rdtclient"
 cd /opt/rdtc
 mkdir -p data/{db,downloads}
 sed -i 's#/data/db/#/opt/rdtc&#g' /opt/rdtc/appsettings.json
-rm -f ~/packages-microsoft-prod.deb
 msg_ok "Configured rdtclient"
 
 msg_info "Creating Service"
@@ -56,7 +55,7 @@ User=root
 [Install]
 WantedBy=multi-user.target
 EOF
-$STD systemctl enable -q --now rdtc
+systemctl enable -q --now rdtc
 msg_ok "Created Service"
 
 motd_ssh

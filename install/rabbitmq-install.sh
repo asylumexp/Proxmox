@@ -53,14 +53,14 @@ msg_ok "RabbitMQ server installed"
 
 msg_info "Starting RabbitMQ service"
 systemctl enable -q --now rabbitmq-server
-msg_ok "RabbitMQ service started"
+msg_ok "Started Service"
 
-msg_info "Enabling RabbitMQ management plugin"
+msg_info "Enabling RabbitMQ Management Plugin"
 $STD rabbitmq-plugins enable rabbitmq_management
 $STD rabbitmqctl enable_feature_flag all
-msg_ok "RabbitMQ management plugin enabled"
+msg_ok "Enabled RabbitMQ Management Plugin"
 
-msg_info "Create User"
+msg_info "Creating User"
 $STD rabbitmqctl add_user proxmox proxmox
 $STD rabbitmqctl set_user_tags proxmox administrator
 $STD rabbitmqctl set_permissions -p / proxmox ".*" ".*" ".*"

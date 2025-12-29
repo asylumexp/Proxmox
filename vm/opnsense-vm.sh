@@ -24,7 +24,7 @@ RANDOM_UUID="$(cat /proc/sys/kernel/random/uuid)"
 METHOD=""
 NSAPP="opnsense-vm"
 var_os="opnsense"
-var_version="25.1"
+var_version="25.7"
 #
 GEN_MAC=02:$(openssl rand -hex 5 | awk '{print toupper($0)}' | sed 's/\(..\)/\1:/g; s/.$//')
 GEN_MAC_LAN=02:$(openssl rand -hex 5 | awk '{print toupper($0)}' | sed 's/\(..\)/\1:/g; s/.$//')
@@ -578,7 +578,25 @@ fi
 msg_ok "Using ${CL}${BL}$STORAGE${CL} ${GN}for Storage Location."
 msg_ok "Virtual Machine ID is ${CL}${BL}$VMID${CL}."
 msg_info "Retrieving the URL for the OPNsense Qcow2 Disk Image"
-URL="https://download.freebsd.org/releases/VM-IMAGES/14.2-RELEASE/amd64/Latest/FreeBSD-14.2-RELEASE-amd64.qcow2.xz"
+# Use latest stable FreeBSD amd64 qcow2 VM image (generic, not UFS/ZFS)
+RELEASE_LIST="$(curl -s https://download.freebsd.org/releases/VM-IMAGES/ \
+  | grep -Eo '[0-9]+\.[0-9]+-RELEASE' \
+  | sort -Vr \
+  | uniq)"
+URL=""
+FREEBSD_VER=""
+for ver in $RELEASE_LIST; do
+  candidate="https://download.freebsd.org/releases/VM-IMAGES/${ver}/amd64/Latest/FreeBSD-${ver}-amd64.qcow2.xz"
+  if curl -fsI "$candidate" >/dev/null 2>&1; then
+    FREEBSD_VER="$ver"
+    URL="$candidate"
+    break
+  fi
+done
+if [ -z "$URL" ]; then
+  msg_error "Could not find generic FreeBSD amd64 qcow2 image (non-UFS/ZFS)."
+  exit 1
+fi
 msg_ok "Download URL: ${CL}${BL}${URL}${CL}"
 curl -f#SL -o "$(basename "$URL")" "$URL"
 echo -en "\e[1A\e[0K"
@@ -670,7 +688,7 @@ if [ -n "$WAN_BRG" ]; then
   msg_ok "WAN interface added"
   sleep 5  # Brief pause after adding network interface
 fi
-send_line_to_vm "sh ./opnsense-bootstrap.sh.in -y -f -r 25.1"
+send_line_to_vm "sh ./opnsense-bootstrap.sh.in -y -f -r 25.7"
 msg_ok "OPNsense VM is being installed, do not close the terminal, or the installation will fail."
 #We need to wait for the OPNsense build proccess to finish, this takes a few minutes
 sleep 1000

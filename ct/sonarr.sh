@@ -39,6 +39,7 @@ function update_script() {
   mv Sonarr /opt
   rm -rf SonarrV4.tar.gz
   msg_ok "Updated Sonarr"
+
   msg_info "Starting Service"
   systemctl start sonarr
   msg_ok "Started Service"

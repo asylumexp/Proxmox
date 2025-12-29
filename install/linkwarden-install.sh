@@ -19,37 +19,34 @@ $STD apt install -y \
   build-essential
 msg_ok "Installed Dependencies"
 
-NODE_VERSION="22" NODE_MODULE="yarn@latest" setup_nodejs
+NODE_VERSION="22" setup_nodejs
 PG_VERSION="16" setup_postgresql
 RUST_CRATES="monolith" setup_rust
-
-msg_info "Setting up PostgreSQL DB"
-DB_NAME=linkwardendb
-DB_USER=linkwarden
-DB_PASS="$(openssl rand -base64 18 | tr -d '/' | cut -c1-13)"
-SECRET_KEY="$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)"
-$STD sudo -u postgres psql -c "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASS';"
-$STD sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER $DB_USER ENCODING 'UTF8' TEMPLATE template0;"
-$STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET client_encoding TO 'utf8';"
-$STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET default_transaction_isolation TO 'read committed';"
-$STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET timezone TO 'UTC';"
-{
-  echo "Linkwarden-Credentials"
-  echo "Linkwarden Database User: $DB_USER"
-  echo "Linkwarden Database Password: $DB_PASS"
-  echo "Linkwarden Database Name: $DB_NAME"
-  echo "Linkwarden Secret: $SECRET_KEY"
-} >>~/linkwarden.creds
-msg_ok "Set up PostgreSQL DB"
+PG_DB_NAME="linkwardendb" PG_DB_USER="linkwarden" setup_postgresql_db
 
 read -r -p "${TAB3}Would you like to add Adminer? <y/N> " prompt
 if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then
   setup_adminer
 fi
 
-msg_info "Installing Linkwarden (Patience)"
 fetch_and_deploy_gh_release "linkwarden" "linkwarden/linkwarden"
+
+msg_info "Installing Linkwarden (Patience)"
+SECRET_KEY="$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)"
+echo "Linkwarden Secret: $SECRET_KEY" >>"${HOME}/linkwarden.creds"
 cd /opt/linkwarden
+yarn_ver="4.12.0"
+if [[ -f package.json ]]; then
+  pkg_manager=$(jq -r '.packageManager // empty' package.json 2>/dev/null || true)
+  if [[ -n "$pkg_manager" && "$pkg_manager" == yarn@* ]]; then
+    yarn_spec="${pkg_manager#yarn@}"
+    yarn_ver="${yarn_spec%%+*}"
+  fi
+fi
+if command -v corepack >/dev/null 2>&1; then
+  $STD corepack enable
+  $STD corepack prepare "yarn@${yarn_ver}" --activate || true
+fi
 $STD yarn
 $STD npx playwright install-deps
 $STD yarn playwright install
@@ -57,12 +54,12 @@ IP=$(hostname -I | awk '{print $1}')
 cat <<EOF >/opt/linkwarden/.env
 NEXTAUTH_SECRET=${SECRET_KEY}
 NEXTAUTH_URL=http://${IP}:3000
-DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@localhost:5432/${DB_NAME}
+DATABASE_URL=postgresql://${PG_DB_USER}:${PG_DB_PASS}@localhost:5432/${PG_DB_NAME}
 EOF
 $STD yarn prisma:generate
 $STD yarn web:build
 $STD yarn prisma:deploy
-rm -rf ~/.cargo/registry ~/.cargo/git ~/.cargo/.package-cache ~/.rustup
+rm -rf ~/.cargo/registry ~/.cargo/git ~/.cargo/.package-cache
 rm -rf /root/.cache/yarn
 rm -rf /opt/linkwarden/.next/cache
 msg_ok "Installed Linkwarden"

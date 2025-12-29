@@ -29,7 +29,7 @@ else
 fi
 
 mkdir -p /etc/pulse
-fetch_and_deploy_gh_release "pulse" "rcourtman/Pulse" "prebuild" "latest" "/opt/pulse" "*-linux-arm64.tar.gz"
+fetch_and_deploy_gh_release "pulse" "rcourtman/Pulse" "prebuild" "latest" "/opt/pulse" "pulse-v*-linux-arm64.tar.gz"
 ln -sf /opt/pulse/bin/pulse /usr/local/bin/pulse
 chown -R pulse:pulse /etc/pulse /opt/pulse
 msg_ok "Installed Pulse"

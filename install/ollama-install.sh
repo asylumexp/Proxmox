@@ -30,20 +30,10 @@ rm -f "$temp_file"
 set -o pipefail
 msg_ok "Installed Golang"
 
-msg_info "Setting Up Hardware Acceleration"
-$STD apt-get -y install {va-driver-all,ocl-icd-libopencl1,vainfo}
-if [[ "$CTTYPE" == "0" ]]; then
-  chgrp video /dev/dri
-  chmod 755 /dev/dri
-  chmod 660 /dev/dri/*
-  $STD adduser $(id -u -n) video
-  $STD adduser $(id -u -n) render
-fi
-msg_ok "Set Up Hardware Acceleration"
+setup_hwaccel
 
 msg_info "Installing Ollama (Patience)"
 RELEASE=$(curl -fsSL https://api.github.com/repos/ollama/ollama/releases/latest | grep "tag_name" | awk -F '"' '{print $4}')
-OLLAMA_INSTALL_DIR="/usr/local/lib/ollama"
 BINDIR="/usr/local/bin"
 mkdir -p $OLLAMA_INSTALL_DIR
 OLLAMA_URL="https://github.com/ollama/ollama/releases/download/${RELEASE}/ollama-linux-arm64.tgz"
