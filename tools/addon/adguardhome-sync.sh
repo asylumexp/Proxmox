@@ -5,9 +5,9 @@
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://github.com/bakito/adguardhome-sync
 
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/core.func)
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/tools.func)
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/error_handler.func)
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/core.func)
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/tools.func)
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/error_handler.func)
 
 # Enable error handling
 set -Eeuo pipefail
@@ -97,7 +97,7 @@ function update() {
     cp "$CONFIG_PATH" /tmp/adguardhome-sync.yaml.bak 2>/dev/null || true
     msg_ok "Backed up configuration"
 
-    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "adguardhome-sync" "bakito/adguardhome-sync" "prebuild" "latest" "$INSTALL_PATH" "adguardhome-sync_*_linux_amd64.tar.gz"
+    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "adguardhome-sync" "bakito/adguardhome-sync" "prebuild" "latest" "$INSTALL_PATH" "adguardhome-sync_*_linux_arm64.tar.gz"
 
     msg_info "Restoring configuration"
     cp /tmp/adguardhome-sync.yaml.bak "$CONFIG_PATH" 2>/dev/null || true
@@ -123,7 +123,7 @@ function install() {
   local ip
   ip=$(get_ip)
 
-  fetch_and_deploy_gh_release "adguardhome-sync" "bakito/adguardhome-sync" "prebuild" "latest" "$INSTALL_PATH" "adguardhome-sync_*_linux_amd64.tar.gz"
+  fetch_and_deploy_gh_release "adguardhome-sync" "bakito/adguardhome-sync" "prebuild" "latest" "$INSTALL_PATH" "adguardhome-sync_*_linux_arm64.tar.gz"
 
   # Gather configuration from user
   echo ""
@@ -265,7 +265,7 @@ EOF
   cat <<'UPDATEEOF' >/usr/local/bin/update_adguardhome-sync
 #!/usr/bin/env bash
 # AdGuardHome-Sync Update Script
-type=update bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/addon/adguardhome-sync.sh)"
+type=update bash -c "$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/tools/addon/adguardhome-sync.sh)"
 UPDATEEOF
   chmod +x /usr/local/bin/update_adguardhome-sync
   msg_ok "Created update script (/usr/local/bin/update_adguardhome-sync)"
