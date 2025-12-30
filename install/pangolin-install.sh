@@ -21,8 +21,8 @@ msg_ok "Installed Dependencies"
 
 NODE_VERSION="22" setup_nodejs
 fetch_and_deploy_gh_release "pangolin" "fosrl/pangolin" "tarball"
-fetch_and_deploy_gh_release "gerbil" "fosrl/gerbil" "singlefile" "latest" "/usr/bin" "gerbil_linux_amd64"
-fetch_and_deploy_gh_release "traefik" "traefik/traefik" "prebuild" "latest" "/usr/bin" "traefik_v*_linux_amd64.tar.gz"
+fetch_and_deploy_gh_release "gerbil" "fosrl/gerbil" "singlefile" "latest" "/usr/bin" "gerbil_linux_arm64"
+fetch_and_deploy_gh_release "traefik" "traefik/traefik" "prebuild" "latest" "/usr/bin" "traefik_v*_linux_arm64.tar.gz"
 
 read -rp "${TAB3}Enter your Pangolin URL (ex: https://pangolin.example.com): " pango_url
 read -rp "${TAB3}Enter your email address: " pango_email
