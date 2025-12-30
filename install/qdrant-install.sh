@@ -13,7 +13,7 @@ setting_up_container
 network_check
 update_os
 
-fetch_and_deploy_gh_release "qdrant" "qdrant/qdrant" "binary" "latest" "/usr/bin/qdrant"
+fetch_and_deploy_gh_release "qdrant" "qdrant/qdrant" "prebuild" "latest" "/opt/qdrant" "qdrant-aarch64-unknown-linux-musl.tar.gz"
 
 msg_info "Creating Qdrant Configuration"
 mkdir -p /etc/qdrant

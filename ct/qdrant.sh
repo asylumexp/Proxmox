@@ -28,7 +28,7 @@ function update_script() {
     exit
   fi
   if check_for_gh_release "qdrant" "qdrant/qdrant"; then
-    fetch_and_deploy_gh_release "qdrant" "qdrant/qdrant" "binary" "latest" "/usr/bin/qdrant"
+    fetch_and_deploy_gh_release "qdrant" "qdrant/qdrant" "prebuild" "latest" "/opt/qdrant" "qdrant-aarch64-unknown-linux-musl.tar.gz"
     chown -R root:root /var/lib/qdrant
     chmod -R 755 /var/lib/qdrant
   fi
