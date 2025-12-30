@@ -14,6 +14,8 @@ network_check
 update_os
 
 fetch_and_deploy_gh_release "qdrant" "qdrant/qdrant" "prebuild" "latest" "/opt/qdrant" "qdrant-aarch64-unknown-linux-musl.tar.gz"
+$STD mv /opt/qdrant/qdrant /usr/bin/qdrant
+$STD rm -rf /opt/qdrant
 
 msg_info "Creating Qdrant Configuration"
 mkdir -p /etc/qdrant
