@@ -14,15 +14,12 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-setup_deb822_repo \
-  "microsoft" \
-  "https://packages.microsoft.com/keys/microsoft-2025.asc" \
-  "https://packages.microsoft.com/debian/13/prod/" \
-  "trixie" \
-  "main"
-$STD apt install -y \
-  dotnet-sdk-10.0 \
-  aspnetcore-runtime-8.0
+curl -SL -o dotnet.tar.gz https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.101/dotnet-sdk-10.0.101-linux-arm64.tar.gz
+curl -SL -o aspnet.tar.gz https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.1/aspnetcore-runtime-10.0.1-linux-arm64.tar.gz
+$STD mkdir -p /usr/share/dotnet
+$STD tar -zxf dotnet.tar.gz -C /usr/share/dotnet
+$STD tar -zxf aspnet.tar.gz -C /usr/share/dotnet
+ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
 msg_ok "Installed Dependencies"
 
 PG_VERSION="17" setup_postgresql
