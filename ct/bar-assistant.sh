@@ -93,7 +93,7 @@ function update_script() {
     systemctl stop meilisearch
     msg_ok "Stopped Meilisearch"
 
-    fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "binary"
+    fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "singlefile" "latest" "/usr/bin" "meilisearch-linux-aarch64"
 
     msg_info "Starting Meilisearch"
     systemctl start meilisearch
