@@ -39,6 +39,10 @@
     {
       "text": "Please check that you have installed the drivers for your GPU.",
       "type": "info"
+    },
+		{
+      "text": "GPU acceleration on arm64 devices has not been tested and may not work.",
+      "type": "warning"
     }
   ]
 }
