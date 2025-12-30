@@ -5,9 +5,9 @@
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://github.com/xperimental/nextcloud-exporter
 
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/core.func)
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/tools.func)
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/error_handler.func)
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/core.func)
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/tools.func)
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/error_handler.func)
 
 # Enable error handling
 set -Eeuo pipefail
@@ -139,7 +139,7 @@ EOF
   cat <<'UPDATEEOF' >/usr/local/bin/update_nextcloud-exporter
 #!/usr/bin/env bash
 # nextcloud-exporter Update Script
-type=update bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/addon/nextcloud-exporter.sh)"
+type=update bash -c "$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/tools/addon/nextcloud-exporter.sh)"
 UPDATEEOF
   chmod +x /usr/local/bin/update_nextcloud-exporter
   msg_ok "Created update script (/usr/local/bin/update_nextcloud-exporter)"
