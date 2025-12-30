@@ -55,7 +55,7 @@ function update_script() {
         systemctl stop wanderer-web
         msg_ok "Stopped service"
 
-        fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "binary" "latest" "/opt/wanderer/source/search"
+        fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "singlefile" "latest" "/opt/wanderer/source/search" "meilisearch-linux-aarch64"
         grep -q -- '--experimental-dumpless-upgrade' /opt/wanderer/start.sh || sed -i 's|meilisearch --master-key|meilisearch --experimental-dumpless-upgrade --master-key|' /opt/wanderer/start.sh
 
         msg_info "Starting service"
