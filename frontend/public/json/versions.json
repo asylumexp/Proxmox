@@ -1,5 +1,100 @@
 [
   {
+    "name": "karlomikus/bar-assistant",
+    "version": "v5.11.2",
+    "date": "2025-12-29T21:09:41Z"
+  },
+  {
+    "name": "outline/outline",
+    "version": "v1.2.0-0",
+    "date": "2025-12-29T20:53:30Z"
+  },
+  {
+    "name": "mealie-recipes/mealie",
+    "version": "v3.9.0",
+    "date": "2025-12-29T20:46:08Z"
+  },
+  {
+    "name": "livebook-dev/livebook",
+    "version": "nightly",
+    "date": "2025-12-29T20:41:56Z"
+  },
+  {
+    "name": "scanopy/scanopy",
+    "version": "v0.12.8",
+    "date": "2025-12-29T19:43:21Z"
+  },
+  {
+    "name": "home-assistant/core",
+    "version": "2025.12.5",
+    "date": "2025-12-29T12:55:22Z"
+  },
+  {
+    "name": "metabase/metabase",
+    "version": "v0.58.x",
+    "date": "2025-12-29T19:09:12Z"
+  },
+  {
+    "name": "openobserve/openobserve",
+    "version": "v0.40.0-rc4",
+    "date": "2025-12-29T16:54:07Z"
+  },
+  {
+    "name": "msgbyte/tianji",
+    "version": "v1.31.1",
+    "date": "2025-12-29T16:50:03Z"
+  },
+  {
+    "name": "traefik/traefik",
+    "version": "v3.6.6",
+    "date": "2025-12-29T15:56:09Z"
+  },
+  {
+    "name": "firefly-iii/firefly-iii",
+    "version": "develop-20251228",
+    "date": "2025-12-28T05:59:54Z"
+  },
+  {
+    "name": "emqx/emqx",
+    "version": "6.1.0",
+    "date": "2025-12-29T13:59:25Z"
+  },
+  {
+    "name": "ArchiveBox/ArchiveBox",
+    "version": "v0.8.6rc1",
+    "date": "2025-12-29T10:58:49Z"
+  },
+  {
+    "name": "rcourtman/Pulse",
+    "version": "v5.0.6",
+    "date": "2025-12-29T10:39:08Z"
+  },
+  {
+    "name": "alam00000/bentopdf",
+    "version": "v1.15.3",
+    "date": "2025-12-29T09:33:00Z"
+  },
+  {
+    "name": "booklore-app/booklore",
+    "version": "v1.16.1",
+    "date": "2025-12-29T06:08:46Z"
+  },
+  {
+    "name": "Jackett/Jackett",
+    "version": "v0.24.612",
+    "date": "2025-12-29T05:55:22Z"
+  },
+  {
+    "name": "steveiliop56/tinyauth",
+    "version": "v4.1.0",
+    "date": "2025-11-23T12:13:34Z"
+  },
+  {
+    "name": "jeedom/core",
+    "version": "4.5.1",
+    "date": "2025-12-29T00:27:07Z"
+  },
+  {
     "name": "chrisbenincasa/tunarr",
     "version": "v1.0.11",
     "date": "2025-12-28T23:39:20Z"
@@ -15,11 +110,6 @@
     "date": "2025-11-16T22:39:01Z"
   },
   {
-    "name": "scanopy/scanopy",
-    "version": "v0.12.7",
-    "date": "2025-12-28T16:51:10Z"
-  },
-  {
     "name": "bluenviron/mediamtx",
     "version": "v1.15.6",
     "date": "2025-12-28T16:38:35Z"
@@ -28,11 +118,6 @@
     "name": "release-argus/Argus",
     "version": "0.29.0",
     "date": "2025-12-28T14:32:36Z"
-  },
-  {
-    "name": "msgbyte/tianji",
-    "version": "v1.31.0",
-    "date": "2025-12-28T11:41:41Z"
   },
   {
     "name": "pommee/goaway",
@@ -50,29 +135,9 @@
     "date": "2025-12-28T06:32:47Z"
   },
   {
-    "name": "firefly-iii/firefly-iii",
-    "version": "v6.4.14",
-    "date": "2025-12-16T05:42:34Z"
-  },
-  {
-    "name": "Jackett/Jackett",
-    "version": "v0.24.590",
-    "date": "2025-12-28T05:55:38Z"
-  },
-  {
     "name": "hyperion-project/hyperion.ng",
     "version": "2.1.1",
     "date": "2025-06-14T17:45:06Z"
-  },
-  {
-    "name": "steveiliop56/tinyauth",
-    "version": "v4.1.0",
-    "date": "2025-11-23T12:13:34Z"
-  },
-  {
-    "name": "jeedom/core",
-    "version": "4.5.1",
-    "date": "2025-12-28T00:27:09Z"
   },
   {
     "name": "dani-garcia/vaultwarden",
@@ -105,24 +170,9 @@
     "date": "2025-12-01T08:14:11Z"
   },
   {
-    "name": "alam00000/bentopdf",
-    "version": "v1.15.1",
-    "date": "2025-12-27T16:29:08Z"
-  },
-  {
-    "name": "rcourtman/Pulse",
-    "version": "v5.0.5",
-    "date": "2025-12-27T11:47:48Z"
-  },
-  {
     "name": "alexta69/metube",
     "version": "2025.12.27",
     "date": "2025-12-27T10:24:02Z"
-  },
-  {
-    "name": "karlomikus/bar-assistant",
-    "version": "v5.11.1",
-    "date": "2025-12-27T09:55:49Z"
   },
   {
     "name": "fuma-nama/fumadocs",
@@ -140,11 +190,6 @@
     "date": "2025-12-26T22:24:19Z"
   },
   {
-    "name": "metabase/metabase",
-    "version": "v0.58.x",
-    "date": "2025-12-26T19:49:03Z"
-  },
-  {
     "name": "homarr-labs/homarr",
     "version": "v1.48.0",
     "date": "2025-12-26T19:23:50Z"
@@ -153,11 +198,6 @@
     "name": "toniebox-reverse-engineering/teddycloud",
     "version": "tc_v0.6.6",
     "date": "2025-12-26T18:45:22Z"
-  },
-  {
-    "name": "openobserve/openobserve",
-    "version": "v0.40.0-rc3",
-    "date": "2025-12-26T16:06:54Z"
   },
   {
     "name": "wazuh/wazuh",
@@ -205,11 +245,6 @@
     "date": "2025-12-24T21:33:56Z"
   },
   {
-    "name": "booklore-app/booklore",
-    "version": "v1.16.0",
-    "date": "2025-12-24T19:57:11Z"
-  },
-  {
     "name": "FreshRSS/FreshRSS",
     "version": "1.28.0",
     "date": "2025-12-24T19:27:21Z"
@@ -233,11 +268,6 @@
     "name": "BookStackApp/BookStack",
     "version": "v25.12",
     "date": "2025-12-24T12:19:42Z"
-  },
-  {
-    "name": "emqx/emqx",
-    "version": "6.1.0-rc.1",
-    "date": "2025-12-24T09:46:02Z"
   },
   {
     "name": "comfyanonymous/ComfyUI",
@@ -455,11 +485,6 @@
     "date": "2025-12-18T16:43:23Z"
   },
   {
-    "name": "home-assistant/core",
-    "version": "2025.12.4",
-    "date": "2025-12-19T17:55:13Z"
-  },
-  {
     "name": "qdrant/qdrant",
     "version": "v1.16.3",
     "date": "2025-12-19T17:45:42Z"
@@ -503,11 +528,6 @@
     "name": "javedh-dev/tracktor",
     "version": "1.0.2",
     "date": "2025-12-19T02:43:42Z"
-  },
-  {
-    "name": "mealie-recipes/mealie",
-    "version": "v3.8.0",
-    "date": "2025-12-19T01:37:04Z"
   },
   {
     "name": "moghtech/komodo",
@@ -595,11 +615,6 @@
     "date": "2025-12-16T11:13:20Z"
   },
   {
-    "name": "traefik/traefik",
-    "version": "v2.11.33",
-    "date": "2025-12-17T10:10:19Z"
-  },
-  {
     "name": "zitadel/zitadel",
     "version": "v4.7.6",
     "date": "2025-12-17T08:56:54Z"
@@ -638,11 +653,6 @@
     "name": "azukaar/Cosmos-Server",
     "version": "v0.19.0",
     "date": "2025-12-15T19:43:03Z"
-  },
-  {
-    "name": "livebook-dev/livebook",
-    "version": "v0.18.2",
-    "date": "2025-12-15T19:17:42Z"
   },
   {
     "name": "opencloud-eu/opencloud",
@@ -1153,11 +1163,6 @@
     "name": "binwiederhier/ntfy",
     "version": "v2.15.0",
     "date": "2025-11-16T18:53:49Z"
-  },
-  {
-    "name": "outline/outline",
-    "version": "v1.1.0",
-    "date": "2025-11-16T15:07:09Z"
   },
   {
     "name": "bastienwirtz/homer",
@@ -1688,11 +1693,6 @@
     "name": "favonia/cloudflare-ddns",
     "version": "v1.15.1",
     "date": "2024-12-16T13:00:05Z"
-  },
-  {
-    "name": "ArchiveBox/ArchiveBox",
-    "version": "v0.7.3",
-    "date": "2024-12-15T10:18:06Z"
   },
   {
     "name": "swizzin/swizzin",

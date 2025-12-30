@@ -58,7 +58,7 @@ function update_script() {
     fi
     $STD yarn
     $STD npx playwright install-deps
-    $STD yarn playwright install
+    $STD npx playwright install
     mv /opt/.env /opt/linkwarden/.env
     $STD yarn prisma:generate
     $STD yarn web:build

@@ -821,9 +821,9 @@ cleanup_lxc() {
     rm -rf /root/.npm/_cacache /root/.npm/_logs 2>/dev/null || true
   fi
   # Node.js yarn
-  if command -v yarn &>/dev/null; then $STD yarn cache clean || true; fi
+  if command -v yarn &>/dev/null; then yarn cache clean &>/dev/null || true; fi
   # Node.js pnpm
-  if command -v pnpm &>/dev/null; then $STD pnpm store prune || true; fi
+  if command -v pnpm &>/dev/null; then pnpm store prune &>/dev/null || true; fi
   # Go
   if command -v go &>/dev/null; then $STD go clean -cache -modcache || true; fi
   # Rust cargo
@@ -831,7 +831,7 @@ cleanup_lxc() {
   # Ruby gem
   if command -v gem &>/dev/null; then $STD gem cleanup || true; fi
   # Composer (PHP)
-  if command -v composer &>/dev/null; then COMPOSER_ALLOW_SUPERUSER=1 && $STD composer clear-cache || true; fi
+  if command -v composer &>/dev/null; then COMPOSER_ALLOW_SUPERUSER=1 $STD composer clear-cache || true; fi
 
   if command -v journalctl &>/dev/null; then
     $STD journalctl --vacuum-time=10m || true

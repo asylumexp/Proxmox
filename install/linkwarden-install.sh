@@ -49,7 +49,7 @@ if command -v corepack >/dev/null 2>&1; then
 fi
 $STD yarn
 $STD npx playwright install-deps
-$STD yarn playwright install
+$STD npx playwright install
 IP=$(hostname -I | awk '{print $1}')
 cat <<EOF >/opt/linkwarden/.env
 NEXTAUTH_SECRET=${SECRET_KEY}
