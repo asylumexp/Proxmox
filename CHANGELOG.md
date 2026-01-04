@@ -10,7 +10,82 @@
 > [!CAUTION]
 Exercise vigilance regarding copycat or coat-tailing sites that seek to exploit the project's popularity for potentially malicious purposes.
 
+## 2026-01-04
+
+## 2026-01-03
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Fix ownership and permissions for InvoiceNinja setup [@twinzdragonz](https://github.com/twinzdragonz) ([#10298](https://github.com/community-scripts/ProxmoxVE/pull/10298))
+    - Fix headscale Caddyfile to pass non-API URLs [@IlyaSemenov](https://github.com/IlyaSemenov) ([#10493](https://github.com/community-scripts/ProxmoxVE/pull/10493))
+
+### 💾 Core
+
+  - #### 🔧 Refactor
+
+    - [core]: Preserve log files [@tremor021](https://github.com/tremor021) ([#10509](https://github.com/community-scripts/ProxmoxVE/pull/10509))
+
+### ❔ Uncategorized
+
+  - Wireguard: Update WGDashboard notes URL to the new link [@tremor021](https://github.com/tremor021) ([#10496](https://github.com/community-scripts/ProxmoxVE/pull/10496))
+- InvoiceNinja: Update database credentias information [@tremor021](https://github.com/tremor021) ([#10497](https://github.com/community-scripts/ProxmoxVE/pull/10497))
+
+## 2026-01-02
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - Fix Intel Level Zero package conflict on Debian 13 [@Copilot](https://github.com/Copilot) ([#10467](https://github.com/community-scripts/ProxmoxVE/pull/10467))
+
+### ❔ Uncategorized
+
+  - Extend guidance for changing the immich upload location for #10447 [@jshprentz](https://github.com/jshprentz) ([#10475](https://github.com/community-scripts/ProxmoxVE/pull/10475))
+
+## 2026-01-01
+
+### 🚀 Updated Scripts
+
+  - #### 🐞 Bug Fixes
+
+    - fix(sabnzbd): update script now migrates old service files to use venv Python [@vidonnus](https://github.com/vidonnus) ([#10466](https://github.com/community-scripts/ProxmoxVE/pull/10466))
+    - fix(bazarr): update script now migrates old service files to use venv Python [@vidonnus](https://github.com/vidonnus) ([#10459](https://github.com/community-scripts/ProxmoxVE/pull/10459))
+    - fix #10453 broken sonarqube update [@Karlito83](https://github.com/Karlito83) ([#10456](https://github.com/community-scripts/ProxmoxVE/pull/10456))
+
+### 💾 Core
+
+  - #### 🐞 Bug Fixes
+
+    - Fix MariaDB runtime directory persistence on container reboot [@Copilot](https://github.com/Copilot) ([#10468](https://github.com/community-scripts/ProxmoxVE/pull/10468))
+
+## 2025-12-31
+
+### 🚀 Updated Scripts
+
+  - fix(wazuh): add LXC rootcheck exclusion to prevent false positives [@brettlyons](https://github.com/brettlyons) ([#10436](https://github.com/community-scripts/ProxmoxVE/pull/10436))
+
+  - #### 🐞 Bug Fixes
+
+    - Increase BentoPDF RAM requirement from 2GB to 4GB [@Copilot](https://github.com/Copilot) ([#10449](https://github.com/community-scripts/ProxmoxVE/pull/10449))
+    - fix(swizzin): Use HTTPS and add curl error handling [@fmcglinn](https://github.com/fmcglinn) ([#10440](https://github.com/community-scripts/ProxmoxVE/pull/10440))
+
 ## 2025-12-30
+
+### 🚀 Updated Scripts
+
+  - #### ✨ New Features
+
+    - Unlink default nginx config [@iLikeToCode](https://github.com/iLikeToCode) ([#10432](https://github.com/community-scripts/ProxmoxVE/pull/10432))
+
+  - #### 🔧 Refactor
+
+    - Refactor: Firefly [@tremor021](https://github.com/tremor021) ([#10421](https://github.com/community-scripts/ProxmoxVE/pull/10421))
+
+### 🗑️ Deleted Scripts
+
+  - Remove: GoAway [@MickLesk](https://github.com/MickLesk) ([#10429](https://github.com/community-scripts/ProxmoxVE/pull/10429))
 
 ## 2025-12-29
 

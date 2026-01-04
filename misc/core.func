@@ -809,12 +809,6 @@ cleanup_lxc() {
   find /tmp /var/tmp -type f -name 'tmp*' -delete 2>/dev/null || true
   find /tmp /var/tmp -type f -name 'tempfile*' -delete 2>/dev/null || true
 
-  # Truncate writable log files silently (permission errors ignored)
-  if command -v truncate >/dev/null 2>&1; then
-    find /var/log -type f -writable -print0 2>/dev/null |
-      xargs -0 -n1 truncate -s 0 2>/dev/null || true
-  fi
-
   # Node.js npm - directly remove cache directory
   # npm cache clean/verify can fail with ENOTEMPTY errors, so we skip them
   if command -v npm &>/dev/null; then
@@ -833,9 +827,6 @@ cleanup_lxc() {
   # Composer (PHP)
   if command -v composer &>/dev/null; then COMPOSER_ALLOW_SUPERUSER=1 $STD composer clear-cache || true; fi
 
-  if command -v journalctl &>/dev/null; then
-    $STD journalctl --vacuum-time=10m || true
-  fi
   msg_ok "Cleaned"
 }
 
