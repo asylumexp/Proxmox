@@ -23,7 +23,7 @@ setup_deb822_repo \
 $STD apt install -y ansible
 msg_ok "Installed Dependencies"
 
-fetch_and_deploy_gh_release "semaphore" "semaphoreui/semaphore" "binary" "latest" "/opt/semaphore" "semaphore_*_linux_amd64.deb"
+fetch_and_deploy_gh_release "semaphore" "semaphoreui/semaphore" "binary" "latest" "/opt/semaphore" "semaphore_*_linux_arm64.deb"
 
 msg_info "Configuring Semaphore"
 mkdir -p /opt/semaphore
