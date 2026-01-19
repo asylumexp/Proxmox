@@ -46,11 +46,15 @@ CL=$(echo "\033[m")
 BFR="\\r\\033[K"
 HOLD="-"
 CM="${GN}✓${CL}"
+INFO=""
+YWB="\033[1;33m"
 CROSS="${RD}✗${CL}"
 set -o errexit
 set -o errtrace
 set -o nounset
 set -o pipefail
+ARCH_CHECK=true
+DIAGNOSTICS=true
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
@@ -165,13 +169,16 @@ pve_check() {
 }
 
 function arch_check() {
-  if [ "$(dpkg --print-architecture)" != "aarch64" ]; then
-    echo -e "\n ${INFO}${YWB}This script will not work on AMD64! \n"%
+  local ARCH
+  ARCH=$(dpkg --print-architecture)
+  if [ "$ARCH" != "arm64" ]; then
+    echo -e "\n This script will not work on AMD64! \n"
     echo -e "Exiting..."
     sleep 2
-    exit
+    exit 1
   fi
 }
+
 function msg_info() {
   local msg="$1"
   echo -ne " ${HOLD} ${YW}${msg}..."
@@ -331,7 +338,7 @@ function START_SCRIPT() {
     advanced_settings
   fi
 }
-ARCH_CHECK
+arch_check
 START_SCRIPT
 post_to_api_vm
 while read -r line; do
