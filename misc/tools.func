@@ -184,7 +184,10 @@ install_packages_with_retry() {
   local retry=0
 
   while [[ $retry -le $max_retries ]]; do
-    if $STD apt install -y "${packages[@]}" 2>/dev/null; then
+    if DEBIAN_FRONTEND=noninteractive $STD apt install -y \
+      -o Dpkg::Options::="--force-confdef" \
+      -o Dpkg::Options::="--force-confold" \
+      "${packages[@]}" 2>/dev/null; then
       return 0
     fi
 
@@ -211,7 +214,10 @@ upgrade_packages_with_retry() {
   local retry=0
 
   while [[ $retry -le $max_retries ]]; do
-    if $STD apt install --only-upgrade -y "${packages[@]}" 2>/dev/null; then
+    if DEBIAN_FRONTEND=noninteractive $STD apt install --only-upgrade -y \
+      -o Dpkg::Options::="--force-confdef" \
+      -o Dpkg::Options::="--force-confold" \
+      "${packages[@]}" 2>/dev/null; then
       return 0
     fi
 
@@ -1892,7 +1898,7 @@ function fetch_and_deploy_gh_release() {
         rm -rf "$tmpdir" "$unpack_tmp"
         return 1
       }
-    elif [[ "$filename" == *.tar.* || "$filename" == *.tgz ]]; then
+    elif [[ "$filename" == *.tar.* || "$filename" == *.tgz || "$filename" == *.txz ]]; then
       tar --no-same-owner -xf "$tmpdir/$filename" -C "$unpack_tmp" || {
         msg_error "Failed to extract TAR archive"
         rm -rf "$tmpdir" "$unpack_tmp"
@@ -1994,50 +2000,6 @@ function fetch_and_deploy_gh_release() {
   echo "$version" >"$version_file"
   msg_ok "Deployed: $app ($version)"
   rm -rf "$tmpdir"
-}
-
-# ------------------------------------------------------------------------------
-# Loads LOCAL_IP from persistent store or detects if missing.
-#
-# Description:
-#   - Loads from /run/local-ip.env or performs runtime lookup
-# ------------------------------------------------------------------------------
-
-function import_local_ip() {
-  local IP_FILE="/run/local-ip.env"
-  if [[ -f "$IP_FILE" ]]; then
-    # shellcheck disable=SC1090
-    source "$IP_FILE"
-  fi
-
-  if [[ -z "${LOCAL_IP:-}" ]]; then
-    get_current_ip() {
-      local targets=("8.8.8.8" "1.1.1.1" "192.168.1.1" "10.0.0.1" "172.16.0.1" "default")
-      local ip
-
-      for target in "${targets[@]}"; do
-        if [[ "$target" == "default" ]]; then
-          ip=$(ip route get 1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if ($i=="src") print $(i+1)}')
-        else
-          ip=$(ip route get "$target" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if ($i=="src") print $(i+1)}')
-        fi
-        if [[ -n "$ip" ]]; then
-          echo "$ip"
-          return 0
-        fi
-      done
-
-      return 1
-    }
-
-    LOCAL_IP="$(get_current_ip || true)"
-    if [[ -z "$LOCAL_IP" ]]; then
-      msg_error "Could not determine LOCAL_IP"
-      return 1
-    fi
-  fi
-
-  export LOCAL_IP
 }
 
 # ------------------------------------------------------------------------------
@@ -2561,9 +2523,13 @@ function setup_gs() {
 # Sets up Hardware Acceleration on debian or ubuntu.
 #
 # Description:
-#   - Determites CPU/GPU/APU Vendor
-#   - Installs the correct libraries and packages
-#   - Sets up Hardware Acceleration
+#   - Detects all available GPUs (Intel, AMD, NVIDIA)
+#   - Allows user to select which GPU(s) to configure (with 60s timeout)
+#   - Installs the correct libraries and packages for each GPU type
+#   - Supports: Debian 11/12/13, Ubuntu 22.04/24.04
+#   - Intel: Legacy (Gen 6-8), Modern (Gen 9+), Arc
+#   - AMD: Discrete GPUs, APUs, ROCm compute
+#   - NVIDIA: Version-matched drivers from CUDA repository
 #
 # Notes:
 #   - arm64-focused: installs generic DRM/VA/V4L2 userspace when device nodes are present.
@@ -2585,15 +2551,80 @@ function setup_hwaccel() {
 
   msg_info "Setup Hardware Acceleration (arm64)"
 
-  # Detect OS with fallbacks
+  # ═══════════════════════════════════════════════════════════════════════════
+  # GPU Selection - Let user choose which GPU(s) to configure
+  # ═══════════════════════════════════════════════════════════════════════════
+  local -a SELECTED_INDICES=()
+
+  if [[ $gpu_count -eq 1 ]]; then
+    # Single GPU - auto-select
+    SELECTED_INDICES=(0)
+    msg_ok "Detected GPU: ${GPU_NAMES[0]} (${GPU_TYPES[0]})"
+  else
+    # Multiple GPUs - show selection menu
+    echo ""
+    msg_custom "⚠" "${YW}" "Multiple GPUs detected:"
+    echo ""
+    for i in "${!GPU_LIST[@]}"; do
+      local type_display="${GPU_TYPES[$i]}"
+      case "${GPU_TYPES[$i]}" in
+      INTEL_ARC) type_display="Intel Arc" ;;
+      INTEL_GEN9+) type_display="Intel Gen9+" ;;
+      INTEL_LEGACY) type_display="Intel Legacy" ;;
+      INTEL) type_display="Intel" ;;
+      AMD) type_display="AMD" ;;
+      AMD_APU) type_display="AMD APU" ;;
+      NVIDIA) type_display="NVIDIA" ;;
+      esac
+      printf "  %d) [%s] %s\n" "$((i + 1))" "$type_display" "${GPU_NAMES[$i]}"
+    done
+    printf "  A) Configure ALL GPUs\n"
+    echo ""
+
+    # Read with 60 second timeout
+    local selection=""
+    echo -n "Select GPU(s) to configure (1-${gpu_count}, A=all) [timeout 60s, default=all]: "
+    if read -r -t 60 selection; then
+      selection="${selection^^}" # uppercase
+    else
+      echo ""
+      msg_info "Timeout - configuring all GPUs automatically"
+      selection="A"
+    fi
+
+    # Parse selection
+    if [[ "$selection" == "A" || -z "$selection" ]]; then
+      # Select all
+      for i in "${!GPU_LIST[@]}"; do
+        SELECTED_INDICES+=("$i")
+      done
+    elif [[ "$selection" =~ ^[0-9,]+$ ]]; then
+      # Parse comma-separated numbers
+      IFS=',' read -ra nums <<<"$selection"
+      for num in "${nums[@]}"; do
+        num=$(echo "$num" | tr -d ' ')
+        if [[ "$num" =~ ^[0-9]+$ ]] && ((num >= 1 && num <= gpu_count)); then
+          SELECTED_INDICES+=("$((num - 1))")
+        fi
+      done
+    else
+      # Invalid - default to all
+      msg_warn "Invalid selection - configuring all GPUs"
+      for i in "${!GPU_LIST[@]}"; do
+        SELECTED_INDICES+=("$i")
+      done
+    fi
+  fi
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # OS Detection
+  # ═══════════════════════════════════════════════════════════════════════════
   local os_id os_codename os_version
   os_id=$(grep -oP '(?<=^ID=).+' /etc/os-release 2>/dev/null | tr -d '"' || echo "debian")
   os_codename=$(grep -oP '(?<=^VERSION_CODENAME=).+' /etc/os-release 2>/dev/null | tr -d '"' || echo "unknown")
   os_version=$(grep -oP '(?<=^VERSION_ID=).+' /etc/os-release 2>/dev/null | tr -d '"' || echo "")
-
   [[ -z "$os_id" ]] && os_id="debian"
 
-  # Determine if we are in a privileged LXC container
   local in_ct="${CTTYPE:-0}"
 
   ensure_apt_working || return 1
@@ -2636,7 +2667,8 @@ function setup_hwaccel() {
   if [[ "$vendor_hex" == "0x1002" || "$vendor_hex" == "0x1022" ]]; then
     if [[ "$os_id" == "debian" ]]; then
       if [[ ! -f /etc/apt/sources.list.d/non-free-firmware.sources ]]; then
-        if [[ "$os_codename" == "bookworm" ]]; then
+        case "$os_codename" in
+        bookworm)
           cat <<EOF >/etc/apt/sources.list.d/non-free-firmware.sources
 Types: deb
 URIs: http://deb.debian.org/debian
@@ -2648,8 +2680,9 @@ URIs: http://deb.debian.org/debian-security
 Suites: bookworm-security
 Components: non-free-firmware
 EOF
-        elif [[ "$os_codename" == "trixie" || "$os_codename" == "sid" ]]; then
-          cat <<EOF >/etc/apt/sources.list.d/non-free-firmware.sources
+          ;;
+        trixie|sid)
+          cat <<'EOF' >/etc/apt/sources.list.d/non-free-firmware.sources
 Types: deb
 URIs: http://deb.debian.org/debian
 Suites: trixie trixie-updates
@@ -2660,7 +2693,8 @@ URIs: http://deb.debian.org/debian-security
 Suites: trixie-security
 Components: non-free-firmware
 EOF
-        fi
+          ;;
+        esac
         $STD apt update
       fi
 
@@ -2678,19 +2712,32 @@ EOF
 
   # Set permissions for accelerator nodes (only in privileged containers)
   if [[ "$in_ct" == "0" && -d /dev/dri ]]; then
-    chgrp video /dev/dri 2>/dev/null || true
-    chmod 755 /dev/dri 2>/dev/null || true
-    chmod 660 /dev/dri/* 2>/dev/null || true
-    $STD adduser "$(id -u -n)" video 2>/dev/null || true
-    $STD adduser "$(id -u -n)" render 2>/dev/null || true
+    if ls /dev/dri/card* /dev/dri/renderD* &>/dev/null; then
+      chgrp video /dev/dri 2>/dev/null || true
+      chmod 755 /dev/dri 2>/dev/null || true
+      chmod 660 /dev/dri/* 2>/dev/null || true
+      $STD adduser "$(id -u -n)" video 2>/dev/null || true
+      $STD adduser "$(id -u -n)" render 2>/dev/null || true
 
-    # Sync GID for video/render groups between host and container
-    local host_video_gid host_render_gid
-    host_video_gid=$(getent group video | cut -d: -f3)
-    host_render_gid=$(getent group render | cut -d: -f3)
-    if [[ -n "$host_video_gid" && -n "$host_render_gid" ]]; then
-      sed -i "s/^video:x:[0-9]*:/video:x:$host_video_gid:/" /etc/group 2>/dev/null || true
-      sed -i "s/^render:x:[0-9]*:/render:x:$host_render_gid:/" /etc/group 2>/dev/null || true
+      # Sync GID with host
+      local host_video_gid host_render_gid
+      host_video_gid=$(getent group video | cut -d: -f3)
+      host_render_gid=$(getent group render | cut -d: -f3)
+      if [[ -n "$host_video_gid" ]]; then
+        sed -i "s/^video:x:[0-9]*:/video:x:$host_video_gid:/" /etc/group 2>/dev/null || true
+      fi
+      if [[ -n "$host_render_gid" ]]; then
+        sed -i "s/^render:x:[0-9]*:/render:x:$host_render_gid:/" /etc/group 2>/dev/null || true
+      fi
+
+      # Verify VA-API
+      if command -v vainfo &>/dev/null; then
+        if vainfo &>/dev/null; then
+          msg_info "VA-API verified and working"
+        else
+          msg_warn "vainfo test failed - check GPU passthrough"
+        fi
+      fi
     fi
   fi
 
@@ -2933,16 +2980,34 @@ IP_FILE="/run/local-ip.env"
 mkdir -p "$(dirname "$IP_FILE")"
 
 get_current_ip() {
-    local targets=("8.8.8.8" "1.1.1.1" "192.168.1.1" "10.0.0.1" "172.16.0.1" "default")
     local ip
 
-    for target in "${targets[@]}"; do
+    # Try IPv4 targets first
+    local ipv4_targets=("8.8.8.8" "1.1.1.1" "192.168.1.1" "10.0.0.1" "172.16.0.1" "default")
+    for target in "${ipv4_targets[@]}"; do
         if [[ "$target" == "default" ]]; then
             ip=$(ip route get 1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if ($i=="src") print $(i+1)}')
         else
             ip=$(ip route get "$target" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if ($i=="src") print $(i+1)}')
         fi
         if [[ -n "$ip" ]]; then
+            echo "$ip"
+            return 0
+        fi
+    done
+
+    # IPv6 fallback: Try direct interface lookup for eth0
+    ip=$(ip -6 addr show eth0 scope global 2>/dev/null | awk '/inet6 / {print $2}' | cut -d/ -f1 | head -n1)
+    if [[ -n "$ip" && "$ip" =~ : ]]; then
+        echo "$ip"
+        return 0
+    fi
+
+    # IPv6 fallback: Use routing table with IPv6 targets (Google DNS, Cloudflare DNS)
+    local ipv6_targets=("2001:4860:4860::8888" "2606:4700:4700::1111")
+    for target in "${ipv6_targets[@]}"; do
+        ip=$(ip -6 route get "$target" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if ($i=="src") print $(i+1)}')
+        if [[ -n "$ip" && "$ip" =~ : ]]; then
             echo "$ip"
             return 0
         fi
@@ -2986,57 +3051,144 @@ EOF
 }
 
 # ------------------------------------------------------------------------------
-# Installs or updates MariaDB from official repo.
+# Installs or updates MariaDB.
 #
 # Description:
+#   - Uses Debian/Ubuntu distribution packages by default (most reliable)
+#   - Only uses official MariaDB repository when a specific version is requested
 #   - Detects current MariaDB version and replaces it if necessary
 #   - Preserves existing database data
-#   - Dynamically determines latest GA version if "latest" is given
 #
 # Variables:
-#   MARIADB_VERSION - MariaDB version to install (e.g. 10.11, latest) (default: latest)
+#   MARIADB_VERSION - MariaDB version to install (optional)
+#                     - Not set or "latest": Uses distribution packages (recommended)
+#                     - Specific version (e.g. "11.4", "12.2"): Uses MariaDB official repo
 # ------------------------------------------------------------------------------
 
 setup_mariadb() {
   local MARIADB_VERSION="${MARIADB_VERSION:-latest}"
+  local USE_DISTRO_PACKAGES=false
 
-  # Resolve "latest" to actual version
-  if [[ "$MARIADB_VERSION" == "latest" ]]; then
-    if ! curl -fsI --max-time 10 http://mirror.mariadb.org/repo/ >/dev/null 2>&1; then
-      msg_warn "MariaDB mirror not reachable - trying mariadb_repo_setup fallback"
-      # Try using official mariadb_repo_setup script as fallback
-      if curl -fsSL --max-time 15 https://r.mariadb.com/downloads/mariadb_repo_setup 2>/dev/null | bash -s -- --skip-verify >/dev/null 2>&1; then
-        msg_ok "MariaDB repository configured via mariadb_repo_setup"
-        # Extract version from configured repo
-        MARIADB_VERSION=$(grep -oP 'repo/\K[0-9]+\.[0-9]+\.[0-9]+' /etc/apt/sources.list.d/mariadb.list 2>/dev/null | head -n1 || echo "12.2")
-      else
-        msg_warn "mariadb_repo_setup failed - using hardcoded fallback version"
-        MARIADB_VERSION="12.2"
-      fi
-    else
-      MARIADB_VERSION=$(curl -fsSL --max-time 15 http://mirror.mariadb.org/repo/ 2>/dev/null |
-        grep -Eo '[0-9]+\.[0-9]+\.[0-9]+/' |
-        grep -vE 'rc/|rolling/' |
-        sed 's|/||' |
-        sort -Vr |
-        head -n1 || echo "")
+  # Ensure non-interactive mode for all apt operations
+  export DEBIAN_FRONTEND=noninteractive
+  export NEEDRESTART_MODE=a
+  export NEEDRESTART_SUSPEND=1
 
-      if [[ -z "$MARIADB_VERSION" ]]; then
-        msg_warn "Could not parse latest GA MariaDB version from mirror - trying mariadb_repo_setup"
-        if curl -fsSL --max-time 15 https://r.mariadb.com/downloads/mariadb_repo_setup 2>/dev/null | bash -s -- --skip-verify >/dev/null 2>&1; then
-          msg_ok "MariaDB repository configured via mariadb_repo_setup"
-          MARIADB_VERSION=$(grep -oP 'repo/\K[0-9]+\.[0-9]+\.[0-9]+' /etc/apt/sources.list.d/mariadb.list 2>/dev/null | head -n1 || echo "12.2")
-        else
-          msg_warn "mariadb_repo_setup failed - using hardcoded fallback version"
-          MARIADB_VERSION="12.2"
-        fi
-      fi
-    fi
+  # Determine installation method:
+  # - "latest" or empty: Use distribution packages (avoids mirror issues)
+  # - Specific version: Use MariaDB official repository
+  if [[ "$MARIADB_VERSION" == "latest" || -z "$MARIADB_VERSION" ]]; then
+    USE_DISTRO_PACKAGES=true
+    msg_info "Setup MariaDB (distribution packages)"
+  else
+    msg_info "Setup MariaDB $MARIADB_VERSION (official repository)"
   fi
 
   # Get currently installed version
   local CURRENT_VERSION=""
   CURRENT_VERSION=$(is_tool_installed "mariadb" 2>/dev/null) || true
+
+  # Pre-configure debconf to prevent any interactive prompts during install/upgrade
+  debconf-set-selections <<EOF
+mariadb-server mariadb-server/feedback boolean false
+mariadb-server mariadb-server/root_password password
+mariadb-server mariadb-server/root_password_again password
+EOF
+
+  # If specific version requested, also configure version-specific debconf
+  if [[ "$USE_DISTRO_PACKAGES" == "false" ]]; then
+    local MARIADB_MAJOR_MINOR
+    MARIADB_MAJOR_MINOR=$(echo "$MARIADB_VERSION" | awk -F. '{print $1"."$2}')
+    if [[ -n "$MARIADB_MAJOR_MINOR" ]]; then
+      debconf-set-selections <<EOF
+mariadb-server-$MARIADB_MAJOR_MINOR mariadb-server/feedback boolean false
+mariadb-server-$MARIADB_MAJOR_MINOR mariadb-server/root_password password
+mariadb-server-$MARIADB_MAJOR_MINOR mariadb-server/root_password_again password
+EOF
+    fi
+  fi
+
+  # ============================================================================
+  # DISTRIBUTION PACKAGES PATH (default, most reliable)
+  # ============================================================================
+  if [[ "$USE_DISTRO_PACKAGES" == "true" ]]; then
+    # Check if MariaDB was previously installed from official repo
+    local HAD_MARIADB_REPO=false
+    if [[ -f /etc/apt/sources.list.d/mariadb.sources ]] || [[ -f /etc/apt/sources.list.d/mariadb.list ]]; then
+      HAD_MARIADB_REPO=true
+      msg_info "Removing MariaDB official repository (switching to distribution packages)"
+    fi
+
+    # Clean up any existing MariaDB repository files to avoid conflicts
+    cleanup_old_repo_files "mariadb"
+
+    # If we had a repo, we need to refresh APT cache
+    if [[ "$HAD_MARIADB_REPO" == "true" ]]; then
+      $STD apt update || msg_warn "APT update had issues, continuing..."
+    fi
+
+    # Ensure APT is working
+    ensure_apt_working || return 1
+
+    # Check if installed version is from official repo and higher than distro version
+    # In this case, we keep the existing installation to avoid data issues
+    if [[ -n "$CURRENT_VERSION" ]]; then
+      # Get available distro version
+      local DISTRO_VERSION=""
+      DISTRO_VERSION=$(apt-cache policy mariadb-server 2>/dev/null | grep -E "Candidate:" | awk '{print $2}' | grep -oP '^\d+:\K\d+\.\d+\.\d+' || echo "")
+
+      if [[ -n "$DISTRO_VERSION" ]]; then
+        # Compare versions - if current is higher, keep it
+        local CURRENT_MAJOR DISTRO_MAJOR
+        CURRENT_MAJOR=$(echo "$CURRENT_VERSION" | awk -F. '{print $1}')
+        DISTRO_MAJOR=$(echo "$DISTRO_VERSION" | awk -F. '{print $1}')
+
+        if [[ "$CURRENT_MAJOR" -gt "$DISTRO_MAJOR" ]]; then
+          msg_warn "MariaDB $CURRENT_VERSION is already installed (higher than distro $DISTRO_VERSION)"
+          msg_warn "Keeping existing installation to preserve data integrity"
+          msg_warn "To use distribution packages, manually remove MariaDB first"
+          _setup_mariadb_runtime_dir
+          cache_installed_version "mariadb" "$CURRENT_VERSION"
+          msg_ok "Setup MariaDB $CURRENT_VERSION (existing installation kept)"
+          return 0
+        fi
+      fi
+    fi
+
+    # Install or upgrade MariaDB from distribution packages
+    if ! install_packages_with_retry "mariadb-server" "mariadb-client"; then
+      msg_error "Failed to install MariaDB packages from distribution"
+      return 1
+    fi
+
+    # Get installed version for caching
+    local INSTALLED_VERSION=""
+    INSTALLED_VERSION=$(mariadb --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -n1 || echo "distro")
+
+    # Configure runtime directory and finish
+    _setup_mariadb_runtime_dir
+    cache_installed_version "mariadb" "$INSTALLED_VERSION"
+    msg_ok "Setup MariaDB $INSTALLED_VERSION (distribution packages)"
+    return 0
+  fi
+
+  # ============================================================================
+  # OFFICIAL REPOSITORY PATH (only when specific version requested)
+  # ============================================================================
+
+  # First, check if there's an old/broken repository that needs cleanup
+  if [[ -f /etc/apt/sources.list.d/mariadb.sources ]] || [[ -f /etc/apt/sources.list.d/mariadb.list ]]; then
+    local OLD_REPO_VERSION=""
+    OLD_REPO_VERSION=$(grep -oP 'repo/\K[0-9]+\.[0-9]+(\.[0-9]+)?' /etc/apt/sources.list.d/mariadb.sources 2>/dev/null || \
+                       grep -oP 'repo/\K[0-9]+\.[0-9]+(\.[0-9]+)?' /etc/apt/sources.list.d/mariadb.list 2>/dev/null || echo "")
+
+    # Check if old repo points to a different version
+    if [[ -n "$OLD_REPO_VERSION" ]] && [[ "${OLD_REPO_VERSION%.*}" != "${MARIADB_VERSION%.*}" ]]; then
+      msg_info "Cleaning up old MariaDB repository (was: $OLD_REPO_VERSION, requested: $MARIADB_VERSION)"
+      cleanup_old_repo_files "mariadb"
+      $STD apt update || msg_warn "APT update had issues, continuing..."
+    fi
+  fi
 
   # Scenario 1: Already installed at target version - just update packages
   if [[ -n "$CURRENT_VERSION" && "$CURRENT_VERSION" == "$MARIADB_VERSION" ]]; then
@@ -3076,9 +3228,7 @@ setup_mariadb() {
     remove_old_tool_version "mariadb"
   fi
 
-  # Scenario 3: Fresh install or version change
-  msg_info "Setup MariaDB $MARIADB_VERSION"
-
+  # Scenario 3: Fresh install or version change with specific version
   # Prepare repository (cleanup + validation)
   prepare_repository_setup "mariadb" || {
     msg_error "Failed to prepare MariaDB repository"
@@ -3104,37 +3254,45 @@ setup_mariadb() {
     return 1
   }
 
-  # Set debconf selections for all potential versions
-  local MARIADB_MAJOR_MINOR
-  MARIADB_MAJOR_MINOR=$(echo "$MARIADB_VERSION" | awk -F. '{print $1"."$2}')
-  if [[ -n "$MARIADB_MAJOR_MINOR" ]]; then
-    echo "mariadb-server-$MARIADB_MAJOR_MINOR mariadb-server/feedback boolean false" | debconf-set-selections
-  fi
-
   # Install packages with retry logic
-  export DEBIAN_FRONTEND=noninteractive
   if ! install_packages_with_retry "mariadb-server" "mariadb-client"; then
-    # Fallback: try without specific version
-    msg_warn "Failed to install MariaDB packages from upstream repo, trying distro fallback..."
+    # Fallback: try distribution packages
+    msg_warn "Failed to install MariaDB $MARIADB_VERSION from official repo, falling back to distribution packages..."
     cleanup_old_repo_files "mariadb"
     $STD apt update || {
       msg_warn "APT update also failed, continuing with cache"
     }
-    install_packages_with_retry "mariadb-server" "mariadb-client" || {
-      msg_error "Failed to install MariaDB packages (both upstream and distro)"
+    if install_packages_with_retry "mariadb-server" "mariadb-client"; then
+      local FALLBACK_VERSION=""
+      FALLBACK_VERSION=$(mariadb --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -n1 || echo "distro")
+      msg_warn "Installed MariaDB $FALLBACK_VERSION from distribution instead of requested $MARIADB_VERSION"
+      _setup_mariadb_runtime_dir
+      cache_installed_version "mariadb" "$FALLBACK_VERSION"
+      msg_ok "Setup MariaDB $FALLBACK_VERSION (fallback to distribution packages)"
+      return 0
+    else
+      msg_error "Failed to install MariaDB packages (both official repo and distribution)"
       return 1
-    }
+    fi
   fi
 
+  _setup_mariadb_runtime_dir
+  cache_installed_version "mariadb" "$MARIADB_VERSION"
+  msg_ok "Setup MariaDB $MARIADB_VERSION"
+}
+
+# ------------------------------------------------------------------------------
+# Helper function: Configure MariaDB runtime directory persistence
+# ------------------------------------------------------------------------------
+_setup_mariadb_runtime_dir() {
   # Configure tmpfiles.d to ensure /run/mysqld directory is created on boot
   # This fixes the issue where MariaDB fails to start after container reboot
-  msg_info "Configuring MariaDB runtime directory persistence"
-  
+
   # Create tmpfiles.d configuration with error handling
-  if ! printf '# Ensure /run/mysqld directory exists with correct permissions for MariaDB\nd /run/mysqld 0755 mysql mysql -\n' > /etc/tmpfiles.d/mariadb.conf; then
+  if ! printf '# Ensure /run/mysqld directory exists with correct permissions for MariaDB\nd /run/mysqld 0755 mysql mysql -\n' >/etc/tmpfiles.d/mariadb.conf; then
     msg_warn "Failed to create /etc/tmpfiles.d/mariadb.conf - runtime directory may not persist on reboot"
   fi
-  
+
   # Create the directory now if it doesn't exist
   # Verify mysql user exists before attempting ownership change
   if [[ ! -d /run/mysqld ]]; then
@@ -3148,11 +3306,6 @@ setup_mariadb() {
       msg_warn "mysql user not found - directory created with correct permissions but ownership not set"
     fi
   fi
-  
-  msg_ok "Configured MariaDB runtime directory persistence"
-
-  cache_installed_version "mariadb" "$MARIADB_VERSION"
-  msg_ok "Setup MariaDB $MARIADB_VERSION"
 }
 
 # ------------------------------------------------------------------------------
@@ -3251,6 +3404,11 @@ function setup_mongodb() {
   local DISTRO_ID DISTRO_CODENAME
   DISTRO_ID=$(get_os_info id)
   DISTRO_CODENAME=$(get_os_info codename)
+
+  # Ensure non-interactive mode for all apt operations
+  export DEBIAN_FRONTEND=noninteractive
+  export NEEDRESTART_MODE=a
+  export NEEDRESTART_SUSPEND=1
 
   # Check AVX support
   if ! grep -qm1 'avx[^ ]*' /proc/cpuinfo; then
@@ -3370,6 +3528,11 @@ function setup_mysql() {
   DISTRO_ID=$(awk -F= '/^ID=/{print $2}' /etc/os-release | tr -d '"')
   DISTRO_CODENAME=$(awk -F= '/^VERSION_CODENAME=/{print $2}' /etc/os-release)
 
+  # Ensure non-interactive mode for all apt operations
+  export DEBIAN_FRONTEND=noninteractive
+  export NEEDRESTART_MODE=a
+  export NEEDRESTART_SUSPEND=1
+
   # Get currently installed version
   local CURRENT_VERSION=""
   CURRENT_VERSION=$(is_tool_installed "mysql" 2>/dev/null) || true
@@ -3464,7 +3627,6 @@ EOF
   ensure_apt_working || return 1
 
   # Try multiple package names with retry logic
-  export DEBIAN_FRONTEND=noninteractive
   local mysql_install_success=false
 
   if apt-cache search "^mysql-server$" 2>/dev/null | grep -q . &&
@@ -3648,14 +3810,14 @@ function setup_nodejs() {
           msg_info "Updating $MODULE_NAME from v$MODULE_INSTALLED_VERSION to v$MODULE_REQ_VERSION"
           if ! $STD npm install -g "${MODULE_NAME}@${MODULE_REQ_VERSION}" 2>/dev/null; then
             msg_warn "Failed to update $MODULE_NAME to version $MODULE_REQ_VERSION"
-            ((failed_modules++))
+            ((failed_modules++)) || true
             continue
           fi
         elif [[ "$MODULE_REQ_VERSION" == "latest" ]]; then
           msg_info "Updating $MODULE_NAME to latest version"
           if ! $STD npm install -g "${MODULE_NAME}@latest" 2>/dev/null; then
             msg_warn "Failed to update $MODULE_NAME to latest version"
-            ((failed_modules++))
+            ((failed_modules++)) || true
             continue
           fi
         fi
@@ -3663,7 +3825,7 @@ function setup_nodejs() {
         msg_info "Installing $MODULE_NAME@$MODULE_REQ_VERSION"
         if ! $STD npm install -g "${MODULE_NAME}@${MODULE_REQ_VERSION}" 2>/dev/null; then
           msg_warn "Failed to install $MODULE_NAME@$MODULE_REQ_VERSION"
-          ((failed_modules++))
+          ((failed_modules++)) || true
           continue
         fi
       fi
@@ -3752,11 +3914,19 @@ EOF
     return 1
   }
 
-  manage_tool_repository "php" "$PHP_VERSION" "" "https://packages.sury.org/debsuryorg-archive-keyring.deb" || {
-    msg_error "Failed to setup PHP repository"
-    return 1
-  }
-
+  # Use different repository based on OS
+  if [[ "$DISTRO_ID" == "ubuntu" ]]; then
+    # Ubuntu: Use ondrej/php PPA
+    msg_info "Adding ondrej/php PPA for Ubuntu"
+    $STD apt install -y software-properties-common
+    $STD add-apt-repository -y ppa:ondrej/php
+  else
+    # Debian: Use Sury repository
+    manage_tool_repository "php" "$PHP_VERSION" "" "https://packages.sury.org/debsuryorg-archive-keyring.deb" || {
+      msg_error "Failed to setup PHP repository"
+      return 1
+    }
+  fi
   ensure_apt_working || return 1
   $STD apt update
 
@@ -3902,6 +4072,11 @@ function setup_postgresql() {
   local DISTRO_ID DISTRO_CODENAME
   DISTRO_ID=$(awk -F= '/^ID=/{print $2}' /etc/os-release | tr -d '"')
   DISTRO_CODENAME=$(awk -F= '/^VERSION_CODENAME=/{print $2}' /etc/os-release)
+
+  # Ensure non-interactive mode for all apt operations
+  export DEBIAN_FRONTEND=noninteractive
+  export NEEDRESTART_MODE=a
+  export NEEDRESTART_SUSPEND=1
 
   # Get currently installed version
   local CURRENT_PG_VERSION=""
@@ -4360,6 +4535,11 @@ function setup_clickhouse() {
   DISTRO_ID=$(awk -F= '/^ID=/{print $2}' /etc/os-release | tr -d '"')
   DISTRO_CODENAME=$(awk -F= '/^VERSION_CODENAME=/{print $2}' /etc/os-release)
 
+  # Ensure non-interactive mode for all apt operations
+  export DEBIAN_FRONTEND=noninteractive
+  export NEEDRESTART_MODE=a
+  export NEEDRESTART_SUSPEND=1
+
   # Resolve "latest" version
   if [[ "$CLICKHOUSE_VERSION" == "latest" ]]; then
     CLICKHOUSE_VERSION=$(curl -fsSL --max-time 15 https://packages.clickhouse.com/tgz/stable/ 2>/dev/null |
@@ -4422,7 +4602,6 @@ function setup_clickhouse() {
     "main"
 
   # Install packages with retry logic
-  export DEBIAN_FRONTEND=noninteractive
   $STD apt update || {
     msg_error "APT update failed for ClickHouse repository"
     return 1

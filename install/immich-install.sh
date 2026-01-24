@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: vhsdream
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://immich.app
@@ -29,7 +29,6 @@ $STD apt install --no-install-recommends -y \
   libltdl-dev \
   libgdk-pixbuf-2.0-dev \
   libbrotli-dev \
-  libde265-dev \
   libexif-dev \
   libexpat1-dev \
   libglib2.0-dev \
@@ -105,9 +104,9 @@ Pin-Priority: 450
 EOF
 $STD apt update
 msg_ok "Configured Debian Testing repo"
-msg_info "Installing libmimalloc3"
-$STD apt install -t testing --no-install-recommends -yqq libmimalloc3
-msg_ok "Installed libmimalloc3"
+msg_info "Installing packages from Debian Testing repo"
+$STD apt install -t testing --no-install-recommends -yqq libmimalloc3 libde265-dev
+msg_ok "Installed packages from Debian Testing repo"
 
 PNPM_VERSION="$(curl -fsSL "https://raw.githubusercontent.com/immich-app/immich/refs/heads/main/package.json" | jq -r '.packageManager | split("@")[1]')"
 NODE_VERSION="24" NODE_MODULE="pnpm@${PNPM_VERSION}" setup_nodejs

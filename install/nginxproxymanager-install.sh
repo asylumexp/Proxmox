@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 Community-Scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: tteck (tteckster) | Co-Author: CrazyWolf13
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://nginxproxymanager.com/
@@ -59,12 +59,11 @@ msg_ok "Installed Openresty"
 
 NODE_VERSION="22" NODE_MODULE="yarn" setup_nodejs
 
-# RELEASE=$(curl -fsSL https://api.github.com/repos/NginxProxyManager/nginx-proxy-manager/releases/latest |
-#  grep "tag_name" |
-#  awk '{print substr($2, 3, length($2)-4) }')
-RELEASE="2.13.5"
+RELEASE=$(curl -fsSL https://api.github.com/repos/NginxProxyManager/nginx-proxy-manager/releases/latest |
+  grep "tag_name" |
+  awk '{print substr($2, 3, length($2)-4) }')
 
-fetch_and_deploy_gh_release "nginxproxymanager" "NginxProxyManager/nginx-proxy-manager" "tarball" "v2.13.5"
+fetch_and_deploy_gh_release "nginxproxymanager" "NginxProxyManager/nginx-proxy-manager" "tarball" "v${RELEASE}"
 
 msg_info "Setting up Environment"
 ln -sf /usr/bin/python3 /usr/bin/python

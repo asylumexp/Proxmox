@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-
-# Copyright (c) 2021-2025 community-scripts ORG
-# Author: tteck (tteckster) | Co-Author: Slaviša Arežina (tremor021)
+# Copyright (c) 2021-2026 community-scripts ORG
+# Author: tteck (tteckster) | Co-Author: Slaviša Arežina (tremor021), remz1337
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://github.com/keycloak/keycloak
 

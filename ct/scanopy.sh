@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/build.func)
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: vhsdream
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://github.com/scanopy/scanopy
@@ -31,14 +31,13 @@ function update_script() {
 
   if check_for_gh_release "scanopy" "scanopy/scanopy"; then
     msg_info "Stopping services"
-    systemctl stop scanopy-daemon scanopy-server
+    systemctl stop scanopy-server
+    [[ -f /etc/systemd/system/scanopy-daemon.service ]] && systemctl stop scanopy-daemon
     msg_ok "Stopped services"
 
     msg_info "Backing up configurations"
-    cp /opt/scanopy/.env /opt/scanopy.env.bak
-    if [[ -f /opt/scanopy/oidc.toml ]]; then
-      cp /opt/scanopy/oidc.toml /opt/scanopy.oidc.toml
-    fi
+    cp /opt/scanopy/.env /opt/scanopy.env
+    [[ -f /opt/scanopy/oidc.toml ]] && cp /opt/scanopy/oidc.toml /opt/scanopy.oidc.toml
     msg_ok "Backed up configurations"
 
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "scanopy" "scanopy/scanopy" "tarball" "latest" "/opt/scanopy"
@@ -52,13 +51,10 @@ function update_script() {
     TOOLCHAIN="$(grep "channel" /opt/scanopy/backend/rust-toolchain.toml | awk -F\" '{print $2}')"
     RUST_TOOLCHAIN=$TOOLCHAIN setup_rust
 
-    mv /opt/scanopy.env.bak /opt/scanopy/.env
-    if [[ -f /opt/scanopy.oidc.toml ]]; then
-      mv /opt/scanopy.oidc.toml /opt/scanopy/oidc.toml
-    fi
-    LOCAL_IP="$(hostname -I | awk '{print $1}')"
+    [[ -f /opt/scanopy.env ]] && mv /opt/scanopy.env /opt/scanopy/.env
+    [[ -f /opt/scanopy.oidc.toml ]] && mv /opt/scanopy.oidc.toml /opt/scanopy/oidc.toml
     if ! grep -q "PUBLIC_URL" /opt/scanopy/.env; then
-      sed -i "\|_PATH=|a\scanopy_PUBLIC_URL=http://${LOCAL_IP}:60072" /opt/scanopy/.env
+      sed -i "\|_PATH=|a\\scanopy_PUBLIC_URL=http://${LOCAL_IP}:60072" /opt/scanopy/.env
     fi
     sed -i 's|_TARGET=.*$|_URL=http://127.0.0.1:60072|' /opt/scanopy/.env
 
@@ -82,7 +78,8 @@ function update_script() {
     msg_ok "Built scanopy-daemon"
 
     msg_info "Starting services"
-    systemctl start scanopy-server scanopy-daemon
+    systemctl start scanopy-server
+    [[ -f /etc/systemd/system/scanopy-daemon.service ]] && systemctl start scanopy-daemon
     msg_ok "Updated successfully!"
   fi
   exit
@@ -92,8 +89,8 @@ start
 build_container
 description
 
-msg_ok "Completed Successfully!\n"
+msg_ok "Completed successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
 echo -e "${INFO}${YW} Access it using the following URL:${CL}"
 echo -e "${TAB}${GATEWAY}${BGN}http://${IP}:60072${CL}"
-echo -e "${INFO}${YW} Then create your account, and run the 'configure_daemon.sh' script to setup the daemon.${CL}"
+echo -e "${INFO}${YW} Then create your account, and create a daemon in the UI.${CL}"

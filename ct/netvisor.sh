@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/build.func)
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: vhsdream
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://github.com/scanopy/scanopy
@@ -49,7 +49,6 @@ function update_script() {
   if [[ -f /opt/netvisor/oidc.toml ]]; then
     mv /opt/netvisor/oidc.toml /opt/scanopy/oidc.toml
   fi
-  LOCAL_IP="$(hostname -I | awk '{print $1}')"
   if ! grep -q "PUBLIC_URL" /opt/scanopy/.env; then
     sed -i "\|_PATH=|a\NETVISOR_PUBLIC_URL=http://${LOCAL_IP}:60072" /opt/scanopy/.env
   fi
@@ -104,7 +103,7 @@ start
 build_container
 description
 
-msg_ok "Completed Successfully!\n"
+msg_ok "Completed successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
 echo -e "${INFO}${YW} Access it using the following URL:${CL}"
 echo -e "${TAB}${GATEWAY}${BGN}http://${IP}:60072${CL}"

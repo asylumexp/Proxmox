@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: wimb0
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://github.com/NLnetLabs/unbound
@@ -18,11 +18,7 @@ $STD apt-get install -y logrotate
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Unbound"
-$STD apt install -y \
-  unbound \
-  unbound-host
-msg_info "Installed Unbound"
-
+mkdir -p /etc/unbound/unbound.conf.d
 cat <<EOF >/etc/unbound/unbound.conf.d/unbound.conf
 server:
   interface: 0.0.0.0
@@ -56,13 +52,17 @@ server:
   logfile: /var/log/unbound.log
 EOF
 
+$STD apt install -y \
+  unbound \
+  unbound-host
+
 touch /var/log/unbound.log
 chown unbound:unbound /var/log/unbound.log
 sleep 5
 systemctl restart unbound
 msg_ok "Installed Unbound"
 
-msg_ok "Configuring Logrotate"
+msg_info "Configuring Logrotate"
 cat <<EOF >/etc/logrotate.d/unbound
 /var/log/unbound.log {
   daily
@@ -78,7 +78,6 @@ cat <<EOF >/etc/logrotate.d/unbound
   endscript
 }
 EOF
-
 systemctl restart logrotate
 msg_ok "Configured Logrotate"
 

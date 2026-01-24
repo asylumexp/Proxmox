@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: cfurrow | Co-Author: Slaviša Arežina (tremor021)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://github.com/gristlabs/grist-core
@@ -14,7 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
+$STD apt install -y \
   make \
   ca-certificates \
   python3-venv
@@ -42,7 +42,7 @@ Description=Grist
 After=network.target
 
 [Service]
-Type=exec
+Type=simple
 WorkingDirectory=/opt/grist 
 ExecStart=/usr/bin/yarn run start:prod
 EnvironmentFile=-/opt/grist/.env

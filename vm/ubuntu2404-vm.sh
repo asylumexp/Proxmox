@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
@@ -541,6 +541,6 @@ if [ "$START_VM" == "yes" ]; then
   msg_ok "Started Ubuntu 24.04 VM"
 fi
 post_update_to_api "done" "none"
-msg_ok "Completed Successfully!\n"
+msg_ok "Completed successfully!\n"
 echo -e "Setup Cloud-Init before starting \n
 More info at https://github.com/community-scripts/ProxmoxVE/discussions/272 \n"

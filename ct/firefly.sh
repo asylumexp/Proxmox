@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/build.func)
-# Copyright (c) 2021-2025 community-scripts ORG
-# Author: quantumryuu
+# Copyright (c) 2021-2026 community-scripts ORG
+# Author: quantumryuu | Co-Author: Slaviša Arežina (tremor021)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://firefly-iii.org/
 
@@ -32,6 +32,7 @@ function update_script() {
   if check_for_gh_release "firefly" "firefly-iii/firefly-iii"; then
     systemctl stop apache2
     cp /opt/firefly/.env /opt/.env
+    rm -rf /opt/storage
     cp -r /opt/firefly/storage /opt/storage
 
     if [[ -d /opt/firefly/dataimporter ]]; then
@@ -82,6 +83,7 @@ function update_script() {
       chown -R www-data:www-data /opt/firefly/dataimporter
       msg_ok "Updated Firefly Importer"
     fi
+    rm -rf /opt/storage /opt/.env /opt/dataimporter.env
     systemctl start apache2
     msg_ok "Updated successfully!"
   fi
@@ -92,7 +94,7 @@ start
 build_container
 description
 
-msg_ok "Completed Successfully!\n"
+msg_ok "Completed successfully!\n"
 echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
 echo -e "${INFO}${YW} Access it using the following URL:${CL}"
 echo -e "${TAB}${GATEWAY}${BGN}http://${IP}${CL}"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: MickLesk (Canbiz)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://linkwarden.app/
@@ -29,7 +29,7 @@ if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then
   setup_adminer
 fi
 
-fetch_and_deploy_gh_release "linkwarden" "linkwarden/linkwarden"
+fetch_and_deploy_gh_release "linkwarden" "linkwarden/linkwarden" "tarball"
 
 msg_info "Installing Linkwarden (Patience)"
 SECRET_KEY="$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)"
@@ -50,10 +50,9 @@ fi
 $STD yarn
 $STD npx playwright install-deps
 $STD npx playwright install
-IP=$(hostname -I | awk '{print $1}')
 cat <<EOF >/opt/linkwarden/.env
 NEXTAUTH_SECRET=${SECRET_KEY}
-NEXTAUTH_URL=http://${IP}:3000
+NEXTAUTH_URL=http://${LOCAL_IP}:3000
 DATABASE_URL=postgresql://${PG_DB_USER}:${PG_DB_PASS}@localhost:5432/${PG_DB_NAME}
 EOF
 $STD yarn prisma:generate

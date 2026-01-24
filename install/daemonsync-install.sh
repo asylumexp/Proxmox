@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2024 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: tteck (tteckster)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://daemonsync.me/
@@ -14,8 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-wget -qL http://ports.ubuntu.com/pool/universe/g/gcc-defaults/g++-multilib-arm-linux-gnueabi_9.3.0-1ubuntu2_arm64.deb
-$STD dpkg -i g++-multilib-arm-linux-gnueabi_9.3.0-1ubuntu2_arm64.deb
+$STD apt install -y g++-multilib
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Daemon Sync Server"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: MickLesk (CanbiZ)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://www.meilisearch.com/
@@ -18,7 +18,6 @@ fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "singlefile"
 msg_info "Configuring ${APPLICATION}"
 curl -fsSL https://raw.githubusercontent.com/meilisearch/meilisearch/latest/config.toml -o /etc/meilisearch.toml
 MASTER_KEY=$(openssl rand -base64 12)
-LOCAL_IP="$(hostname -I | awk '{print $1}')"
 sed -i \
   -e 's|^env =.*|env = "production"|' \
   -e "s|^# master_key =.*|master_key = \"$MASTER_KEY\"|" \

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: MickLesk (CanbiZ)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://invoiceninja.com/
@@ -36,7 +36,7 @@ msg_ok "Installed Dependencies"
 setup_mariadb
 MARIADB_DB_NAME="invoiceninja" MARIADB_DB_USER="invoiceninja" setup_mariadb_db
 PHP_VERSION="8.4" PHP_FPM="YES" PHP_MODULE="bcmath,curl,gd,gmp,imagick,intl,mbstring,mysql,soap,xml,zip" setup_php
-import_local_ip
+
 fetch_and_deploy_gh_release "invoiceninja" "invoiceninja/invoiceninja" "prebuild" "latest" "/opt/invoiceninja" "invoiceninja.tar.gz"
 
 msg_info "Configuring InvoiceNinja"
@@ -106,6 +106,7 @@ $STD php artisan migrate --force
 $STD php artisan db:seed --force
 $STD php artisan ninja:post-update
 $STD php artisan optimize
+chown -R www-data:www-data /opt/invoiceninja
 msg_ok "Set up Database"
 
 msg_info "Configuring Nginx"

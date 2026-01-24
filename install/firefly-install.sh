@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: quantumryuu | Co-Author: Slaviša Arežina (tremor021)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://firefly-iii.org/
@@ -17,7 +17,7 @@ PHP_VERSION="8.4" PHP_APACHE="YES" PHP_MODULE="mysql" setup_php
 setup_composer
 setup_mariadb
 MARIADB_DB_NAME="firefly" MARIADB_DB_USER="firefly" setup_mariadb_db
-import_local_ip
+
 fetch_and_deploy_gh_release "firefly" "firefly-iii/firefly-iii" "prebuild" "latest" "/opt/firefly" "FireflyIII-*.zip"
 fetch_and_deploy_gh_release "dataimporter" "firefly-iii/data-importer" "prebuild" "latest" "/opt/firefly/dataimporter" "DataImporter-v*.tar.gz"
 

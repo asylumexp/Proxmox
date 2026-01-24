@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: Slaviša Arežina (tremor021)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://openarchiver.com/
@@ -20,11 +20,11 @@ msg_ok "Installed dependendencies"
 NODE_VERSION="22" NODE_MODULE="pnpm" setup_nodejs
 PG_VERSION="17" setup_postgresql
 PG_DB_NAME="openarchiver_db" PG_DB_USER="openarchiver" setup_postgresql_db
+
 fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "binary"
 fetch_and_deploy_gh_release "openarchiver" "LogicLabs-OU/OpenArchiver" "tarball"
 JWT_KEY="$(openssl rand -hex 32)"
 SECRET_KEY="$(openssl rand -hex 32)"
-import_local_ip
 
 msg_info "Configuring MeiliSearch"
 curl -fsSL https://raw.githubusercontent.com/meilisearch/meilisearch/latest/config.toml -o /etc/meilisearch.toml

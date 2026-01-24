@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2024 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: tteck (tteckster)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://www.phoscon.de/en/conbee2/software#deconz
@@ -14,9 +14,11 @@ network_check
 update_os
 
 msg_info "Setting Phoscon Repository"
-VERSION="$(awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release)"
-curl -fsSL http://phoscon.de/apt/deconz.pub.key >/etc/apt/trusted.gpg.d/deconz.pub.asc
-echo "deb [arch=arm64] http://phoscon.de/apt/deconz $VERSION main" >/etc/apt/sources.list.d/deconz.list
+setup_deb822_repo \
+  "deconz" \
+  "http://phoscon.de/apt/deconz.pub.key" \
+  "http://phoscon.de/apt/deconz" \
+  "generic"
 msg_ok "Setup Phoscon Repository"
 
 msg_info "Installing deConz"

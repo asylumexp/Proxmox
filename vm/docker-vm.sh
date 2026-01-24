@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Copyright (c) 2021-2026 community-scripts ORG
 # Author: thost96 (thost96) | Co-Author: michelroegl-brunner
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 
@@ -560,7 +560,7 @@ DESCRIPTION=$(
 </div>
 EOF
 )
-qm set "$VMID" -description "$DESCRIPTION" >/dev/null
+qm set $VMID -description "$DESCRIPTION" >/dev/null
 
 msg_ok "Created a Docker VM ${CL}${BL}(${HN})"
 if [ "$START_VM" == "yes" ]; then
@@ -569,4 +569,4 @@ if [ "$START_VM" == "yes" ]; then
   msg_ok "Started Docker VM"
 fi
 post_update_to_api "done" "none"
-msg_ok "Completed Successfully!\n"
+msg_ok "Completed successfully!\n"

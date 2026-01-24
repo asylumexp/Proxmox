@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2024 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: tteck (tteckster)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://aria2.github.io/
@@ -14,19 +14,21 @@ network_check
 update_os
 
 msg_info "Installing Aria2"
-$STD apt-get install -y aria2
+$STD apt install -y aria2
 msg_ok "Installed Aria2"
 
 read -r -p "${TAB3}Would you like to add AriaNG? <y/N> " prompt
 if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
-  msg_info "Installing AriaNG"
+  msg_info "Installing Dependencies"
   $STD apt-get install -y nginx 
   $STD apt-get install -y unzip 
   systemctl disable -q --now nginx
-  curl -fsSL "$(curl -fsSL https://api.github.com/repos/mayswind/ariang/releases/latest | grep download | grep AllInOne.zip | cut -d\" -f4)" -o $(basename "$(curl -fsSL https://api.github.com/repos/mayswind/ariang/releases/latest | grep download | grep AllInOne.zip | cut -d\" -f4)")
-  $STD unzip AriaNg-*-AllInOne.zip -d /var/www
-  rm AriaNg-*-AllInOne.zip
   rm /etc/nginx/sites-enabled/*
+  msg_ok "Installed Dependencies"
+
+  fetch_and_deploy_gh_release "ariang" "mayswind/ariang" "prebuild" "latest" "/var/www" "AriaNg-*-AllInOne.zip"
+  
+  msg_info "Configure nginx"
   cat <<EOF >/etc/nginx/conf.d/ariang.conf
 server {
     listen 6880 default_server;
@@ -43,11 +45,12 @@ server {
 }
 EOF
   cp /lib/systemd/system/nginx.service /lib/systemd/system/ariang.service
-  msg_ok "Installed AriaNG"
+  systemctl enable -q --now ariang
+  msg_ok "Configured nginx"
 fi
 
 msg_info "Creating Service"
-mkdir /root/downloads
+mkdir -p /root/downloads
 rpc_secret=$(openssl rand -base64 8)
 echo "rpc-secret: $rpc_secret" >>~/rpc.secret
 cat <<EOF >/root/aria2.daemon
@@ -81,7 +84,6 @@ Restart=on-failure
 WantedBy=multi-user.target
 EOF
 systemctl enable -q --now aria2
-systemctl enable -q --now ariang
 msg_ok "Created Service"
 
 motd_ssh

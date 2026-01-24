@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: tteck | Co-Author: havardthom | Co-Author: Slaviša Arežina (tremor021)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://openwebui.com/
@@ -14,7 +14,9 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt install -y ffmpeg
+$STD apt install -y \
+  ffmpeg \
+  zstd
 msg_ok "Installed Dependencies"
 
 setup_hwaccel
@@ -35,7 +37,7 @@ Types: deb
 URIs: https://repositories.intel.com/gpu/ubuntu
 Suites: jammy
 Components: client
-Architectures: amd64 i386
+Architectures: arm64 i386
 Signed-By: /usr/share/keyrings/intel-graphics.gpg
 EOF
   curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor -o /usr/share/keyrings/oneapi-archive-keyring.gpg 2>/dev/null || true
@@ -69,9 +71,10 @@ EOF
   msg_ok "Installed Intel® oneAPI Base Toolkit"
 
   msg_info "Installing Ollama"
-  curl -fsSLO -C - https://ollama.com/download/ollama-linux-arm64.tgz
-  tar -C /usr -xzf ollama-linux-arm64.tgz
-  rm -rf ollama-linux-arm64.tgz
+  OLLAMA_RELEASE=$(curl -fsSL https://api.github.com/repos/ollama/ollama/releases/latest | grep "tag_name" | awk -F '"' '{print $4}')
+  curl -fsSLO -C - https://github.com/ollama/ollama/releases/download/${OLLAMA_RELEASE}/ollama-linux-arm64.tar.zst
+  tar --zstd -C /usr -xf ollama-linux-arm64.tar.zst
+  rm -rf ollama-linux-arm64.tar.zst
   cat <<EOF >/etc/systemd/system/ollama.service
 [Unit]
 Description=Ollama Service

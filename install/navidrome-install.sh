@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-
-# Copyright (c) 2021-2025 tteck
-# Author: tteck (tteckster)
+# Copyright (c) 2021-2026 community-scripts ORG
+# Author: MickLesk (CanbiZ)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 # Source: https://github.com/navidrome/navidrome
 

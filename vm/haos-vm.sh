@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 tteck
+# Copyright (c) 2021-2026 tteck
 # Author: tteck (tteckster)
 # License: MIT | https://github.com/asylumexp/Proxmox/raw/main/LICENSE
 
@@ -575,7 +575,7 @@ qm set "$VMID" --agent enabled=1 >/dev/null
 msg_ok "Attached EFI and root disk"
 
 msg_info "Resizing disk to $DISK_SIZE"
-qm resize "$VMID" scsi0 "${DISK_SIZE}" >/dev/null
+qm resize $VMID scsi0 ${DISK_SIZE} >/dev/null
 msg_ok "Resized disk"
 
 DESCRIPTION=$(
@@ -608,7 +608,7 @@ DESCRIPTION=$(
 </div>
 EOF
 )
-qm set "$VMID" -description "$DESCRIPTION" >/dev/null
+qm set $VMID -description "$DESCRIPTION" >/dev/null
 msg_ok "Created Homeassistant OS VM ${CL}${BL}(${HN})"
 
 if whiptail --backtitle "Proxmox VE Helper Scripts" --title "Image Cache" \
@@ -625,4 +625,4 @@ if [ "$START_VM" == "yes" ]; then
   msg_ok "Started Home Assistant OS VM"
 fi
 post_update_to_api "done" "none"
-msg_ok "Completed Successfully!\n"
+msg_ok "Completed successfully!\n"
