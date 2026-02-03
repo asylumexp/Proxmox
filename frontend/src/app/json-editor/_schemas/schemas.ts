@@ -45,6 +45,7 @@ export const ScriptSchema = z.object({
     username: z.string().nullable(),
     password: z.string().nullable(),
   }),
+	status: z.string(),
   notes: z.array(NoteSchema).optional().default([]),
 }).refine((data) => {
   if (data.disable === true && !data.disable_description) {
