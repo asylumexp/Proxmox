@@ -13,8 +13,8 @@ setting_up_container
 network_check
 update_os
 
-fetch_and_deploy_gh_release "rustypaste" "orhun/rustypaste" "prebuild" "latest" "/opt/rustypaste" "*x86_64-unknown-linux-gnu.tar.gz"
-fetch_and_deploy_gh_release "rustypaste-cli" "orhun/rustypaste-cli" "prebuild" "latest" "/usr/local/bin" "*x86_64-unknown-linux-gnu.tar.gz"
+fetch_and_deploy_gh_release "rustypaste" "orhun/rustypaste" "prebuild" "latest" "/opt/rustypaste" "*aarch64-unknown-linux-gnu.tar.gz"
+fetch_and_deploy_gh_release "rustypaste-cli" "orhun/rustypaste-cli" "prebuild" "latest" "/usr/local/bin" "*aarch64-unknown-linux-gnu.tar.gz"
 
 msg_info "Setting up RustyPaste"
 cd /opt/rustypaste

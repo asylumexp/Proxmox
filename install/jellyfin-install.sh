@@ -22,7 +22,7 @@ if ! dpkg -s libjemalloc2 >/dev/null 2>&1; then
   $STD apt install -y libjemalloc2
 fi
 if [[ ! -f /usr/lib/libjemalloc.so ]]; then
-  ln -sf /usr/lib/x86_64-linux-gnu/libjemalloc.so.2 /usr/lib/libjemalloc.so
+  ln -sf /usr/lib/aarch64-linux-gnu/libjemalloc.so.2 /usr/lib/libjemalloc.so
 fi
 if [[ ! -d /etc/apt/keyrings ]]; then
   mkdir -p /etc/apt/keyrings

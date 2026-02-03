@@ -21,9 +21,9 @@ $STD apt install -y \
   openssl
 msg_ok "Installed Dependencies"
 
-NODE_VERSION=$(curl -s https://raw.githubusercontent.com/homarr-labs/homarr/dev/package.json | jq -r '.engines.node | split(">=")[1] | split(".")[0]')
+NODE_VERSION=$(curl -s https://raw.githubusercontent.com/homarr-labs/homarr/dev/package.json | jq -	r '.engines.node | split(">=")[1] | split(".")[0]')
 setup_nodejs
-fetch_and_deploy_gh_release "homarr" "homarr-labs/homarr" "prebuild" "latest" "/opt/homarr" "build-debian-amd64.tar.gz"
+fetch_and_deploy_gh_release "homarr" "homarr-labs/homarr" "prebuild" "latest" "/opt/homarr" "build-debian-arm64.tar.gz"
 
 msg_info "Installing Homarr"
 mkdir -p /opt/homarr_db

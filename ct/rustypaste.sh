@@ -39,7 +39,7 @@ function update_script() {
     cp /opt/rustypaste/config.toml /tmp/rustypaste_config.toml.bak
     msg_ok "Backup Created"
 
-    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "rustypaste" "orhun/rustypaste" "prebuild" "latest" "/opt/rustypaste" "*x86_64-unknown-linux-gnu.tar.gz"
+    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "rustypaste" "orhun/rustypaste" "prebuild" "latest" "/opt/rustypaste" "*aarch64-unknown-linux-gnu.tar.gz"
 
     msg_info "Restoring Data"
     mv /tmp/rustypaste_config.toml.bak /opt/rustypaste/config.toml
@@ -54,7 +54,7 @@ function update_script() {
   fi
 
   if check_for_gh_release "rustypaste-cli" "orhun/rustypaste-cli"; then
-    fetch_and_deploy_gh_release "rustypaste-cli" "orhun/rustypaste-cli" "prebuild" "latest" "/usr/local/bin" "*x86_64-unknown-linux-gnu.tar.gz"
+    fetch_and_deploy_gh_release "rustypaste-cli" "orhun/rustypaste-cli" "prebuild" "latest" "/usr/local/bin" "*aarch64-unknown-linux-gnu.tar.gz"
   fi
   exit
 }

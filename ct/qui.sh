@@ -32,7 +32,7 @@ function update_script() {
     systemctl stop qui
     msg_ok "Stopped Service"
 
-    fetch_and_deploy_gh_release "qui" "autobrr/qui" "prebuild" "latest" "/tmp/qui" "qui_*_linux_x86_64.tar.gz"
+    fetch_and_deploy_gh_release "qui" "autobrr/qui" "prebuild" "latest" "/tmp/qui" "qui_*_linux_aarch64.tar.gz"
 
     msg_info "Updating qui"
     mv /tmp/qui/qui /usr/local/bin/qui

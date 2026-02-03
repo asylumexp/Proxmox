@@ -36,7 +36,7 @@ function update_script() {
     mv /opt/blocky/config.yml /opt/config.yml
     msg_ok "Backed Up Config"
     
-    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "blocky" "0xERR0R/blocky" "prebuild" "latest" "/opt/blocky" "blocky_*_Linux_x86_64.tar.gz"
+    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "blocky" "0xERR0R/blocky" "prebuild" "latest" "/opt/blocky" "blocky_*_Linux_aarch64.tar.gz"
 
     msg_info "Restore Config"
     mv /opt/config.yml /opt/blocky/config.yml

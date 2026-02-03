@@ -33,7 +33,7 @@ sonar.jdbc.url=jdbc:postgresql://localhost/${PG_DB_NAME}
 sonar.web.host=0.0.0.0
 sonar.web.port=9000
 EOF
-chmod +x /opt/sonarqube/bin/linux-x86-64/sonar.sh
+chmod +x /opt/sonarqube/bin/linux-aarch64/sonar.sh
 echo ${RELEASE} >>~/.sonarqube
 msg_ok "Configured SonarQube"
 
@@ -45,8 +45,8 @@ After=postgresql.service
 
 [Service]
 Type=forking
-ExecStart=/opt/sonarqube/bin/linux-x86-64/sonar.sh start
-ExecStop=/opt/sonarqube/bin/linux-x86-64/sonar.sh stop
+ExecStart=/opt/sonarqube/bin/linux-aarch64/sonar.sh start
+ExecStop=/opt/sonarqube/bin/linux-aarch64/sonar.sh stop
 User=sonarqube
 Group=sonarqube
 Restart=on-failure

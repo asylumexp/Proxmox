@@ -51,10 +51,10 @@ function msg_ok() {
 }
 
 msg_info "Installing ${APP}"
-curl -fsSL "https://github.com/OliveTin/OliveTin/releases/latest/download/OliveTin_linux_amd64.deb" -o $(basename "https://github.com/OliveTin/OliveTin/releases/latest/download/OliveTin_linux_amd64.deb")
-dpkg -i OliveTin_linux_amd64.deb &>/dev/null
+curl -fsSL "https://github.com/OliveTin/OliveTin/releases/latest/download/OliveTin_linux_arm64.deb" -o $(basename "https://github.com/OliveTin/OliveTin/releases/latest/download/OliveTin_linux_arm64.deb")
+dpkg -i OliveTin_linux_arm64.deb &>/dev/null
 systemctl enable --now OliveTin &>/dev/null
-rm OliveTin_linux_amd64.deb
+rm OliveTin_linux_arm64.deb
 msg_ok "Installed ${APP} on $hostname"
 
 msg_ok "Completed successfully!\n"

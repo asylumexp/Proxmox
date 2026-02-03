@@ -19,7 +19,7 @@ cd /opt
 curl -fsSL "https://dl.typesense.org/releases/${RELEASE}/typesense-server-${RELEASE}-arm64.deb" -o "/opt/typesense-server-${RELEASE}-arm64.deb"
 $STD apt install -y /opt/typesense-server-${RELEASE}-arm64.deb
 echo 'enable-cors = true' >>/etc/typesense/typesense-server.ini
-rm -rf /opt/typesense-server-${RELEASE}-amd64.deb
+rm -rf /opt/typesense-server-${RELEASE}-arm64.deb
 echo "${RELEASE}" >"/opt/${APPLICATION}_version.txt"
 msg_ok "Installed TypeSense"
 

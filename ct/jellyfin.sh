@@ -29,20 +29,10 @@ function update_script() {
     exit
   fi
 
-  if ! grep -qEi 'ubuntu' /etc/os-release; then
-    msg_info "Updating Intel Dependencies"
-    rm -f ~/.intel-* || true
-    fetch_and_deploy_gh_release "intel-igc-core-2" "intel/intel-graphics-compiler" "binary" "latest" "" "intel-igc-core-2_*_amd64.deb"
-    fetch_and_deploy_gh_release "intel-igc-opencl-2" "intel/intel-graphics-compiler" "binary" "latest" "" "intel-igc-opencl-2_*_amd64.deb"
-    fetch_and_deploy_gh_release "intel-libgdgmm12" "intel/compute-runtime" "binary" "latest" "" "libigdgmm12_*_amd64.deb"
-    fetch_and_deploy_gh_release "intel-opencl-icd" "intel/compute-runtime" "binary" "latest" "" "intel-opencl-icd_*_amd64.deb"
-    msg_ok "Updated Intel Dependencies"
-  fi
-
   msg_info "Updating Jellyfin"
   ensure_dependencies libjemalloc2
   if [[ ! -f /usr/lib/libjemalloc.so ]]; then
-    ln -sf /usr/lib/x86_64-linux-gnu/libjemalloc.so.2 /usr/lib/libjemalloc.so
+    ln -sf /usr/lib/aarch64-linux-gnu/libjemalloc.so.2 /usr/lib/libjemalloc.so
   fi
   $STD apt update
   $STD apt -y upgrade
