@@ -55,6 +55,7 @@ const initialScript: Script = {
     password: null,
   },
   notes: [],
+	status: "",
 };
 
 export default function JSONGenerator() {
