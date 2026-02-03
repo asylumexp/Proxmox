@@ -27,6 +27,7 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
+ensure_dependencies graphicsmagick
   if [ ! -f /opt/n8n.env ]; then
     sed -i 's|^Environment="N8N_SECURE_COOKIE=false"$|EnvironmentFile=/opt/n8n.env|' /etc/systemd/system/n8n.service
     mkdir -p /opt
@@ -37,6 +38,7 @@ N8N_PROTOCOL=http
 N8N_HOST=$LOCAL_IP
 EOF
   fi
+  
   NODE_VERSION="22" setup_nodejs
 
   msg_info "Updating ${APP} LXC"

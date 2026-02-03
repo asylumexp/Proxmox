@@ -34,7 +34,7 @@ function update_script() {
     systemctl stop nginx
     msg_ok "Stopped nginx"
 
-    PHP_VERSION="8.4" PHP_FPM=YES PHP_MODULE="ffi,opcache,redis,zip,pdo-sqlite,bcmath,pdo,curl,dom,fpm" setup_php
+    PHP_VERSION="8.4" PHP_FPM="YES" PHP_MODULE="pdo-sqlite" setup_php
 
     msg_info "Backing up Bar Assistant"
     mv /opt/bar-assistant /opt/bar-assistant-backup
@@ -88,18 +88,8 @@ function update_script() {
     msg_ok "Started nginx"
   fi
 
-  if check_for_gh_release "meilisearch" "meilisearch/meilisearch"; then
-    msg_info "Stopping Meilisearch"
-    systemctl stop meilisearch
-    msg_ok "Stopped Meilisearch"
+  setup_meilisearch
 
-    fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "singlefile" "latest" "/usr/bin" "meilisearch-linux-aarch64"
-
-    msg_info "Starting Meilisearch"
-    systemctl start meilisearch
-    msg_ok "Started Meilisearch"
-    msg_ok "Updated successfully!"
-  fi
   exit
 }
 

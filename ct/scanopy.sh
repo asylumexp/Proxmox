@@ -42,12 +42,7 @@ function update_script() {
 
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "scanopy" "scanopy/scanopy" "tarball" "latest" "/opt/scanopy"
 
-    if ! dpkg -l | grep -q "pkg-config"; then
-      $STD apt install -y pkg-config
-    fi
-    if ! dpkg -l | grep -q "libssl-dev"; then
-      $STD apt install -y libssl-dev
-    fi
+    ensure_dependencies pkg-config libssl-dev
     TOOLCHAIN="$(grep "channel" /opt/scanopy/backend/rust-toolchain.toml | awk -F\" '{print $2}')"
     RUST_TOOLCHAIN=$TOOLCHAIN setup_rust
 
@@ -72,15 +67,11 @@ function update_script() {
     mv ./target/release/server /usr/bin/scanopy-server
     msg_ok "Built scanopy-server"
 
-    msg_info "Building scanopy-daemon"
-    $STD cargo build --release --bin daemon
-    cp ./target/release/daemon /usr/bin/scanopy-daemon
-    msg_ok "Built scanopy-daemon"
-
     msg_info "Starting services"
     systemctl start scanopy-server
     [[ -f /etc/systemd/system/scanopy-daemon.service ]] && systemctl start scanopy-daemon
     msg_ok "Updated successfully!"
+    msg_warn "Update your integrated daemon via the UI"
   fi
   exit
 }

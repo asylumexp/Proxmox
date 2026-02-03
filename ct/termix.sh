@@ -36,9 +36,18 @@ function update_script() {
 
     msg_info "Backing up Data"
     cp -r /opt/termix/data /opt/termix_data_backup
+    cp -r /opt/termix/uploads /opt/termix_uploads_backup
     msg_ok "Backed up Data"
 
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "termix" "Termix-SSH/Termix"
+
+    msg_info "Recreating Directories"
+    mkdir -p /opt/termix/html \
+      /opt/termix/nginx \
+      /opt/termix/nginx/logs \
+      /opt/termix/nginx/cache \
+      /opt/termix/nginx/client_body
+    msg_ok "Recreated Directories"
 
     msg_info "Building Frontend"
     cd /opt/termix
@@ -60,9 +69,9 @@ function update_script() {
     msg_ok "Set up Production Dependencies"
 
     msg_info "Restoring Data"
-    mkdir -p /opt/termix/data
-    cp -r /opt/termix_data_backup/. /opt/termix/data
-    rm -rf /opt/termix_data_backup
+    cp -r /opt/termix_data_backup /opt/termix/data
+    cp -r /opt/termix_uploads_backup /opt/termix/uploads
+    rm -rf /opt/termix_data_backup /opt/termix_uploads_backup
     msg_ok "Restored Data"
 
     msg_info "Updating Frontend Files"
@@ -71,6 +80,27 @@ function update_script() {
     cp -r /opt/termix/src/locales /opt/termix/html/locales 2>/dev/null || true
     cp -r /opt/termix/public/fonts /opt/termix/html/fonts 2>/dev/null || true
     msg_ok "Updated Frontend Files"
+
+    msg_warn "The Nginx configuration may need to be updated for new features to work."
+    msg_custom "💾" "Your current config will be backed up to nginx.conf.bak"
+    msg_custom "⚠️ " "Note: Custom modifications (reverse proxy, SSL) will be overwritten!"
+    echo ""
+    read -rp "${TAB3}Update Nginx configuration? [Y/n]: " REPLY
+    if [[ "${REPLY,,}" =~ ^(y|yes|)$ ]]; then
+      msg_info "Updating Nginx Configuration"
+      cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
+      curl -fsSL "https://raw.githubusercontent.com/Termix-SSH/Termix/main/docker/nginx.conf" -o /etc/nginx/nginx.conf
+      sed -i '/^master_process/d' /etc/nginx/nginx.conf
+      sed -i '/^pid \/app\/nginx/d' /etc/nginx/nginx.conf
+      sed -i 's|/app/html|/opt/termix/html|g' /etc/nginx/nginx.conf
+      sed -i 's|/app/nginx|/opt/termix/nginx|g' /etc/nginx/nginx.conf
+      sed -i 's|listen ${PORT};|listen 80;|g' /etc/nginx/nginx.conf
+      
+      nginx -t && systemctl reload nginx
+      msg_ok "Updated Nginx Configuration"
+    else
+      msg_warn "Nginx configuration not updated. If Termix doesn't work, restore from backup or update manually."
+    fi
 
     msg_info "Starting Service"
     systemctl start termix

@@ -28,6 +28,8 @@ function update_script() {
     exit
   fi
 
+  ensure_dependencies git
+
   if check_for_gh_release "grist" "gristlabs/grist-core"; then
     msg_info "Stopping Service"
     systemctl stop grist
@@ -48,6 +50,7 @@ function update_script() {
     cp /opt/grist_bak/landing.db /opt/grist/landing.db
     cd /opt/grist
     $STD yarn install
+    $STD yarn run install:ee
     $STD yarn run build:prod
     $STD yarn run install:python
     msg_ok "Updated Grist"
