@@ -15,15 +15,17 @@ update_os
 
 msg_info "Installing Dependencies"
 $STD apt install -y apt-transport-https
+curl -fsSL "https://dl.ui.com/unifi/unifi-repo.gpg" -o "/usr/share/keyrings/unifi-repo.gpg"
+cat <<EOF | sudo tee /etc/apt/sources.list.d/100-ubnt-unifi.sources >/dev/null
+Types: deb
+URIs: https://www.ui.com/downloads/unifi/debian
+Suites: stable
+Components: ubiquiti
+Architectures: arm64
+Signed-By: /usr/share/keyrings/unifi-repo.gpg
+EOF
+$STD apt update
 msg_ok "Installed Dependencies"
-
-setup_deb822_repo \
-  "unifi" \
-  "https://dl.ui.com/unifi/unifi-repo.gpg" \
-  "https://www.ui.com/downloads/unifi/debian" \
-  "stable" \
-  "ubiquiti" \
-  "arm64"
 
 JAVA_VERSION="21" setup_java
 

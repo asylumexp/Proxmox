@@ -24,6 +24,11 @@ RD=$(echo "\033[01;31m")
 CM='\xE2\x9C\x94\033'
 GN=$(echo "\033[1;92m")
 CL=$(echo "\033[m")
+
+# Telemetry
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "update-lxcs" "pve"
+
 header_info
 echo "Loading..."
 whiptail --backtitle "Proxmox VE Helper Scripts" --title "Proxmox VE LXC Updater" --yesno "This Will Update LXC Containers. Proceed?" 10 58
@@ -109,6 +114,11 @@ for container in $(pct list | awk '{if(NR>1) print $1}'); do
       # Get the container's hostname and add it to the list
       container_hostname=$(pct exec "$container" hostname)
       containers_needing_reboot+=("$container ($container_hostname)")
+    fi
+    # check if patchmon agent is present in container and run a report if found
+    if pct exec "$container" -- [ -e "/usr/local/bin/patchmon-agent" ]; then
+      echo -e "${BL}[Info]${GN} patchmon-agent found in ${BL} $container ${CL}, triggering report. \n"
+      pct exec "$container" -- "/usr/local/bin/patchmon-agent" "report"
     fi
   fi
 done

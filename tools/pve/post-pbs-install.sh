@@ -32,6 +32,10 @@ msg_info() { echo -ne " ${HOLD} ${YW}$1..."; }
 msg_ok() { echo -e "${BFR} ${CM} ${GN}$1${CL}"; }
 msg_error() { echo -e "${BFR} ${CROSS} ${RD}$1${CL}"; }
 
+# Telemetry
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "post-pbs-install" "pve"
+
 # ---- helpers ----
 get_pbs_codename() {
   awk -F'=' '/^VERSION_CODENAME=/{print $2}' /etc/os-release

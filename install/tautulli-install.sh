@@ -25,10 +25,11 @@ cd /opt/Tautulli
 TAUTULLI_VERSION=$(get_latest_github_release "Tautulli/Tautulli" "false")
 echo "${TAUTULLI_VERSION}" >/opt/Tautulli/version.txt
 echo "master" >/opt/Tautulli/branch.txt
-$STD uv venv
+$STD uv venv --clear
 $STD source /opt/Tautulli/.venv/bin/activate
 $STD uv pip install -r requirements.txt
 $STD uv pip install pyopenssl
+$STD uv pip install "setuptools<81"
 msg_ok "Installed Tautulli"
 
 msg_info "Creating Service"

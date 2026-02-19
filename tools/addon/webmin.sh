@@ -36,13 +36,17 @@ msg_ok() {
   echo -e "${BFR} ${CM} ${GN}${msg}${CL}"
 }
 
+# Telemetry
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "webmin" "addon"
+
 header_info
 
 whiptail --backtitle "Proxmox VE Helper Scripts" --title "Webmin Installer" --yesno "This Will Install Webmin on this LXC Container. Proceed?" 10 58
 
 msg_info "Installing Prerequisites"
 apt update &>/dev/null
-apt-get -y install libnet-ssleay-perl libauthen-pam-perl libio-pty-perl unzip shared-mime-info &>/dev/null
+apt-get -y install libnet-ssleay-perl libauthen-pam-perl libio-pty-perl unzip shared-mime-info curl &>/dev/null
 msg_ok "Installed Prerequisites"
 
 LATEST=$(curl -fsSL https://api.github.com/repos/webmin/webmin/releases/latest | grep '"tag_name":' | cut -d'"' -f4)

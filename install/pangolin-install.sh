@@ -36,7 +36,8 @@ $STD npm ci
 $STD npm run set:sqlite
 $STD npm run set:oss
 rm -rf server/private
-$STD npm run build:sqlite
+$STD npm run db:generate
+$STD npm run build
 $STD npm run build:cli
 cp -R .next/standalone ./
 
@@ -177,8 +178,7 @@ http:
         servers:
           - url: "http://$LOCAL_IP:3000"
 EOF
-$STD npm run db:sqlite:generate
-$STD npm run db:sqlite:push
+$STD npm run db:push
 
 . /etc/os-release
 if [ "$VERSION_CODENAME" = "trixie" ]; then

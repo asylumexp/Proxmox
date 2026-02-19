@@ -43,6 +43,10 @@ msg_error() {
   echo -e "${BFR} ${CROSS} ${RD}${msg}${CL}"
 }
 
+# Telemetry
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "post-pmg-install" "pve"
+
 if ! grep -q "Proxmox Mail Gateway" /etc/issue 2>/dev/null; then
   msg_error "This script is only intended for Proxmox Mail Gateway"
   exit 1

@@ -38,6 +38,10 @@ CL=$(echo "\033[m")
 TAB="  "
 CM="${TAB}✔️${TAB}${CL}"
 
+# Telemetry
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "lxc-delete" "pve"
+
 header_info
 echo "Loading..."
 whiptail --backtitle "Proxmox VE Helper Scripts" --title "Proxmox VE LXC Deletion" --yesno "This will delete LXC containers. Proceed?" 10 58

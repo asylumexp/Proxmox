@@ -9,7 +9,7 @@ APP="Open WebUI"
 var_tags="${var_tags:-ai;interface}"
 var_cpu="${var_cpu:-4}"
 var_ram="${var_ram:-8192}"
-var_disk="${var_disk:-25}"
+var_disk="${var_disk:-50}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
 var_unprivileged="${var_unprivileged:-1}"
@@ -44,7 +44,7 @@ function update_script() {
 
     msg_info "Installing uv-based Open-WebUI"
     PYTHON_VERSION="3.12" setup_uv
-    $STD uv tool install --python 3.12 open-webui[all]
+    $STD uv tool install --python 3.12 --constraint <(echo "numba>=0.60") open-webui[all]
     msg_ok "Installed uv-based Open-WebUI"
 
     msg_info "Restoring data"
@@ -126,7 +126,7 @@ EOF
 
   msg_info "Updating Open WebUI via uv"
   PYTHON_VERSION="3.12" setup_uv
-  $STD uv tool upgrade --python 3.12 open-webui[all]
+  $STD uv tool install --force --python 3.12 --constraint <(echo "numba>=0.60") open-webui[all]
   systemctl restart open-webui
   msg_ok "Updated Open WebUI"
   msg_ok "Updated successfully!"

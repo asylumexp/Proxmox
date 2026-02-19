@@ -15,9 +15,8 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y \
+$STD apt install -y \
   ffmpeg \
-  jq \
   imagemagick
 msg_ok "Installed Dependencies"
 
@@ -31,15 +30,14 @@ ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
 $STD rm -f aspnet.tar.gz
 msg_ok "Installed ASP.NET Core Runtime"
 
+fetch_and_deploy_from_url "https://fileflows.com/downloads/zip" "/opt/fileflows"
+
 msg_info "Setup FileFlows"
 $STD ln -svf /usr/bin/ffmpeg /usr/local/bin/ffmpeg
 $STD ln -svf /usr/bin/ffprobe /usr/local/bin/ffprobe
-temp_file=$(mktemp)
-curl -fsSL https://fileflows.com/downloads/zip -o "$temp_file"
-$STD unzip -d /opt/fileflows "$temp_file"
-$STD bash -c "cd /opt/fileflows/Server && dotnet FileFlows.Server.dll --systemd install --root true"
+cd /opt/fileflows/Server
+dotnet FileFlows.Server.dll --systemd install --root true
 systemctl enable -q --now fileflows
-rm -f "$temp_file"
 msg_ok "Setup FileFlows"
 
 motd_ssh

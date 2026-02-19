@@ -48,7 +48,7 @@ function error_handler() {
   local exit_code="$?"
   local line_number="$1"
   local command="$2"
-  post_update_to_api "failed" "$command"
+  post_update_to_api "failed" "$exit_code"
   local error_message="${RD}[ERROR]${CL} in line ${RD}$line_number${CL}: exit code ${RD}$exit_code${CL}: while executing command ${YW}$command${CL}"
   echo -e "\n$error_message\n"
   cleanup_vmid
@@ -79,9 +79,27 @@ function cleanup_vmid() {
 }
 
 function cleanup() {
+  local exit_code=$?
   popd >/dev/null
-  post_update_to_api "done" "none"
+  if [[ "${POST_TO_API_DONE:-}" == "true" && "${POST_UPDATE_DONE:-}" != "true" ]]; then
+    if [[ $exit_code -eq 0 ]]; then
+      post_update_to_api "done" "none"
+    else
+      post_update_to_api "failed" "$exit_code"
+    fi
+  fi
   rm -rf $TEMP_DIR
+}
+
+function check_disk_space() {
+  local path="$1"
+  local required_gb="$2"
+  local available_kb=$(df -k "$path" | awk 'NR==2 {print $4}')
+  local available_gb=$((available_kb / 1024 / 1024))
+  if [ $available_gb -lt $required_gb ]; then
+    return 1
+  fi
+  return 0
 }
 
 TEMP_DIR=$(mktemp -d)
@@ -598,11 +616,41 @@ if [ -z "$URL" ]; then
   exit 1
 fi
 msg_ok "Download URL: ${CL}${BL}${URL}${CL}"
+
+# Check available disk space (require at least 20GB for safety)
+if ! check_disk_space "$TEMP_DIR" 20; then
+  AVAILABLE_GB=$(df -h "$TEMP_DIR" | awk 'NR==2 {print $4}')
+  msg_error "Insufficient disk space in temporary directory ($TEMP_DIR)."
+  msg_error "Available: ${AVAILABLE_GB}, Required: ~20GB for FreeBSD image decompression."
+  msg_error "Please free up space or ensure /tmp has sufficient storage."
+  exit 1
+fi
+
+msg_info "Downloading FreeBSD Image"
 curl -f#SL -o "$(basename "$URL")" "$URL"
 echo -en "\e[1A\e[0K"
+msg_ok "Downloaded ${CL}${BL}$(basename "$URL")${CL}"
+
+# Check disk space again before decompression
+if ! check_disk_space "$TEMP_DIR" 15; then
+  AVAILABLE_GB=$(df -h "$TEMP_DIR" | awk 'NR==2 {print $4}')
+  msg_error "Insufficient disk space for decompression."
+  msg_error "Available: ${AVAILABLE_GB}, Required: ~15GB for decompressed image."
+  exit 1
+fi
+
+msg_info "Decompressing FreeBSD Image (this may take a few minutes)"
 FILE=FreeBSD.qcow2
-unxz -cv $(basename $URL) >${FILE}
-msg_ok "Downloaded ${CL}${BL}${FILE}${CL}"
+if ! unxz -cv $(basename $URL) >${FILE}; then
+  msg_error "Failed to decompress FreeBSD image."
+  msg_error "This is usually caused by insufficient disk space."
+  df -h "$TEMP_DIR"
+  exit 1
+fi
+
+# Remove the compressed file to save space
+rm -f "$(basename "$URL")"
+msg_ok "Decompressed ${CL}${BL}${FILE}${CL}"
 
 STORAGE_TYPE=$(pvesm status -storage $STORAGE | awk 'NR>1 {print $2}')
 case $STORAGE_TYPE in
@@ -618,6 +666,11 @@ btrfs)
   DISK_IMPORT="-format raw"
   FORMAT=",efitype=4m"
   THIN=""
+  ;;
+*)
+  DISK_EXT=""
+  DISK_REF=""
+  DISK_IMPORT="-format raw"
   ;;
 esac
 for i in {0,1}; do
@@ -637,7 +690,7 @@ qm set $VMID \
   -boot order=scsi0 \
   -serial0 socket \
   -tags community-script >/dev/null
-qm resize $VMID scsi0 10G >/dev/null
+qm resize $VMID scsi0 20G >/dev/null
 DESCRIPTION=$(
   cat <<EOF
 <div align='center'>

@@ -36,10 +36,6 @@ function update_script() {
     exit
   fi
 
-  setup_uv
-  PNPM_VERSION="$(curl -fsSL "https://raw.githubusercontent.com/immich-app/immich/refs/heads/main/package.json" | jq -r '.packageManager | split("@")[1]')"
-  NODE_VERSION="24" NODE_MODULE="pnpm@${PNPM_VERSION}" setup_nodejs
-
   if [[ ! -f /etc/apt/preferences.d/preferences ]]; then
     msg_info "Adding Debian Testing repo"
     sed -i 's/ trixie-updates/ trixie-updates testing/g' /etc/apt/sources.list.d/debian.sources
@@ -109,8 +105,8 @@ EOF
     msg_ok "Image-processing libraries up to date"
   fi
 
-  RELEASE="2.5.2"
-  if check_for_gh_release "immich" "immich-app/immich" "${RELEASE}"; then
+  RELEASE="2.5.6"
+  if check_for_gh_release "Immich" "immich-app/immich" "${RELEASE}"; then
     if [[ $(cat ~/.immich) > "2.5.1" ]]; then
       msg_info "Enabling Maintenance Mode"
       cd /opt/immich/app/bin
@@ -145,7 +141,7 @@ EOF
     GEO_DIR="${INSTALL_DIR}/geodata"
 
     [[ -f "$ML_DIR"/ml_start.sh ]] && cp "$ML_DIR"/ml_start.sh "$INSTALL_DIR"
-    if grep -qs "set -a" "$APP_DIR"/bin/start.sh; then
+    if grep -qs "set -a" "$APP_DIR"/bin/start.sh && grep -qs "warnings" "$APP_DIR"/bin/start.sh; then
       cp "$APP_DIR"/bin/start.sh "$INSTALL_DIR"
     else
       cat <<EOF >"$INSTALL_DIR"/start.sh
@@ -155,7 +151,7 @@ set -a
 . ${INSTALL_DIR}/.env
 set +a
 
-/usr/bin/node ${APP_DIR}/dist/main.js "\$@"
+/usr/bin/node --no-warnings ${APP_DIR}/dist/main.js "\$@"
 EOF
       chmod +x "$INSTALL_DIR"/start.sh
     fi
@@ -165,7 +161,10 @@ EOF
       rm -rf "${APP_DIR:?}"/*
     )
 
-    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "immich" "immich-app/immich" "tarball" "v${RELEASE}" "$SRC_DIR"
+    setup_uv
+    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "Immich" "immich-app/immich" "tarball" "v${RELEASE}" "$SRC_DIR"
+    PNPM_VERSION="$(jq -r '.packageManager | split("@")[1]' ${SRC_DIR}/package.json)"
+    NODE_VERSION="24" NODE_MODULE="pnpm@${PNPM_VERSION}" setup_nodejs
 
     msg_info "Updating Immich web and microservices"
     cd "$SRC_DIR"/server
@@ -250,6 +249,7 @@ EOF
       msg_ok "Disabled Maintenance Mode"
     fi
     systemctl restart immich-ml immich-web
+    [[ -f /etc/systemd/system/immich-proxy.service ]] && systemctl restart immich-proxy
     msg_ok "Updated successfully!"
   fi
   exit

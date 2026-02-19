@@ -28,6 +28,11 @@ function msg_error() {
   local msg="$1"
   echo -e "${BFR} ${CROSS} ${RD}${msg}${CL}"
 }
+
+# Telemetry
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "pyenv" "addon"
+
 if command -v pveversion >/dev/null 2>&1; then
   msg_error "Can't Install on Proxmox "
   exit

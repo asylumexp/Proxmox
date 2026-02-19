@@ -27,6 +27,11 @@ HOLD="-"
 CM="${GN}✓${CL}"
 APP="OliveTin"
 hostname="$(hostname)"
+
+# Telemetry
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "olivetin" "addon"
+
 set-e
 header_info
 
@@ -51,6 +56,10 @@ function msg_ok() {
 }
 
 msg_info "Installing ${APP}"
+if ! command -v curl &>/dev/null; then
+  apt-get update >/dev/null 2>&1
+  apt-get install -y curl >/dev/null 2>&1
+fi
 curl -fsSL "https://github.com/OliveTin/OliveTin/releases/latest/download/OliveTin_linux_arm64.deb" -o $(basename "https://github.com/OliveTin/OliveTin/releases/latest/download/OliveTin_linux_arm64.deb")
 dpkg -i OliveTin_linux_arm64.deb &>/dev/null
 systemctl enable --now OliveTin &>/dev/null

@@ -22,6 +22,10 @@ GN="\033[1;92m"
 RD="\033[01;31m"
 CL="\033[m"
 
+# Telemetry
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "kernel-clean" "pve"
+
 # Detect current kernel
 current_kernel=$(uname -r)
 available_kernels=$(dpkg --list | grep 'kernel-.*-pve' | awk '{print $2}' | grep -v "$current_kernel" | sort -V)

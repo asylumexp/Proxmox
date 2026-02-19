@@ -22,6 +22,10 @@ CM='\xE2\x9C\x94\033'
 GN="\033[1;92m"
 CL="\033[m"
 
+# Telemetry
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "clean-lxcs" "pve"
+
 header_info
 echo "Loading..."
 

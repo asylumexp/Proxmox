@@ -44,6 +44,10 @@ msg_error() {
   echo -e "${BFR} ${CROSS} ${RD}${msg}${CL}"
 }
 
+# Telemetry
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "post-pve-install" "pve"
+
 get_pve_version() {
   local pve_ver
   pve_ver="$(pveversion | awk -F'/' '{print $2}' | awk -F'-' '{print $1}')"

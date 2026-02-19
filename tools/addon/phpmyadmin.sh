@@ -29,6 +29,10 @@ APP="phpMyAdmin"
 INSTALL_DIR_DEBIAN="/var/www/html/phpMyAdmin"
 INSTALL_DIR_ALPINE="/usr/share/phpmyadmin"
 
+# Telemetry
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+declare -f init_tool_telemetry &>/dev/null && init_tool_telemetry "phpmyadmin" "addon"
+
 IFACE=$(ip -4 route | awk '/default/ {print $5; exit}')
 IP=$(ip -4 addr show "$IFACE" | awk '/inet / {print $2}' | cut -d/ -f1 | head -n 1)
 [[ -z "$IP" ]] && IP=$(hostname -I | awk '{print $1}')
@@ -57,6 +61,10 @@ function msg_ok() { echo -e "${CM} ${GN}${1}${CL}"; }
 function msg_error() { echo -e "${CROSS} ${RD}${1}${CL}"; }
 
 function check_internet() {
+  if ! command -v curl &>/dev/null; then
+    apt-get update >/dev/null 2>&1
+    apt-get install -y curl >/dev/null 2>&1
+  fi
   msg_info "Checking Internet connectivity to GitHub"
   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://github.com)
   if [[ "$HTTP_CODE" -ge 200 && "$HTTP_CODE" -lt 400 ]]; then
