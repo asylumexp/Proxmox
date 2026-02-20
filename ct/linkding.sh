@@ -45,7 +45,7 @@ function update_script() {
     cp -r /opt/linkding_data_backup/. /opt/linkding/data
     cp /opt/linkding_env_backup /opt/linkding/.env
     rm -rf /opt/linkding_data_backup /opt/linkding_env_backup
-    ln -sf /usr/lib/x86_64-linux-gnu/mod_icu.so /opt/linkding/libicu.so
+    ln -sf /usr/lib/aarch64-linux-gnu/mod_icu.so /opt/linkding/libicu.so
     msg_ok "Restored Data"
 
     msg_info "Updating LinkDing"

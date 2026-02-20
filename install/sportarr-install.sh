@@ -21,7 +21,7 @@ $STD apt install -y \
   sqlite3
 msg_ok "Installed Dependencies"
 
-fetch_and_deploy_gh_release "sportarr" "Sportarr/Sportarr" "prebuild" "latest" "/opt/sportarr" "Sportarr-linux-x64-*.tar.gz"
+fetch_and_deploy_gh_release "sportarr" "Sportarr/Sportarr" "prebuild" "latest" "/opt/sportarr" "Sportarr-linux-arm64-*.tar.gz"
 
 msg_info "Creating Service"
 cat <<EOF >/opt/sportarr/.env

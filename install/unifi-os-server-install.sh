@@ -53,7 +53,7 @@ fi
 LATEST=$(jq -r '
   ._embedded.firmware
   | map(select(.product == "unifi-os-server"))
-  | map(select(.platform == "linux-x64"))
+  | map(select(.platform == "linux-arm64"))
   | sort_by(.version_major, .version_minor, .version_patch)
   | last
 ' "$TEMP_JSON")

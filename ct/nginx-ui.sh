@@ -38,7 +38,7 @@ function update_script() {
     cp /usr/local/etc/nginx-ui/app.ini /tmp/nginx-ui-app.ini.bak
     msg_ok "Backed up Configuration"
 
-    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "nginx-ui" "0xJacky/nginx-ui" "prebuild" "latest" "/opt/nginx-ui" "nginx-ui-linux-64.tar.gz"
+    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "nginx-ui" "0xJacky/nginx-ui" "prebuild" "latest" "/opt/nginx-ui" "nginx-ui-linux-arm64.tar.gz"
 
     msg_info "Updating Binary"
     cp /opt/nginx-ui/nginx-ui /usr/local/bin/nginx-ui

@@ -33,7 +33,7 @@ function update_script() {
     systemctl stop sportarr
     msg_ok "Stopped Services"
 
-    fetch_and_deploy_gh_release "sportarr" "Sportarr/Sportarr" "prebuild" "latest" "/opt/sportarr" "Sportarr-linux-x64-*.tar.gz"
+    fetch_and_deploy_gh_release "sportarr" "Sportarr/Sportarr" "prebuild" "latest" "/opt/sportarr" "Sportarr-linux-arm64-*.tar.gz"
 
     msg_info "Starting Services"
     systemctl start sportarr

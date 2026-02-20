@@ -34,7 +34,7 @@ function update_script() {
     msg_ok "Stopped service"
 
     cp /opt/bichon/bichon.env /tmp/bichon.env.backup
-    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "bichon" "rustmailer/bichon" "prebuild" "latest" "/opt/bichon" "bichon-*-x86_64-unknown-linux-gnu.tar.gz"
+    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "bichon" "rustmailer/bichon" "prebuild" "latest" "/opt/bichon" "bichon-*-aarch64-unknown-linux-gnu.tar.gz"
     cp /tmp/bichon.env.backup /opt/bichon/bichon.env
 
     msg_info "Starting service"

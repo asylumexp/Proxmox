@@ -10,10 +10,10 @@ if ! command -v curl &>/dev/null; then
   apt-get update >/dev/null 2>&1
   apt-get install -y curl >/dev/null 2>&1
 fi
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/core.func)
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/tools.func)
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/error_handler.func)
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/api.func) 2>/dev/null || true
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/core.func)
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/tools.func)
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/error_handler.func)
+source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/api.func) 2>/dev/null || true
 
 # Enable error handling
 set -Eeuo pipefail
@@ -289,7 +289,7 @@ EOF
   cat <<'UPDATEEOF' >/usr/local/bin/update_jellystat
 #!/usr/bin/env bash
 # Jellystat Update Script
-type=update bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/addon/jellystat.sh)"
+type=update bash -c "$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/tools/addon/jellystat.sh)"
 UPDATEEOF
   chmod +x /usr/local/bin/update_jellystat
   msg_ok "Created update script (/usr/local/bin/update_jellystat)"

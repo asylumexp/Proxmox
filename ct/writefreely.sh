@@ -40,7 +40,7 @@ function update_script() {
     cp /opt/writefreely/config.ini /tmp/writefreely_backup/ 2>/dev/null
     msg_ok "Created Backup"
 
-    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "writefreely" "writefreely/writefreely" "prebuild" "latest" "/opt/writefreely" "writefreely_*_linux_amd64.tar.gz"
+    CLEAN_INSTALL=1 fetch_and_deploy_gh_release "writefreely" "writefreely/writefreely" "prebuild" "latest" "/opt/writefreely" "writefreely_*_linux_arm64.tar.gz"
 
     msg_info "Restoring Data"
     cp /tmp/writefreely_backup/config.ini /opt/writefreely/ 2>/dev/null
