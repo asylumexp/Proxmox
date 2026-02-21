@@ -14,7 +14,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt install -y libicu76
+$STD apt install -y build-essential libicu76
 msg_ok "Installed Dependencies"
 
 PYTHON_VERSION="3.12" setup_uv
