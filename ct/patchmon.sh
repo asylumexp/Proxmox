@@ -29,6 +29,13 @@ function update_script() {
     exit
   fi
 
+  if ! grep -q "PORT=3001" /opt/patchmon/backend/.env; then
+    msg_warn "⚠️ The next PatchMon update will include breaking changes (port changes)."
+    msg_warn "See details here: https://github.com/community-scripts/ProxmoxVE/pull/11888"
+    msg_warn "Press Enter to continue with the update, or Ctrl+C to abort..."
+    read -r
+  fi
+
   NODE_VERSION="24" setup_nodejs
   if check_for_gh_release "PatchMon" "PatchMon/PatchMon"; then
     msg_info "Stopping Service"
@@ -47,7 +54,7 @@ function update_script() {
     PROTO="$(sed -n '/SERVER_PROTOCOL/s/[^=]*=//p' /opt/backend.env)"
     HOST="$(sed -n '/SERVER_HOST/s/[^=]*=//p' /opt/backend.env)"
     SERVER_PORT="$(sed -n '/SERVER_PORT/s/[^=]*=//p' /opt/backend.env)"
-    [[ "${PROTO:-http}" == "http" ]] && PORT=":3001"
+    [[ "$PROTO" == "http" ]] && PORT=":3001"
     sed -i 's/PORT=3399/PORT=3001/' /opt/backend.env
     sed -i -e "s/VERSION=.*/VERSION=$VERSION/" \
       -e "\|VITE_API_URL=|s|http.*|${PROTO:-http}://${HOST:-$LOCAL_IP}${PORT:-}/api/v1|" /opt/frontend.env
@@ -68,7 +75,7 @@ function update_script() {
       -e 's|alias.*|alias /opt/patchmon/frontend/dist/assets;|' \
       -e '\|expires 1y|i\        root /opt/patchmon/frontend/dist;' /etc/nginx/sites-available/patchmon.conf
     if [[ -n "$SERVER_PORT" ]] && [[ "$SERVER_PORT" != "443" ]]; then
-      sed -i "s/listen [[:digit:]]/listen ${SERVER_PORT};/" /etc/nginx/sites-available/patchmon.conf
+      sed -i "s/listen [[:digit:]].*/listen ${SERVER_PORT};/" /etc/nginx/sites-available/patchmon.conf
     fi
     ln -sf /etc/nginx/sites-available/patchmon.conf /etc/nginx/sites-enabled/
     rm -f /etc/nginx/sites-enabled/default
