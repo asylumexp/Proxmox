@@ -237,7 +237,7 @@ EOF
   post_progress_to_api
 
   local tools_content
-  tools_content=$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/tools.func) || {
+  tools_content=$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/tools.func) || {
     msg_error "Failed to download tools.func"
     exit 6
   }
