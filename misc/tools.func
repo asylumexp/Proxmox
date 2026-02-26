@@ -2121,7 +2121,7 @@ function fetch_and_deploy_codeberg_release() {
     # Fall back to architecture heuristic
     if [[ -z "$url_match" ]]; then
       for u in $assets; do
-        if [[ "$u" =~ ($arch|amd64|x86_64|aarch64|arm64).*\.deb$ ]]; then
+        if [[ "$u" =~ ($arch|aarch64|arm64).*\.deb$ ]]; then
           url_match="$u"
           break
         fi
