@@ -344,8 +344,8 @@ pve_check() {
 # - Provides link to ARM64-compatible scripts
 # ------------------------------------------------------------------------------
 arch_check() {
-  if [ "$(dpkg --print-architecture)" != "amd64" ]; then
-    msg_error "This script will not work with PiMox (ARM architecture detected)."
+  if [ "$(dpkg --print-architecture)" != "arm64" ]; then
+    msg_error "This script will not work with AMD64."
     msg_warn "Visit https://github.com/asylumexp/Proxmox for ARM64 support."
     sleep 2
     exit 106
