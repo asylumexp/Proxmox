@@ -35,7 +35,11 @@
 TELEMETRY_URL="https://telemetry.community-scripts.org/telemetry"
 
 # Timeout for telemetry requests (seconds)
+# Progress pings (validation/configuring) use the short timeout
 TELEMETRY_TIMEOUT=5
+# Final status updates (success/failed) use the longer timeout
+# PocketBase may need more time under load (FindRecord + UpdateRecord)
+STATUS_TIMEOUT=10
 
 # ==============================================================================
 # SECTION 0: REPOSITORY SOURCE DETECTION
@@ -120,6 +124,7 @@ detect_repo_source
 #   * Generic/Shell errors (1-3, 10, 124-132, 134, 137, 139, 141, 143-146)
 #   * curl/wget errors (4-8, 16, 18, 22-28, 30, 32-36, 39, 44-48, 51-52, 55-57, 59, 61, 63, 75, 78-79, 92, 95)
 #   * Package manager errors (APT, DPKG: 100-102, 255)
+#   * Script Validation & Setup (103-123)
 #   * BSD sysexits (64-78)
 #   * Systemd/Service errors (150-154)
 #   * Python/pip/uv errors (160-162)
@@ -127,7 +132,9 @@ detect_repo_source
 #   * MySQL/MariaDB errors (180-183)
 #   * MongoDB errors (190-193)
 #   * Proxmox custom codes (200-231)
+#   * Tools & Addon Scripts (232-238)
 #   * Node.js/npm errors (239, 243, 245-249)
+#   * Application Install/Update errors (250-254)
 # - Returns description string for given exit code
 # ------------------------------------------------------------------------------
 explain_exit_code() {
@@ -184,6 +191,29 @@ explain_exit_code() {
   100) echo "APT: Package manager error (broken packages / dependency problems)" ;;
   101) echo "APT: Configuration error (bad sources.list, malformed config)" ;;
   102) echo "APT: Lock held by another process (dpkg/apt still running)" ;;
+
+  # --- Script Validation & Setup (103-123) ---
+  103) echo "Validation: Shell is not Bash" ;;
+  104) echo "Validation: Not running as root (or invoked via sudo)" ;;
+  105) echo "Validation: Proxmox VE version not supported" ;;
+  106) echo "Validation: Architecture not supported (ARM / PiMox)" ;;
+  107) echo "Validation: Kernel key parameters unreadable" ;;
+  108) echo "Validation: Kernel key limits exceeded" ;;
+  109) echo "Proxmox: No available container ID after max attempts" ;;
+  110) echo "Proxmox: Failed to apply default.vars" ;;
+  111) echo "Proxmox: App defaults file not available" ;;
+  112) echo "Proxmox: Invalid install menu option" ;;
+  113) echo "LXC: Under-provisioned — user aborted update" ;;
+  114) echo "LXC: Storage too low — user aborted update" ;;
+  115) echo "Download: install.func download failed or incomplete" ;;
+  116) echo "Proxmox: Default bridge vmbr0 not found" ;;
+  117) echo "LXC: Container did not reach running state" ;;
+  118) echo "LXC: No IP assigned to container after timeout" ;;
+  119) echo "Proxmox: No valid storage for rootdir content" ;;
+  120) echo "Proxmox: No valid storage for vztmpl content" ;;
+  121) echo "LXC: Container network not ready (no IP after retries)" ;;
+  122) echo "LXC: No internet connectivity — user declined to continue" ;;
+  123) echo "LXC: Local IP detection failed" ;;
 
   # --- BSD sysexits.h (64-78) ---
   64) echo "Usage error (wrong arguments)" ;;
@@ -272,7 +302,17 @@ explain_exit_code() {
   223) echo "Proxmox: Template not available after download" ;;
   224) echo "Proxmox: PBS storage is for backups only" ;;
   225) echo "Proxmox: No template available for OS/Version" ;;
+  226) echo "Proxmox: VM disk import or post-creation setup failed" ;;
   231) echo "Proxmox: LXC stack upgrade failed" ;;
+
+  # --- Tools & Addon Scripts (232-238) ---
+  232) echo "Tools: Wrong execution environment (run on PVE host, not inside LXC)" ;;
+  233) echo "Tools: Application not installed (update prerequisite missing)" ;;
+  234) echo "Tools: No LXC containers found or available" ;;
+  235) echo "Tools: Backup or restore operation failed" ;;
+  236) echo "Tools: Required hardware not detected" ;;
+  237) echo "Tools: Dependency package installation failed" ;;
+  238) echo "Tools: OS or distribution not supported for this addon" ;;
 
   # --- Node.js / npm / pnpm / yarn (239-249) ---
   239) echo "npm/Node.js: Unexpected runtime error or dependency failure" ;;
@@ -282,6 +322,13 @@ explain_exit_code() {
   247) echo "Node.js: Fatal internal error" ;;
   248) echo "Node.js: Invalid C++ addon / N-API failure" ;;
   249) echo "npm/pnpm/yarn: Unknown fatal error" ;;
+
+  # --- Application Install/Update Errors (250-254) ---
+  250) echo "App: Download failed or version not determined" ;;
+  251) echo "App: File extraction failed (corrupt or incomplete archive)" ;;
+  252) echo "App: Required file or resource not found" ;;
+  253) echo "App: Data migration required — update aborted" ;;
+  254) echo "App: User declined prompt or input timed out" ;;
 
   # --- DPKG ---
   255) echo "DPKG: Fatal internal error" ;;
@@ -299,17 +346,20 @@ explain_exit_code() {
 # - Handles backslashes, quotes, newlines, tabs, and carriage returns
 # ------------------------------------------------------------------------------
 json_escape() {
-  local s="$1"
-  # Strip ANSI escape sequences (color codes etc.)
-  s=$(printf '%s' "$s" | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g')
-  s=${s//\\/\\\\}
-  s=${s//"/\\"/}
-  s=${s//$'\n'/\\n}
-  s=${s//$'\r'/}
-  s=${s//$'\t'/\\t}
-  # Remove any remaining control characters (0x00-0x1F except those already handled)
-  s=$(printf '%s' "$s" | tr -d '\000-\010\013\014\016-\037')
-  printf '%s' "$s"
+  # Escape a string for safe JSON embedding using awk (handles any input size).
+  # Pipeline: strip ANSI → remove control chars → escape \ " TAB → join lines with \n
+  printf '%s' "$1" \
+    | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' \
+    | tr -d '\000-\010\013\014\016-\037\177\r' \
+    | awk '
+        BEGIN { ORS = "" }
+        {
+          gsub(/\\/, "\\\\")   # backslash → \\
+          gsub(/"/, "\\\"")    # double quote → \"
+          gsub(/\t/, "\\t")   # tab → \t
+          if (NR > 1) printf "\\n"
+          printf "%s", $0
+        }'
 }
 
 # ------------------------------------------------------------------------------
@@ -345,8 +395,69 @@ get_error_text() {
     logfile="$BUILD_LOG"
   fi
 
+  # Try SILENT_LOGFILE as last resort (captures $STD command output)
+  if [[ -z "$logfile" || ! -s "$logfile" ]] && [[ -n "${SILENT_LOGFILE:-}" && -s "${SILENT_LOGFILE}" ]]; then
+    logfile="$SILENT_LOGFILE"
+  fi
+
   if [[ -n "$logfile" && -s "$logfile" ]]; then
     tail -n 20 "$logfile" 2>/dev/null | sed 's/\r$//' | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g'
+  fi
+}
+
+# ------------------------------------------------------------------------------
+# get_full_log()
+#
+# - Returns the FULL installation log (build + install combined)
+# - Calls ensure_log_on_host() to pull container log if needed
+# - Strips ANSI escape codes and carriage returns
+# - Truncates to max_bytes (default: 120KB) to stay within API limits
+# - Used for the error telemetry field (full trace instead of 20 lines)
+# ------------------------------------------------------------------------------
+get_full_log() {
+  local max_bytes="${1:-122880}" # 120KB default
+  local logfile=""
+
+  # Ensure logs are available on host (pulls from container if needed)
+  if declare -f ensure_log_on_host >/dev/null 2>&1; then
+    ensure_log_on_host
+  fi
+
+  # Try combined log first (most complete)
+  if [[ -n "${CTID:-}" && -n "${SESSION_ID:-}" ]]; then
+    local combined_log="/tmp/${NSAPP:-lxc}-${CTID}-${SESSION_ID}.log"
+    if [[ -s "$combined_log" ]]; then
+      logfile="$combined_log"
+    fi
+  fi
+
+  # Fall back to INSTALL_LOG
+  if [[ -z "$logfile" || ! -s "$logfile" ]]; then
+    if [[ -n "${INSTALL_LOG:-}" && -s "${INSTALL_LOG}" ]]; then
+      logfile="$INSTALL_LOG"
+    fi
+  fi
+
+  # Fall back to BUILD_LOG
+  if [[ -z "$logfile" || ! -s "$logfile" ]]; then
+    if [[ -n "${BUILD_LOG:-}" && -s "${BUILD_LOG}" ]]; then
+      logfile="$BUILD_LOG"
+    fi
+  fi
+
+  # Fall back to SILENT_LOGFILE (captures $STD command output)
+  if [[ -z "$logfile" || ! -s "$logfile" ]]; then
+    if [[ -n "${SILENT_LOGFILE:-}" && -s "${SILENT_LOGFILE}" ]]; then
+      logfile="$SILENT_LOGFILE"
+    fi
+  fi
+
+  if [[ -n "$logfile" && -s "$logfile" ]]; then
+    # Strip ANSI codes, carriage returns, and anonymize IP addresses (GDPR)
+    sed 's/\r$//' "$logfile" 2>/dev/null |
+      sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' |
+      sed -E 's/([0-9]{1,3}\.)[0-9]{1,3}\.[0-9]{1,3}/\1x.x/g' |
+      head -c "$max_bytes"
   fi
 }
 
@@ -578,18 +689,23 @@ EOF
   [[ "${DEV_MODE:-}" == "true" ]] && echo "[DEBUG] Sending to: $TELEMETRY_URL" >&2
   [[ "${DEV_MODE:-}" == "true" ]] && echo "[DEBUG] Payload: $JSON_PAYLOAD" >&2
 
-  # Fire-and-forget: never block, never fail
-  local http_code
-  if [[ "${DEV_MODE:-}" == "true" ]]; then
-    http_code=$(curl -sS -w "%{http_code}" -m "${TELEMETRY_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
-      -H "Content-Type: application/json" \
-      -d "$JSON_PAYLOAD" -o /dev/stderr 2>&1) || true
-    echo "[DEBUG] HTTP response code: $http_code" >&2
-  else
-    curl -fsS -m "${TELEMETRY_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
-      -H "Content-Type: application/json" \
-      -d "$JSON_PAYLOAD" &>/dev/null || true
-  fi
+  # Send initial "installing" record with retry.
+  # This record MUST exist for all subsequent updates to succeed.
+  local http_code="" attempt
+  for attempt in 1 2 3; do
+    if [[ "${DEV_MODE:-}" == "true" ]]; then
+      http_code=$(curl -sS -w "%{http_code}" -m "${TELEMETRY_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
+        -H "Content-Type: application/json" \
+        -d "$JSON_PAYLOAD" -o /dev/stderr 2>&1) || http_code="000"
+      echo "[DEBUG] post_to_api attempt $attempt HTTP=$http_code" >&2
+    else
+      http_code=$(curl -sS -w "%{http_code}" -m "${TELEMETRY_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
+        -H "Content-Type: application/json" \
+        -d "$JSON_PAYLOAD" -o /dev/null 2>/dev/null) || http_code="000"
+    fi
+    [[ "$http_code" =~ ^2[0-9]{2}$ ]] && break
+    [[ "$attempt" -lt 3 ]] && sleep 1
+  done
 
   POST_TO_API_DONE=true
 }
@@ -680,10 +796,15 @@ post_to_api_vm() {
 EOF
   )
 
-  # Fire-and-forget: never block, never fail
-  curl -fsS -m "${TELEMETRY_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
-    -H "Content-Type: application/json" \
-    -d "$JSON_PAYLOAD" &>/dev/null || true
+  # Send initial "installing" record with retry (must succeed for updates to work)
+  local http_code="" attempt
+  for attempt in 1 2 3; do
+    http_code=$(curl -sS -w "%{http_code}" -m "${TELEMETRY_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
+      -H "Content-Type: application/json" \
+      -d "$JSON_PAYLOAD" -o /dev/null 2>/dev/null) || http_code="000"
+    [[ "$http_code" =~ ^2[0-9]{2}$ ]] && break
+    [[ "$attempt" -lt 3 ]] && sleep 1
+  done
 
   POST_TO_API_DONE=true
 }
@@ -692,7 +813,10 @@ EOF
 # post_progress_to_api()
 #
 # - Lightweight progress ping from host or container
-# - Updates the existing telemetry record status to "configuring"
+# - Updates the existing telemetry record status
+# - Arguments:
+#   * $1: status (optional, default: "configuring")
+#         Valid values: "validation", "configuring"
 # - Signals that the installation is actively progressing (not stuck)
 # - Fire-and-forget: never blocks or fails the script
 # - Only executes if DIAGNOSTICS=yes and RANDOM_UUID is set
@@ -703,12 +827,13 @@ post_progress_to_api() {
   [[ "${DIAGNOSTICS:-no}" == "no" ]] && return 0
   [[ -z "${RANDOM_UUID:-}" ]] && return 0
 
+  local progress_status="${1:-configuring}"
   local app_name="${NSAPP:-${app:-unknown}}"
   local telemetry_type="${TELEMETRY_TYPE:-lxc}"
 
   curl -fsS -m 5 -X POST "${TELEMETRY_URL:-https://telemetry.community-scripts.org/telemetry}" \
     -H "Content-Type: application/json" \
-    -d "{\"random_id\":\"${RANDOM_UUID}\",\"execution_id\":\"${EXECUTION_ID:-${RANDOM_UUID}}\",\"type\":\"${telemetry_type}\",\"nsapp\":\"${app_name}\",\"status\":\"configuring\"}" &>/dev/null || true
+    -d "{\"random_id\":\"${RANDOM_UUID}\",\"execution_id\":\"${EXECUTION_ID:-${RANDOM_UUID}}\",\"type\":\"${telemetry_type}\",\"nsapp\":\"${app_name}\",\"status\":\"${progress_status}\"}" &>/dev/null || true
 }
 
 # ------------------------------------------------------------------------------
@@ -775,22 +900,38 @@ post_update_to_api() {
   esac
 
   # For failed/unknown status, resolve exit code and error description
-  local short_error=""
+  local short_error="" medium_error=""
   if [[ "$pb_status" == "failed" ]] || [[ "$pb_status" == "unknown" ]]; then
     if [[ "$raw_exit_code" =~ ^[0-9]+$ ]]; then
       exit_code="$raw_exit_code"
     else
       exit_code=1
     fi
-    # Get log lines and build structured error string
-    local error_text=""
-    error_text=$(get_error_text)
+    # Get full installation log for error field
+    local log_text=""
+    log_text=$(get_full_log 122880) || true # 120KB max
+    if [[ -z "$log_text" ]]; then
+      # Fallback to last 20 lines
+      log_text=$(get_error_text)
+    fi
     local full_error
-    full_error=$(build_error_string "$exit_code" "$error_text")
+    full_error=$(build_error_string "$exit_code" "$log_text")
     error=$(json_escape "$full_error")
     short_error=$(json_escape "$(explain_exit_code "$exit_code")")
     error_category=$(categorize_error "$exit_code")
     [[ -z "$error" ]] && error="Unknown error"
+
+    # Build medium error for attempt 2: explanation + last 100 log lines (≤16KB)
+    # This is the critical middle ground between full 120KB log and generic-only description
+    local medium_log=""
+    medium_log=$(get_full_log 16384) || true # 16KB max
+    if [[ -z "$medium_log" ]]; then
+      medium_log=$(get_error_text) || true
+    fi
+    local medium_full
+    medium_full=$(build_error_string "$exit_code" "$medium_log")
+    medium_error=$(json_escape "$medium_full")
+    [[ -z "$medium_error" ]] && medium_error="$short_error"
   fi
 
   # Calculate duration if timer was started
@@ -807,7 +948,12 @@ post_update_to_api() {
 
   local http_code=""
 
-  # ── Attempt 1: Full payload with complete error text ──
+  # Strip 'G' suffix from disk size (VMs set DISK_SIZE=32G)
+  local DISK_SIZE_API="${DISK_SIZE:-0}"
+  DISK_SIZE_API="${DISK_SIZE_API%G}"
+  [[ ! "$DISK_SIZE_API" =~ ^[0-9]+$ ]] && DISK_SIZE_API=0
+
+  # ── Attempt 1: Full payload with complete error text (includes full log) ──
   local JSON_PAYLOAD
   JSON_PAYLOAD=$(
     cat <<EOF
@@ -818,7 +964,7 @@ post_update_to_api() {
     "nsapp": "${NSAPP:-unknown}",
     "status": "${pb_status}",
     "ct_type": ${CT_TYPE:-1},
-    "disk_size": ${DISK_SIZE:-0},
+    "disk_size": ${DISK_SIZE_API},
     "core_count": ${CORE_COUNT:-0},
     "ram_size": ${RAM_SIZE:-0},
     "os_type": "${var_os:-}",
@@ -840,7 +986,7 @@ post_update_to_api() {
 EOF
   )
 
-  http_code=$(curl -sS -w "%{http_code}" -m "${TELEMETRY_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
+  http_code=$(curl -sS -w "%{http_code}" -m "${STATUS_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
     -H "Content-Type: application/json" \
     -d "$JSON_PAYLOAD" -o /dev/null 2>/dev/null) || http_code="000"
 
@@ -849,7 +995,7 @@ EOF
     return 0
   fi
 
-  # ── Attempt 2: Short error text (no full log) ──
+  # ── Attempt 2: Medium error text (truncated log ≤16KB instead of full 120KB) ──
   sleep 1
   local RETRY_PAYLOAD
   RETRY_PAYLOAD=$(
@@ -861,7 +1007,7 @@ EOF
     "nsapp": "${NSAPP:-unknown}",
     "status": "${pb_status}",
     "ct_type": ${CT_TYPE:-1},
-    "disk_size": ${DISK_SIZE:-0},
+    "disk_size": ${DISK_SIZE_API},
     "core_count": ${CORE_COUNT:-0},
     "ram_size": ${RAM_SIZE:-0},
     "os_type": "${var_os:-}",
@@ -869,7 +1015,7 @@ EOF
     "pve_version": "${pve_version}",
     "method": "${METHOD:-default}",
     "exit_code": ${exit_code},
-    "error": "${short_error}",
+    "error": "${medium_error}",
     "error_category": "${error_category}",
     "install_duration": ${duration},
     "cpu_vendor": "${cpu_vendor}",
@@ -883,7 +1029,7 @@ EOF
 EOF
   )
 
-  http_code=$(curl -sS -w "%{http_code}" -m "${TELEMETRY_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
+  http_code=$(curl -sS -w "%{http_code}" -m "${STATUS_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
     -H "Content-Type: application/json" \
     -d "$RETRY_PAYLOAD" -o /dev/null 2>/dev/null) || http_code="000"
 
@@ -892,7 +1038,7 @@ EOF
     return 0
   fi
 
-  # ── Attempt 3: Minimal payload (bare minimum to set status) ──
+  # ── Attempt 3: Minimal payload with medium error (bare minimum to set status) ──
   sleep 2
   local MINIMAL_PAYLOAD
   MINIMAL_PAYLOAD=$(
@@ -904,19 +1050,25 @@ EOF
     "nsapp": "${NSAPP:-unknown}",
     "status": "${pb_status}",
     "exit_code": ${exit_code},
-    "error": "${short_error}",
+    "error": "${medium_error}",
     "error_category": "${error_category}",
     "install_duration": ${duration}
 }
 EOF
   )
 
-  curl -sS -w "%{http_code}" -m "${TELEMETRY_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
+  http_code=$(curl -sS -w "%{http_code}" -m "${STATUS_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
     -H "Content-Type: application/json" \
-    -d "$MINIMAL_PAYLOAD" -o /dev/null 2>/dev/null || true
+    -d "$MINIMAL_PAYLOAD" -o /dev/null 2>/dev/null) || http_code="000"
 
-  # Tried 3 times - mark as done regardless to prevent infinite loops
-  POST_UPDATE_DONE=true
+  if [[ "$http_code" =~ ^2[0-9]{2}$ ]]; then
+    POST_UPDATE_DONE=true
+    return 0
+  fi
+
+  # All 3 attempts failed — do NOT set POST_UPDATE_DONE=true.
+  # This allows the EXIT trap (on_exit in error_handler.func) to retry.
+  # No infinite loop risk: EXIT trap fires exactly once.
 }
 
 # ==============================================================================
@@ -969,16 +1121,16 @@ categorize_error() {
   # Python environment errors
   # (already covered: 160-162 under dependency)
 
-  # Aborted by user
-  130) echo "aborted" ;;
+  # Aborted by user (SIGHUP=terminal closed, SIGINT=Ctrl+C, SIGTERM=killed)
+  129 | 130 | 143) echo "user_aborted" ;;
 
   # Resource errors (OOM, SIGKILL, SIGABRT)
   134 | 137) echo "resource" ;;
 
-  # Signal/Process errors (SIGTERM, SIGPIPE, SIGSEGV)
-  139 | 141 | 143) echo "signal" ;;
+  # Signal/Process errors (SIGPIPE, SIGSEGV)
+  139 | 141) echo "signal" ;;
 
-  # Shell errors (general error, syntax error)  
+  # Shell errors (general error, syntax error)
   1 | 2) echo "shell" ;;
 
   # Default - truly unknown
@@ -1292,9 +1444,27 @@ post_update_to_api_extended() {
 EOF
   )
 
-  curl -fsS -m "${TELEMETRY_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
+  local http_code
+  http_code=$(curl -sS -w "%{http_code}" -m "${STATUS_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
     -H "Content-Type: application/json" \
-    -d "$JSON_PAYLOAD" &>/dev/null || true
+    -d "$JSON_PAYLOAD" -o /dev/null 2>/dev/null) || http_code="000"
 
-  POST_UPDATE_DONE=true
+  if [[ "$http_code" =~ ^2[0-9]{2}$ ]]; then
+    POST_UPDATE_DONE=true
+    return 0
+  fi
+
+  # Retry with minimal payload
+  sleep 1
+  http_code=$(curl -sS -w "%{http_code}" -m "${STATUS_TIMEOUT}" -X POST "${TELEMETRY_URL}" \
+    -H "Content-Type: application/json" \
+    -d "{\"random_id\":\"${RANDOM_UUID}\",\"execution_id\":\"${EXECUTION_ID:-${RANDOM_UUID}}\",\"type\":\"${TELEMETRY_TYPE:-lxc}\",\"nsapp\":\"${NSAPP:-unknown}\",\"status\":\"${pb_status}\",\"exit_code\":${exit_code},\"install_duration\":${duration:-0}}" \
+    -o /dev/null 2>/dev/null) || http_code="000"
+
+  if [[ "$http_code" =~ ^2[0-9]{2}$ ]]; then
+    POST_UPDATE_DONE=true
+    return 0
+  fi
+
+  # Do NOT set POST_UPDATE_DONE=true — let EXIT trap retry
 }

@@ -19,7 +19,7 @@ msg_ok "Installed Dependencies"
 
 PG_VERSION="17" setup_postgresql
 PG_DB_NAME="fluiddb" PG_DB_USER="fluiduser" setup_postgresql_db
-NODE_VERSION="20" setup_nodejs
+NODE_VERSION="24" setup_nodejs
 fetch_and_deploy_gh_release "fluid-calendar" "dotnetfactory/fluid-calendar" "tarball"
 
 msg_info "Configuring fluid-calendar"

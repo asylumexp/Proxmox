@@ -38,6 +38,31 @@ function update_script() {
     cp /opt/databasus/.env /opt/databasus.env.bak
     msg_ok "Backed up Configuration"
 
+    msg_info "Ensuring Database Clients"
+    # Create PostgreSQL version symlinks for compatibility
+    for v in 12 13 14 15 16 18; do
+      ln -sf /usr/lib/postgresql/17 /usr/lib/postgresql/$v
+    done
+    # Install MongoDB Database Tools via direct .deb (no APT repo for Debian 13)
+    if ! command -v mongodump &>/dev/null; then
+      [[ "$(get_os_info id)" == "ubuntu" ]] && MONGO_DIST="ubuntu2204" || MONGO_DIST="debian12"
+      fetch_and_deploy_from_url "https://fastdl.mongodb.org/tools/db/mongodb-database-tools-${MONGO_DIST}-x86_64-100.14.1.deb"
+    fi
+    [[ -f /usr/bin/mongodump ]] && ln -sf /usr/bin/mongodump /usr/local/mongodb-database-tools/bin/mongodump
+    [[ -f /usr/bin/mongorestore ]] && ln -sf /usr/bin/mongorestore /usr/local/mongodb-database-tools/bin/mongorestore
+    # Create MariaDB and MySQL client symlinks for compatibility
+    ensure_dependencies mariadb-client
+    mkdir -p /usr/local/mariadb-{10.6,12.1}/bin /usr/local/mysql-{5.7,8.0,8.4,9}/bin /usr/local/mongodb-database-tools/bin
+    for dir in /usr/local/mariadb-{10.6,12.1}/bin; do
+      ln -sf /usr/bin/mariadb-dump "$dir/mariadb-dump"
+      ln -sf /usr/bin/mariadb "$dir/mariadb"
+    done
+    for dir in /usr/local/mysql-{5.7,8.0,8.4,9}/bin; do
+      ln -sf /usr/bin/mariadb-dump "$dir/mysqldump"
+      ln -sf /usr/bin/mariadb "$dir/mysql"
+    done
+    msg_ok "Ensured Database Clients"
+
     CLEAN_INSTALL=1 fetch_and_deploy_gh_release "databasus" "databasus/databasus" "tarball" "latest" "/opt/databasus"
 
     msg_info "Updating Databasus"
@@ -49,6 +74,7 @@ function update_script() {
     $STD /root/go/bin/swag init -g cmd/main.go -o swagger
     $STD env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o databasus ./cmd/main.go
     mv /opt/databasus/backend/databasus /opt/databasus/databasus
+    mkdir -p /opt/databasus/ui/build
     cp -r /opt/databasus/frontend/dist/* /opt/databasus/ui/build/
     cp -r /opt/databasus/backend/migrations /opt/databasus/
     chown -R postgres:postgres /opt/databasus

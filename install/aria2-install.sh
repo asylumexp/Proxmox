@@ -27,7 +27,7 @@ if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
   msg_ok "Installed Dependencies"
 
   fetch_and_deploy_gh_release "ariang" "mayswind/ariang" "prebuild" "latest" "/var/www" "AriaNg-*-AllInOne.zip"
-  
+
   msg_info "Configure nginx"
   cat <<EOF >/etc/nginx/conf.d/ariang.conf
 server {

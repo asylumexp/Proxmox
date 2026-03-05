@@ -15,8 +15,8 @@ update_os
 
 msg_info "Installing Dependencies"
 $STD apt install -y \
-    redis \
-    nginx
+  redis \
+  nginx
 msg_ok "Installed Dependencies"
 
 setup_mariadb

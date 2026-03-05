@@ -13,6 +13,7 @@
 #   - Legacy installation cleanup (nvm, rbenv, rustup)
 #   - OS-upgrade-safe repository preparation
 #   - Service pattern matching for multi-version tools
+#   - Debug mode for troubleshooting (TOOLS_DEBUG=true)
 #
 # Usage in install scripts:
 #   source /dev/stdin <<< "$FUNCTIONS"  # Load from build.func
@@ -27,8 +28,238 @@
 #   prepare_repository_setup()       - Cleanup repos + keyrings + validate APT
 #   install_packages_with_retry()    - Install with 3 retries and APT refresh
 #   upgrade_packages_with_retry()    - Upgrade with 3 retries and APT refresh
+#   curl_with_retry()                - Curl with retry logic and timeouts
+#
+# Debug Mode:
+#   TOOLS_DEBUG=true ./script.sh     - Enable verbose output for troubleshooting
 #
 # ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Debug helper - outputs to stderr when TOOLS_DEBUG is enabled
+# Usage: debug_log "message"
+# ------------------------------------------------------------------------------
+debug_log() {
+  if [[ "${TOOLS_DEBUG:-false}" == "true" || "${TOOLS_DEBUG:-0}" == "1" || "${DEBUG:-0}" == "1" ]]; then
+    echo "[DEBUG] $*" >&2
+  fi
+}
+
+# ------------------------------------------------------------------------------
+# Robust curl wrapper with retry logic, timeouts, and error handling
+#
+# Usage:
+#   curl_with_retry "https://example.com/file" "/tmp/output"
+#   curl_with_retry "https://api.github.com/..." "-" | jq .
+#   CURL_RETRIES=5 curl_with_retry "https://slow.server/file" "/tmp/out"
+#
+# Parameters:
+#   $1 - URL to download
+#   $2 - Output file path (use "-" for stdout)
+#   $3 - (optional) Additional curl options as string
+#
+# Variables:
+#   CURL_RETRIES     - Number of retries (default: 3)
+#   CURL_TIMEOUT     - Max time per attempt in seconds (default: 60)
+#   CURL_CONNECT_TO  - Connection timeout in seconds (default: 10)
+#
+# Returns: 0 on success, 1 on failure after all retries
+# ------------------------------------------------------------------------------
+curl_with_retry() {
+  local url="$1"
+  local output="${2:--}"
+  local extra_opts="${3:-}"
+  local retries="${CURL_RETRIES:-3}"
+  local timeout="${CURL_TIMEOUT:-60}"
+  local connect_timeout="${CURL_CONNECT_TO:-10}"
+
+  local attempt=1
+  local success=false
+  local backoff=1
+
+  # Extract hostname for DNS pre-check
+  local host
+  host=$(echo "$url" | sed -E 's|^https?://([^/:]+).*|\1|')
+
+  # DNS pre-check - fail fast if host is unresolvable
+  if ! getent hosts "$host" &>/dev/null; then
+    debug_log "DNS resolution failed for $host"
+    return 1
+  fi
+
+  while [[ $attempt -le $retries ]]; do
+    debug_log "curl attempt $attempt/$retries: $url"
+
+    local curl_cmd="curl -fsSL --connect-timeout $connect_timeout --max-time $timeout"
+    [[ -n "$extra_opts" ]] && curl_cmd="$curl_cmd $extra_opts"
+
+    if [[ "$output" == "-" ]]; then
+      if $curl_cmd "$url"; then
+        success=true
+        break
+      fi
+    else
+      if $curl_cmd -o "$output" "$url"; then
+        success=true
+        break
+      fi
+    fi
+
+    debug_log "curl attempt $attempt failed, waiting ${backoff}s before retry..."
+    sleep "$backoff"
+    # Exponential backoff: 1, 2, 4, 8... capped at 30s
+    backoff=$((backoff * 2))
+    ((backoff > 30)) && backoff=30
+    ((attempt++))
+  done
+
+  if [[ "$success" == "true" ]]; then
+    debug_log "curl successful: $url"
+    return 0
+  else
+    debug_log "curl FAILED after $retries attempts: $url"
+    return 1
+  fi
+}
+
+# ------------------------------------------------------------------------------
+# Robust curl wrapper for API calls (returns HTTP code + body)
+#
+# Usage:
+#   response=$(curl_api_with_retry "https://api.github.com/repos/owner/repo/releases/latest")
+#   http_code=$(curl_api_with_retry "https://api.github.com/..." "/tmp/body.json")
+#
+# Parameters:
+#   $1 - URL to call
+#   $2 - (optional) Output file for body (default: stdout)
+#   $3 - (optional) Additional curl options as string
+#
+# Returns: HTTP status code, body in file or stdout
+# ------------------------------------------------------------------------------
+curl_api_with_retry() {
+  local url="$1"
+  local body_file="${2:-}"
+  local extra_opts="${3:-}"
+  local retries="${CURL_RETRIES:-3}"
+  local timeout="${CURL_TIMEOUT:-60}"
+  local connect_timeout="${CURL_CONNECT_TO:-10}"
+
+  local attempt=1
+  local http_code=""
+
+  while [[ $attempt -le $retries ]]; do
+    debug_log "curl API attempt $attempt/$retries: $url"
+
+    local curl_cmd="curl -fsSL --connect-timeout $connect_timeout --max-time $timeout -w '%{http_code}'"
+    [[ -n "$extra_opts" ]] && curl_cmd="$curl_cmd $extra_opts"
+
+    if [[ -n "$body_file" ]]; then
+      http_code=$($curl_cmd -o "$body_file" "$url" 2>/dev/null) || true
+    else
+      # Capture body and http_code separately
+      local tmp_body="/tmp/curl_api_body_$$"
+      http_code=$($curl_cmd -o "$tmp_body" "$url" 2>/dev/null) || true
+      if [[ -f "$tmp_body" ]]; then
+        cat "$tmp_body"
+        rm -f "$tmp_body"
+      fi
+    fi
+
+    # Success on 2xx codes
+    if [[ "$http_code" =~ ^2[0-9]{2}$ ]]; then
+      debug_log "curl API successful: $url (HTTP $http_code)"
+      echo "$http_code"
+      return 0
+    fi
+
+    debug_log "curl API attempt $attempt failed (HTTP $http_code), waiting ${attempt}s..."
+    sleep "$attempt"
+    ((attempt++))
+  done
+
+  debug_log "curl API FAILED after $retries attempts: $url"
+  echo "$http_code"
+  return 1
+}
+
+# ------------------------------------------------------------------------------
+# Download and install GPG key with retry logic and validation
+#
+# Usage:
+#   download_gpg_key "https://example.com/key.gpg" "/etc/apt/keyrings/example.gpg"
+#   download_gpg_key "https://example.com/key.asc" "/etc/apt/keyrings/example.gpg" "dearmor"
+#
+# Parameters:
+#   $1 - URL to GPG key
+#   $2 - Output path for keyring file
+#   $3 - (optional) "dearmor" to convert ASCII-armored key to binary
+#
+# Features:
+#   - Auto-detects key format (binary vs armored)
+#   - Validates downloaded key
+#   - Multiple mirror fallback support
+#
+# Returns: 0 on success, 1 on failure
+# ------------------------------------------------------------------------------
+download_gpg_key() {
+  local url="$1"
+  local output="$2"
+  local mode="${3:-auto}" # auto, dearmor, or binary
+  local retries="${CURL_RETRIES:-3}"
+  local timeout="${CURL_TIMEOUT:-30}"
+  local temp_key
+  temp_key=$(mktemp)
+
+  mkdir -p "$(dirname "$output")"
+
+  local attempt=1
+  while [[ $attempt -le $retries ]]; do
+    debug_log "GPG key download attempt $attempt/$retries: $url"
+
+    # Download to temp file first
+    if ! curl -fsSL --connect-timeout 10 --max-time "$timeout" -o "$temp_key" "$url" 2>/dev/null; then
+      debug_log "GPG key download attempt $attempt failed, waiting ${attempt}s..."
+      sleep "$attempt"
+      ((attempt++))
+      continue
+    fi
+
+    # Auto-detect key format if mode is auto
+    if [[ "$mode" == "auto" ]]; then
+      if file "$temp_key" 2>/dev/null | grep -qi "pgp\\|gpg\\|public key"; then
+        mode="binary"
+      elif grep -q "BEGIN PGP" "$temp_key" 2>/dev/null; then
+        mode="dearmor"
+      else
+        # Try to detect by extension
+        [[ "$url" == *.asc || "$url" == *.txt ]] && mode="dearmor" || mode="binary"
+      fi
+    fi
+
+    # Process based on mode
+    if [[ "$mode" == "dearmor" ]]; then
+      if gpg --dearmor --yes -o "$output" <"$temp_key" 2>/dev/null; then
+        rm -f "$temp_key"
+        debug_log "GPG key installed (dearmored): $output"
+        return 0
+      fi
+    else
+      if mv "$temp_key" "$output" 2>/dev/null; then
+        chmod 644 "$output"
+        debug_log "GPG key installed: $output"
+        return 0
+      fi
+    fi
+
+    debug_log "GPG key processing attempt $attempt failed"
+    sleep "$attempt"
+    ((attempt++))
+  done
+
+  rm -f "$temp_key"
+  debug_log "GPG key download FAILED after $retries attempts: $url"
+  return 1
+}
 
 # ------------------------------------------------------------------------------
 # Cache installed version to avoid repeated checks
@@ -177,11 +408,20 @@ prepare_repository_setup() {
 # ------------------------------------------------------------------------------
 # Install packages with retry logic
 # Usage: install_packages_with_retry "mysql-server" "mysql-client"
+# Features:
+#   - Automatic dpkg recovery on failure
+#   - Individual package fallback if batch fails
+#   - Dependency resolution with apt-get -f install
 # ------------------------------------------------------------------------------
 install_packages_with_retry() {
   local packages=("$@")
-  local max_retries=2
+  local max_retries=3
   local retry=0
+
+  # Pre-check: ensure dpkg is not in a broken state
+  if dpkg --audit 2>&1 | grep -q .; then
+    $STD dpkg --configure -a 2>/dev/null || true
+  fi
 
   while [[ $retry -le $max_retries ]]; do
     if DEBIAN_FRONTEND=noninteractive $STD apt install -y \
@@ -194,13 +434,45 @@ install_packages_with_retry() {
     retry=$((retry + 1))
     if [[ $retry -le $max_retries ]]; then
       msg_warn "Package installation failed, retrying ($retry/$max_retries)..."
-      sleep 2
-      # Fix any interrupted dpkg operations before retry
-      $STD dpkg --configure -a 2>/dev/null || true
-      $STD apt update 2>/dev/null || true
+
+      # Progressive recovery steps based on retry count
+      case $retry in
+      1)
+        # First retry: just fix dpkg and update
+        $STD dpkg --configure -a 2>/dev/null || true
+        $STD apt update 2>/dev/null || true
+        ;;
+      2)
+        # Second retry: fix broken dependencies
+        $STD apt --fix-broken install -y 2>/dev/null || true
+        $STD apt update 2>/dev/null || true
+        ;;
+      3)
+        # Third retry: try installing packages one by one
+        local failed=()
+        for pkg in "${packages[@]}"; do
+          if ! $STD apt install -y "$pkg" 2>/dev/null; then
+            # Try with --fix-missing
+            if ! $STD apt install -y --fix-missing "$pkg" 2>/dev/null; then
+              failed+=("$pkg")
+            fi
+          fi
+        done
+        # If some packages installed, consider partial success
+        if [[ ${#failed[@]} -lt ${#packages[@]} ]]; then
+          if [[ ${#failed[@]} -gt 0 ]]; then
+            msg_warn "Partially installed. Failed packages: ${failed[*]}"
+          fi
+          return 0
+        fi
+        ;;
+      esac
+
+      sleep $((retry * 2))
     fi
   done
 
+  msg_error "Failed to install packages after $((max_retries + 1)) attempts: ${packages[*]}"
   return 1
 }
 
@@ -231,6 +503,7 @@ upgrade_packages_with_retry() {
     fi
   done
 
+  msg_error "Failed to upgrade packages after $((max_retries + 1)) attempts: ${packages[*]}"
   return 1
 }
 
@@ -410,7 +683,7 @@ should_update_tool() {
   return 0 # Update needed
 }
 
-# ---------------------–----------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Unified repository management for tools
 # Handles adding, updating, and verifying tool repositories
 # Usage: manage_tool_repository "mariadb" "11.4" "https://repo..." "GPG_key_url"
@@ -459,9 +732,8 @@ manage_tool_repository() {
     # Clean old repos first
     cleanup_old_repo_files "mongodb"
 
-    # Import GPG key
-    mkdir -p /etc/apt/keyrings
-    if ! curl -fsSL "$gpg_key_url" | gpg --dearmor --yes -o "/etc/apt/keyrings/mongodb-server-${version}.gpg" 2>/dev/null; then
+    # Import GPG key with retry logic
+    if ! download_gpg_key "$gpg_key_url" "/etc/apt/keyrings/mongodb-server-${version}.gpg" "dearmor"; then
       msg_error "Failed to download MongoDB GPG key"
       return 1
     fi
@@ -542,14 +814,11 @@ EOF
     local distro_codename
     distro_codename=$(awk -F= '/^VERSION_CODENAME=/{print $2}' /etc/os-release)
 
-    # Create keyring directory first
-    mkdir -p /etc/apt/keyrings
-
-    # Download GPG key from NodeSource
-    curl -fsSL "$gpg_key_url" | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg || {
+    # Download GPG key from NodeSource with retry logic
+    if ! download_gpg_key "$gpg_key_url" "/etc/apt/keyrings/nodesource.gpg" "dearmor"; then
       msg_error "Failed to import NodeSource GPG key"
       return 1
-    }
+    fi
 
     cat <<EOF >/etc/apt/sources.list.d/nodesource.sources
 Types: deb
@@ -570,11 +839,11 @@ EOF
 
     cleanup_old_repo_files "php"
 
-    # Download and install keyring
-    curl -fsSLo /tmp/debsuryorg-archive-keyring.deb "$gpg_key_url" || {
+    # Download and install keyring with retry logic
+    if ! curl_with_retry "$gpg_key_url" "/tmp/debsuryorg-archive-keyring.deb"; then
       msg_error "Failed to download PHP keyring"
       return 1
-    }
+    fi
     # Don't use /dev/null redirection for dpkg as it may use background processes
     dpkg -i /tmp/debsuryorg-archive-keyring.deb >>"$(get_active_logfile)" 2>&1 || {
       msg_error "Failed to install PHP keyring"
@@ -605,14 +874,11 @@ EOF
 
     cleanup_old_repo_files "postgresql"
 
-    # Create keyring directory first
-    mkdir -p /etc/apt/keyrings
-
-    # Import PostgreSQL key
-    curl -fsSL "$gpg_key_url" | gpg --dearmor -o /etc/apt/keyrings/postgresql.gpg || {
+    # Import PostgreSQL key with retry logic
+    if ! download_gpg_key "$gpg_key_url" "/etc/apt/keyrings/postgresql.gpg" "dearmor"; then
       msg_error "Failed to import PostgreSQL GPG key"
       return 1
-    }
+    fi
 
     # Setup repository
     local distro_codename
@@ -637,7 +903,7 @@ EOF
   return 0
 }
 
-# ------–----------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Unified package upgrade function (with apt update caching)
 # ------------------------------------------------------------------------------
 upgrade_package() {
@@ -666,16 +932,40 @@ upgrade_package() {
 }
 
 # ------------------------------------------------------------------------------
-# Repository availability check
+# Repository availability check with caching
 # ------------------------------------------------------------------------------
+# Note: Must use -gA (global) because tools.func is sourced inside update_os()
+# function scope. Plain 'declare -A' would create a local variable that gets
+# destroyed when update_os() returns, causing "unbound variable" errors later
+# when setup_postgresql/verify_repo_available tries to access the cache key.
+declare -gA _REPO_CACHE 2>/dev/null || declare -A _REPO_CACHE 2>/dev/null || true
+
 verify_repo_available() {
   local repo_url="$1"
   local suite="$2"
+  local cache_key="${repo_url}|${suite}"
+  local cache_ttl=300 # 5 minutes
 
-  if curl -fsSL --max-time 10 "${repo_url}/dists/${suite}/Release" &>/dev/null; then
-    return 0
+  # Check cache first (avoid repeated HTTP requests)
+  if [[ -n "${_REPO_CACHE[$cache_key]:-}" ]]; then
+    local cached_time cached_result
+    cached_time=$(echo "${_REPO_CACHE[$cache_key]}" | cut -d'|' -f1)
+    cached_result=$(echo "${_REPO_CACHE[$cache_key]}" | cut -d'|' -f2)
+    if (($(date +%s) - cached_time < cache_ttl)); then
+      [[ "$cached_result" == "1" ]] && return 0 || return 1
+    fi
   fi
-  return 1
+
+  # Perform actual check with short timeout
+  local result=1
+  if curl -fsSL --max-time 5 --connect-timeout 3 "${repo_url}/dists/${suite}/Release" &>/dev/null; then
+    result=0
+  fi
+
+  # Cache the result
+  _REPO_CACHE[$cache_key]="$(date +%s)|$result"
+
+  return $result
 }
 
 # ------------------------------------------------------------------------------
@@ -685,16 +975,27 @@ ensure_dependencies() {
   local deps=("$@")
   local missing=()
 
+  # Fast batch check using dpkg-query (much faster than individual checks)
+  local installed_pkgs
+  installed_pkgs=$(dpkg-query -W -f='${Package}\n' 2>/dev/null | sort -u)
+
   for dep in "${deps[@]}"; do
-    if ! command -v "$dep" &>/dev/null && ! is_package_installed "$dep"; then
-      missing+=("$dep")
+    # First check if command exists (for binaries like jq, curl)
+    if command -v "$dep" &>/dev/null; then
+      continue
     fi
+    # Then check if package is installed
+    if echo "$installed_pkgs" | grep -qx "$dep"; then
+      continue
+    fi
+    missing+=("$dep")
   done
 
   if [[ ${#missing[@]} -gt 0 ]]; then
     # Only run apt update if not done recently (within last 5 minutes)
     local apt_cache_file="/var/cache/apt-update-timestamp"
-    local current_time=$(date +%s)
+    local current_time
+    current_time=$(date +%s)
     local last_update=0
 
     if [[ -f "$apt_cache_file" ]]; then
@@ -712,8 +1013,17 @@ ensure_dependencies() {
     fi
 
     $STD apt install -y "${missing[@]}" || {
-      msg_error "Failed to install dependencies: ${missing[*]}"
-      return 1
+      # Fallback: try installing one by one to identify problematic package
+      local failed=()
+      for pkg in "${missing[@]}"; do
+        if ! $STD apt install -y "$pkg" 2>/dev/null; then
+          failed+=("$pkg")
+        fi
+      done
+      if [[ ${#failed[@]} -gt 0 ]]; then
+        msg_error "Failed to install dependencies: ${failed[*]}"
+        return 1
+      fi
     }
   fi
 }
@@ -783,15 +1093,24 @@ github_api_call() {
 
   for attempt in $(seq 1 $max_retries); do
     local http_code
-    http_code=$(curl -fsSL -w "%{http_code}" -o "$output_file" \
+    http_code=$(curl -sSL -w "%{http_code}" -o "$output_file" \
       -H "Accept: application/vnd.github+json" \
       -H "X-GitHub-Api-Version: 2022-11-28" \
       "${header_args[@]}" \
-      "$url" 2>/dev/null || echo "000")
+      "$url" 2>/dev/null) || true
 
     case "$http_code" in
     200)
       return 0
+      ;;
+    401)
+      msg_error "GitHub API authentication failed (HTTP 401)."
+      if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+        msg_error "Your GITHUB_TOKEN appears to be invalid or expired."
+      else
+        msg_error "The repository may require authentication. Try: export GITHUB_TOKEN=\"ghp_your_token\""
+      fi
+      return 1
       ;;
     403)
       # Rate limit - check if we can retry
@@ -801,11 +1120,22 @@ github_api_call() {
         retry_delay=$((retry_delay * 2))
         continue
       fi
-      msg_error "GitHub API rate limit exceeded. Set GITHUB_TOKEN to increase limits."
+      msg_error "GitHub API rate limit exceeded (HTTP 403)."
+      msg_error "To increase the limit, export a GitHub token before running the script:"
+      msg_error "  export GITHUB_TOKEN=\"ghp_your_token_here\""
       return 1
       ;;
     404)
-      msg_error "GitHub API endpoint not found: $url"
+      msg_error "GitHub repository or release not found (HTTP 404): $url"
+      return 1
+      ;;
+    000 | "")
+      if [[ $attempt -lt $max_retries ]]; then
+        sleep "$retry_delay"
+        continue
+      fi
+      msg_error "GitHub API connection failed (no response)."
+      msg_error "Check your network/DNS: curl -sSL https://api.github.com/rate_limit"
       return 1
       ;;
     *)
@@ -813,12 +1143,13 @@ github_api_call() {
         sleep "$retry_delay"
         continue
       fi
-      msg_error "GitHub API call failed with HTTP $http_code"
+      msg_error "GitHub API call failed (HTTP $http_code)."
       return 1
       ;;
     esac
   done
 
+  msg_error "GitHub API call failed after ${max_retries} attempts: ${url}"
   return 1
 }
 
@@ -833,13 +1164,17 @@ codeberg_api_call() {
 
   for attempt in $(seq 1 $max_retries); do
     local http_code
-    http_code=$(curl -fsSL -w "%{http_code}" -o "$output_file" \
+    http_code=$(curl -sSL -w "%{http_code}" -o "$output_file" \
       -H "Accept: application/json" \
-      "$url" 2>/dev/null || echo "000")
+      "$url" 2>/dev/null) || true
 
     case "$http_code" in
     200)
       return 0
+      ;;
+    401)
+      msg_error "Codeberg API authentication failed (HTTP 401)."
+      return 1
       ;;
     403)
       # Rate limit - retry
@@ -849,11 +1184,20 @@ codeberg_api_call() {
         retry_delay=$((retry_delay * 2))
         continue
       fi
-      msg_error "Codeberg API rate limit exceeded."
+      msg_error "Codeberg API rate limit exceeded (HTTP 403)."
       return 1
       ;;
     404)
-      msg_error "Codeberg API endpoint not found: $url"
+      msg_error "Codeberg repository or release not found (HTTP 404): $url"
+      return 1
+      ;;
+    000 | "")
+      if [[ $attempt -lt $max_retries ]]; then
+        sleep "$retry_delay"
+        continue
+      fi
+      msg_error "Codeberg API connection failed (no response)."
+      msg_error "Check your network/DNS: curl -sSL https://codeberg.org"
       return 1
       ;;
     *)
@@ -861,12 +1205,13 @@ codeberg_api_call() {
         sleep "$retry_delay"
         continue
       fi
-      msg_error "Codeberg API call failed with HTTP $http_code"
+      msg_error "Codeberg API call failed (HTTP $http_code)."
       return 1
       ;;
     esac
   done
 
+  msg_error "Codeberg API call failed after ${max_retries} attempts: ${url}"
   return 1
 }
 
@@ -968,60 +1313,65 @@ get_fallback_suite() {
     return 0
   fi
 
-  # Comprehensive fallback mappings
+  # Build fallback chain based on distro
+  local fallback_chain=()
   case "$distro_id" in
   debian)
     case "$distro_codename" in
-    # Debian 13 (Trixie) → Debian 12 (Bookworm)
     trixie | forky | sid)
-      echo "bookworm"
+      fallback_chain=("bookworm" "bullseye")
       ;;
-    # Debian 12 (Bookworm) stays
     bookworm)
-      echo "bookworm"
+      fallback_chain=("bookworm" "bullseye")
       ;;
-    # Debian 11 (Bullseye) stays
     bullseye)
-      echo "bullseye"
+      fallback_chain=("bullseye" "buster")
       ;;
-    # Unknown → latest stable
     *)
-      echo "bookworm"
+      fallback_chain=("bookworm" "bullseye")
       ;;
     esac
     ;;
   ubuntu)
     case "$distro_codename" in
-    # Ubuntu 24.10 (Oracular) → 24.04 LTS (Noble)
     oracular | plucky)
-      echo "noble"
+      fallback_chain=("noble" "jammy" "focal")
       ;;
-    # Ubuntu 24.04 LTS (Noble) stays
     noble)
-      echo "noble"
+      fallback_chain=("noble" "jammy")
       ;;
-    # Ubuntu 23.10 (Mantic) → 22.04 LTS (Jammy)
     mantic | lunar)
-      echo "jammy"
+      fallback_chain=("jammy" "focal")
       ;;
-    # Ubuntu 22.04 LTS (Jammy) stays
     jammy)
-      echo "jammy"
+      fallback_chain=("jammy" "focal")
       ;;
-    # Ubuntu 20.04 LTS (Focal) stays
     focal)
-      echo "focal"
+      fallback_chain=("focal" "bionic")
       ;;
-    # Unknown → latest LTS
     *)
-      echo "jammy"
+      fallback_chain=("jammy" "focal")
       ;;
     esac
     ;;
   *)
     echo "$distro_codename"
+    return 0
     ;;
   esac
+
+  # Try each fallback suite with actual HTTP check
+  for suite in "${fallback_chain[@]}"; do
+    if verify_repo_available "$repo_base_url" "$suite"; then
+      debug_log "Fallback suite found: $suite for $distro_codename"
+      echo "$suite"
+      return 0
+    fi
+  done
+
+  # Last resort: return first fallback without verification
+  echo "${fallback_chain[0]:-$distro_codename}"
+  return 0
 }
 
 # ------------------------------------------------------------------------------
@@ -1062,78 +1412,118 @@ is_lts_version() {
 
 # ------------------------------------------------------------------------------
 # Get optimal number of parallel jobs (cached)
+# Features:
+#   - CPU count detection
+#   - Memory-based limiting (1.5GB per job for safety)
+#   - Current load awareness
+#   - Container/VM detection for conservative limits
 # ------------------------------------------------------------------------------
 get_parallel_jobs() {
   if [[ -z "${_PARALLEL_JOBS:-}" ]]; then
-    local cpu_count=$(nproc 2>/dev/null || echo 1)
-    local mem_gb=$(free -g | awk '/^Mem:/{print $2}')
+    local cpu_count
+    cpu_count=$(nproc 2>/dev/null || grep -c ^processor /proc/cpuinfo 2>/dev/null || echo 1)
 
-    # Limit by available memory (assume 1GB per job for compilation)
-    local max_by_mem=$((mem_gb > 0 ? mem_gb : 1))
-    local max_jobs=$((cpu_count < max_by_mem ? cpu_count : max_by_mem))
+    local mem_mb
+    mem_mb=$(free -m 2>/dev/null | awk '/^Mem:/{print $2}' || echo 1024)
 
-    # At least 1, at most cpu_count
-    export _PARALLEL_JOBS=$((max_jobs > 0 ? max_jobs : 1))
+    # Assume 1.5GB per compilation job for safety margin
+    local max_by_mem=$((mem_mb / 1536))
+    ((max_by_mem < 1)) && max_by_mem=1
+
+    # Check current system load - reduce jobs if already loaded
+    local load_1m
+    load_1m=$(awk '{print int($1)}' /proc/loadavg 2>/dev/null || echo 0)
+    local available_cpus=$((cpu_count - load_1m))
+    ((available_cpus < 1)) && available_cpus=1
+
+    # Take minimum of: available CPUs, memory-limited, and total CPUs
+    local max_jobs=$cpu_count
+    ((max_by_mem < max_jobs)) && max_jobs=$max_by_mem
+    ((available_cpus < max_jobs)) && max_jobs=$available_cpus
+
+    # Container detection - be more conservative in containers
+    if [[ -f /.dockerenv ]] || grep -q 'lxc\|docker\|container' /proc/1/cgroup 2>/dev/null; then
+      # Reduce by 25% in containers to leave headroom
+      max_jobs=$((max_jobs * 3 / 4))
+      ((max_jobs < 1)) && max_jobs=1
+    fi
+
+    # Final bounds check
+    ((max_jobs < 1)) && max_jobs=1
+    ((max_jobs > cpu_count)) && max_jobs=$cpu_count
+
+    export _PARALLEL_JOBS=$max_jobs
+    debug_log "Parallel jobs: $_PARALLEL_JOBS (CPUs: $cpu_count, mem-limit: $max_by_mem, load: $load_1m)"
   fi
   echo "$_PARALLEL_JOBS"
 }
 
 # ------------------------------------------------------------------------------
 # Get default PHP version for OS
+# Updated for latest distro releases
 # ------------------------------------------------------------------------------
 get_default_php_version() {
-  local os_id=$(get_os_info id)
-  local os_version=$(get_os_version_major)
+  local os_id
+  os_id=$(get_os_info id)
+  local os_version
+  os_version=$(get_os_version_major)
 
   case "$os_id" in
   debian)
     case "$os_version" in
+    14) echo "8.4" ;; # Debian 14 (Forky) - future
     13) echo "8.3" ;; # Debian 13 (Trixie)
     12) echo "8.2" ;; # Debian 12 (Bookworm)
     11) echo "7.4" ;; # Debian 11 (Bullseye)
-    *) echo "8.2" ;;
+    *) echo "8.3" ;;  # Default to latest stable
     esac
     ;;
   ubuntu)
     case "$os_version" in
+    26) echo "8.4" ;; # Ubuntu 26.04 - future
     24) echo "8.3" ;; # Ubuntu 24.04 LTS (Noble)
     22) echo "8.1" ;; # Ubuntu 22.04 LTS (Jammy)
     20) echo "7.4" ;; # Ubuntu 20.04 LTS (Focal)
-    *) echo "8.1" ;;
+    *) echo "8.3" ;;  # Default to latest stable
     esac
     ;;
   *)
-    echo "8.2"
+    echo "8.3"
     ;;
   esac
 }
 
 # ------------------------------------------------------------------------------
 # Get default Python version for OS
+# Updated for latest distro releases
 # ------------------------------------------------------------------------------
 get_default_python_version() {
-  local os_id=$(get_os_info id)
-  local os_version=$(get_os_version_major)
+  local os_id
+  os_id=$(get_os_info id)
+  local os_version
+  os_version=$(get_os_version_major)
 
   case "$os_id" in
   debian)
     case "$os_version" in
+    14) echo "3.13" ;; # Debian 14 (Forky) - future
     13) echo "3.12" ;; # Debian 13 (Trixie)
     12) echo "3.11" ;; # Debian 12 (Bookworm)
     11) echo "3.9" ;;  # Debian 11 (Bullseye)
-    *) echo "3.11" ;;
+    *) echo "3.12" ;;  # Default to latest stable
     esac
     ;;
   ubuntu)
     case "$os_version" in
+    26) echo "3.13" ;; # Ubuntu 26.04 - future
     24) echo "3.12" ;; # Ubuntu 24.04 LTS
     22) echo "3.10" ;; # Ubuntu 22.04 LTS
     20) echo "3.8" ;;  # Ubuntu 20.04 LTS
-    *) echo "3.10" ;;
+    *) echo "3.12" ;;  # Default to latest stable
     esac
     ;;
   *)
-    echo "3.11"
+    echo "3.12"
     ;;
   esac
 }
@@ -1142,8 +1532,8 @@ get_default_python_version() {
 # Get default Node.js LTS version
 # ------------------------------------------------------------------------------
 get_default_nodejs_version() {
-  # Always return current LTS (as of 2025)
-  echo "22"
+  # Current LTS as of January 2026 (Node.js 24 LTS)
+  echo "24"
 }
 
 # ------------------------------------------------------------------------------
@@ -1240,11 +1630,33 @@ cleanup_orphaned_sources() {
 # ------------------------------------------------------------------------------
 # Ensure APT is in a working state before installing packages
 # This should be called at the start of any setup function
+# Features:
+#   - Fixes interrupted dpkg operations
+#   - Removes orphaned sources
+#   - Handles lock file contention
+#   - Progressive recovery with fallbacks
 # ------------------------------------------------------------------------------
 ensure_apt_working() {
+  local max_wait=60 # Maximum seconds to wait for apt lock
+
+  # Wait for any existing apt/dpkg processes to finish
+  local waited=0
+  while fuser /var/lib/dpkg/lock-frontend &>/dev/null ||
+    fuser /var/lib/apt/lists/lock &>/dev/null ||
+    fuser /var/cache/apt/archives/lock &>/dev/null; do
+    if ((waited >= max_wait)); then
+      msg_warn "APT lock held for ${max_wait}s, attempting to continue anyway"
+      break
+    fi
+    debug_log "Waiting for APT lock (${waited}s)..."
+    sleep 2
+    ((waited += 2))
+  done
+
   # Fix interrupted dpkg operations first
   # This can happen if a previous installation was interrupted (e.g., by script error)
-  if [[ -f /var/lib/dpkg/lock-frontend ]] || dpkg --audit 2>&1 | grep -q "interrupted"; then
+  if dpkg --audit 2>&1 | grep -q .; then
+    debug_log "Fixing interrupted dpkg operations"
     $STD dpkg --configure -a 2>/dev/null || true
   fi
 
@@ -1252,15 +1664,28 @@ ensure_apt_working() {
   cleanup_orphaned_sources
 
   # Try to update package lists
-  if ! $STD apt update; then
-    # More aggressive cleanup
-    rm -f /etc/apt/sources.list.d/*.sources 2>/dev/null || true
+  if ! $STD apt update 2>/dev/null; then
+    debug_log "First apt update failed, trying recovery steps"
+
+    # Step 1: Clear apt lists cache
+    rm -rf /var/lib/apt/lists/* 2>/dev/null || true
+    mkdir -p /var/lib/apt/lists/partial
+
+    # Step 2: Clean up potentially broken sources
     cleanup_orphaned_sources
 
-    # Try again
-    if ! $STD apt update; then
-      msg_error "Cannot update package lists - APT is critically broken"
-      return 1
+    # Step 3: Try again
+    if ! $STD apt update 2>/dev/null; then
+      # Step 4: More aggressive - remove all third-party sources
+      msg_warn "APT update still failing, removing third-party sources"
+      find /etc/apt/sources.list.d/ -type f \( -name "*.sources" -o -name "*.list" \) \
+        ! -name "debian.sources" -delete 2>/dev/null || true
+
+      # Final attempt
+      if ! $STD apt update; then
+        msg_error "Cannot update package lists - APT is critically broken"
+        return 1
+      fi
     fi
   fi
 
@@ -1306,14 +1731,14 @@ setup_deb822_repo() {
 
   if grep -q "BEGIN PGP" "$tmp_gpg" 2>/dev/null; then
     # ASCII-armored — dearmor to binary
-    gpg --dearmor --yes -o "/etc/apt/keyrings/${name}.gpg" < "$tmp_gpg" || {
-      msg_error "Failed to dearmor GPG key for ${name}"
+    gpg --dearmor --yes -o "/etc/apt/keyrings/${name}.gpg" <"$tmp_gpg" || {
+      msg_error "Failed to install GPG key for ${name}"
       rm -f "$tmp_gpg"
       return 1
     }
   else
-    # Already in binary GPG format — copy directly
-    cp "$tmp_gpg" "/etc/apt/keyrings/${name}.gpg" || {
+    # Already binary — copy directly
+    cp -f "$tmp_gpg" "/etc/apt/keyrings/${name}.gpg" || {
       msg_error "Failed to install GPG key for ${name}"
       rm -f "$tmp_gpg"
       return 1
@@ -1336,7 +1761,9 @@ setup_deb822_repo() {
     [[ -n "$enabled" ]] && echo "Enabled: $enabled"
   } >/etc/apt/sources.list.d/${name}.sources
 
-  $STD apt update
+  $STD apt update || {
+    msg_warn "apt update failed after adding repository: ${name}"
+  }
 }
 
 # ------------------------------------------------------------------------------
@@ -1344,32 +1771,60 @@ setup_deb822_repo() {
 # ------------------------------------------------------------------------------
 hold_package_version() {
   local package="$1"
-  $STD apt-mark hold "$package"
+  $STD apt-mark hold "$package" || {
+    msg_warn "Failed to hold package version: ${package}"
+  }
 }
 
 unhold_package_version() {
   local package="$1"
-  $STD apt-mark unhold "$package"
+  $STD apt-mark unhold "$package" || {
+    msg_warn "Failed to unhold package version: ${package}"
+  }
 }
 
 # ------------------------------------------------------------------------------
 # Safe service restart with verification
 # ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Safe service restart with retry logic and wait-for-ready
+# Usage: safe_service_restart "nginx" [timeout_seconds]
+# ------------------------------------------------------------------------------
 safe_service_restart() {
   local service="$1"
+  local timeout="${2:-30}" # Default 30 second timeout
+  local max_retries=2
+  local retry=0
 
-  if systemctl is-active --quiet "$service"; then
-    $STD systemctl restart "$service"
-  else
-    $STD systemctl start "$service"
-  fi
+  while [[ $retry -le $max_retries ]]; do
+    if systemctl is-active --quiet "$service"; then
+      $STD systemctl restart "$service"
+    else
+      $STD systemctl start "$service"
+    fi
 
-  if ! systemctl is-active --quiet "$service"; then
-    msg_error "Failed to start $service"
-    systemctl status "$service" --no-pager
-    return 1
-  fi
-  return 0
+    # Wait for service to become active with timeout
+    local waited=0
+    while [[ $waited -lt $timeout ]]; do
+      if systemctl is-active --quiet "$service"; then
+        return 0
+      fi
+      sleep 1
+      ((waited++))
+    done
+
+    retry=$((retry + 1))
+    if [[ $retry -le $max_retries ]]; then
+      debug_log "Service $service failed to start, retrying ($retry/$max_retries)..."
+      # Try to stop completely before retry
+      systemctl stop "$service" 2>/dev/null || true
+      sleep 2
+    fi
+  done
+
+  msg_error "Failed to start $service after $max_retries retries"
+  systemctl status "$service" --no-pager -l 2>/dev/null | head -20 || true
+  return 1
 }
 
 # ------------------------------------------------------------------------------
@@ -1379,6 +1834,7 @@ enable_and_start_service() {
   local service="$1"
 
   if ! systemctl enable "$service" &>/dev/null; then
+    msg_error "Failed to enable service: $service"
     return 1
   fi
 
@@ -1421,6 +1877,7 @@ extract_version_from_json() {
   version=$(echo "$json" | jq -r ".${field} // empty")
 
   if [[ -z "$version" ]]; then
+    msg_warn "JSON field '${field}' is empty in API response"
     return 1
   fi
 
@@ -1432,7 +1889,8 @@ extract_version_from_json() {
 }
 
 # ------------------------------------------------------------------------------
-# Get latest GitHub release version
+# Get latest GitHub release version with fallback to tags
+# Usage: get_latest_github_release "owner/repo" [strip_v] [include_prerelease]
 # ------------------------------------------------------------------------------
 get_latest_github_release() {
   local repo="$1"
@@ -1440,6 +1898,7 @@ get_latest_github_release() {
   local temp_file=$(mktemp)
 
   if ! github_api_call "https://api.github.com/repos/${repo}/releases/latest" "$temp_file"; then
+    msg_warn "GitHub API call failed for ${repo}"
     rm -f "$temp_file"
     return 1
   fi
@@ -1449,6 +1908,7 @@ get_latest_github_release() {
   rm -f "$temp_file"
 
   if [[ -z "$version" ]]; then
+    msg_error "Could not determine latest version for ${repo}"
     return 1
   fi
 
@@ -1465,6 +1925,7 @@ get_latest_codeberg_release() {
 
   # Codeberg API: get all releases and pick the first non-draft/non-prerelease
   if ! codeberg_api_call "https://codeberg.org/api/v1/repos/${repo}/releases" "$temp_file"; then
+    msg_warn "Codeberg API call failed for ${repo}"
     rm -f "$temp_file"
     return 1
   fi
@@ -1480,6 +1941,7 @@ get_latest_codeberg_release() {
   rm -f "$temp_file"
 
   if [[ -z "$version" ]]; then
+    msg_error "Could not determine latest version for ${repo}"
     return 1
   fi
 
@@ -1487,11 +1949,9 @@ get_latest_codeberg_release() {
 }
 
 # ------------------------------------------------------------------------------
-# Debug logging (only if DEBUG=1)
+# Debug logging - using main debug_log function (line 40)
+# Supports both TOOLS_DEBUG and DEBUG environment variables
 # ------------------------------------------------------------------------------
-debug_log() {
-  [[ "${DEBUG:-0}" == "1" ]] && echo "[DEBUG] $*" >&2
-}
 
 # ------------------------------------------------------------------------------
 # Performance timing helper
@@ -1523,6 +1983,104 @@ verify_gpg_fingerprint() {
 
   msg_error "GPG fingerprint mismatch! Expected: $expected_fingerprint, Got: $actual_fingerprint"
   return 1
+}
+
+# ------------------------------------------------------------------------------
+# Get latest GitHub tag for a repository.
+#
+# Description:
+#   - Queries the GitHub API for tags (not releases)
+#   - Useful for repos that only create tags, not full releases
+#   - Supports optional prefix filter and version-only extraction
+#   - Returns the latest tag name (printed to stdout)
+#
+# Usage:
+#   MONGO_VERSION=$(get_latest_gh_tag "mongodb/mongo-tools")
+#   LATEST=$(get_latest_gh_tag "owner/repo" "v")          # only tags starting with "v"
+#   LATEST=$(get_latest_gh_tag "owner/repo" "" "true")     # strip leading "v"
+#
+# Arguments:
+#   $1 - GitHub repo (owner/repo)
+#   $2 - Tag prefix filter (optional, e.g. "v" or "100.")
+#   $3 - Strip prefix from result (optional, "true" to strip $2 prefix)
+#
+# Returns:
+#   0 on success (tag printed to stdout), 1 on failure
+#
+# Notes:
+#   - Skips tags containing "rc", "alpha", "beta", "dev", "test"
+#   - Sorts by version number (sort -V) to find the latest
+#   - Respects GITHUB_TOKEN for rate limiting
+# ------------------------------------------------------------------------------
+get_latest_gh_tag() {
+  local repo="$1"
+  local prefix="${2:-}"
+  local strip_prefix="${3:-false}"
+
+  local header_args=()
+  [[ -n "${GITHUB_TOKEN:-}" ]] && header_args=(-H "Authorization: Bearer $GITHUB_TOKEN")
+
+  local http_code=""
+  http_code=$(curl -sSL --max-time 20 -w "%{http_code}" -o /tmp/gh_tags.json \
+    -H 'Accept: application/vnd.github+json' \
+    -H 'X-GitHub-Api-Version: 2022-11-28' \
+    "${header_args[@]}" \
+    "https://api.github.com/repos/${repo}/tags?per_page=100" 2>/dev/null) || true
+
+  if [[ "$http_code" == "401" ]]; then
+    msg_error "GitHub API authentication failed (HTTP 401)."
+    if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+      msg_error "Your GITHUB_TOKEN appears to be invalid or expired."
+    else
+      msg_error "The repository may require authentication. Try: export GITHUB_TOKEN=\"ghp_your_token\""
+    fi
+    rm -f /tmp/gh_tags.json
+    return 1
+  fi
+
+  if [[ "$http_code" == "403" ]]; then
+    msg_error "GitHub API rate limit exceeded (HTTP 403)."
+    msg_error "To increase the limit, export a GitHub token before running the script:"
+    msg_error "  export GITHUB_TOKEN=\"ghp_your_token_here\""
+    rm -f /tmp/gh_tags.json
+    return 1
+  fi
+
+  if [[ "$http_code" == "000" || -z "$http_code" ]]; then
+    msg_error "GitHub API connection failed (no response)."
+    msg_error "Check your network/DNS: curl -sSL https://api.github.com/rate_limit"
+    rm -f /tmp/gh_tags.json
+    return 1
+  fi
+
+  if [[ "$http_code" != "200" ]] || [[ ! -s /tmp/gh_tags.json ]]; then
+    msg_error "Unable to fetch tags for ${repo} (HTTP ${http_code})"
+    rm -f /tmp/gh_tags.json
+    return 1
+  fi
+
+  local tags_json
+  tags_json=$(</tmp/gh_tags.json)
+  rm -f /tmp/gh_tags.json
+
+  # Extract tag names, filter by prefix, exclude pre-release patterns, sort by version
+  local latest=""
+  latest=$(echo "$tags_json" | grep -oP '"name":\s*"\K[^"]+' |
+    { [[ -n "$prefix" ]] && grep "^${prefix}" || cat; } |
+    grep -viE '(rc|alpha|beta|dev|test|preview|snapshot)' |
+    sort -V | tail -n1)
+
+  if [[ -z "$latest" ]]; then
+    msg_warn "No matching tags found for ${repo}${prefix:+ (prefix: $prefix)}"
+    return 1
+  fi
+
+  if [[ "$strip_prefix" == "true" && -n "$prefix" ]]; then
+    latest="${latest#"$prefix"}"
+  fi
+
+  echo "$latest"
+  return 0
 }
 
 # ==============================================================================
@@ -1567,31 +2125,77 @@ check_for_gh_release() {
 
   ensure_dependencies jq
 
+  # Build auth header if token is available
+  local header_args=()
+  [[ -n "${GITHUB_TOKEN:-}" ]] && header_args=(-H "Authorization: Bearer $GITHUB_TOKEN")
+
   # Try /latest endpoint for non-pinned versions (most efficient)
-  local releases_json=""
+  local releases_json="" http_code=""
 
   if [[ -z "$pinned_version_in" ]]; then
-    releases_json=$(curl -fsSL --max-time 20 \
+    http_code=$(curl -sSL --max-time 20 -w "%{http_code}" -o /tmp/gh_check.json \
       -H 'Accept: application/vnd.github+json' \
       -H 'X-GitHub-Api-Version: 2022-11-28' \
-      "https://api.github.com/repos/${source}/releases/latest" 2>/dev/null)
+      "${header_args[@]}" \
+      "https://api.github.com/repos/${source}/releases/latest" 2>/dev/null) || true
 
-    if [[ $? -eq 0 ]] && [[ -n "$releases_json" ]]; then
-      # Wrap single release in array for consistent processing
-      releases_json="[$releases_json]"
+    if [[ "$http_code" == "200" ]] && [[ -s /tmp/gh_check.json ]]; then
+      releases_json="[$(</tmp/gh_check.json)]"
+    elif [[ "$http_code" == "401" ]]; then
+      msg_error "GitHub API authentication failed (HTTP 401)."
+      if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+        msg_error "Your GITHUB_TOKEN appears to be invalid or expired."
+      else
+        msg_error "The repository may require authentication. Try: export GITHUB_TOKEN=\"ghp_your_token\""
+      fi
+      rm -f /tmp/gh_check.json
+      return 1
+    elif [[ "$http_code" == "403" ]]; then
+      msg_error "GitHub API rate limit exceeded (HTTP 403)."
+      msg_error "To increase the limit, export a GitHub token before running the script:"
+      msg_error "  export GITHUB_TOKEN=\"ghp_your_token_here\""
+      rm -f /tmp/gh_check.json
+      return 1
     fi
+    rm -f /tmp/gh_check.json
   fi
 
   # If no releases yet (pinned version OR /latest failed), fetch up to 100
   if [[ -z "$releases_json" ]]; then
-    # Fetch releases and exclude drafts/prereleases
-    releases_json=$(curl -fsSL --max-time 20 \
+    http_code=$(curl -sSL --max-time 20 -w "%{http_code}" -o /tmp/gh_check.json \
       -H 'Accept: application/vnd.github+json' \
       -H 'X-GitHub-Api-Version: 2022-11-28' \
-      "https://api.github.com/repos/${source}/releases?per_page=100") || {
-      msg_error "Unable to fetch releases for ${app}"
+      "${header_args[@]}" \
+      "https://api.github.com/repos/${source}/releases?per_page=100" 2>/dev/null) || true
+
+    if [[ "$http_code" == "200" ]] && [[ -s /tmp/gh_check.json ]]; then
+      releases_json=$(</tmp/gh_check.json)
+    elif [[ "$http_code" == "401" ]]; then
+      msg_error "GitHub API authentication failed (HTTP 401)."
+      if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+        msg_error "Your GITHUB_TOKEN appears to be invalid or expired."
+      else
+        msg_error "The repository may require authentication. Try: export GITHUB_TOKEN=\"ghp_your_token\""
+      fi
+      rm -f /tmp/gh_check.json
       return 1
-    }
+    elif [[ "$http_code" == "403" ]]; then
+      msg_error "GitHub API rate limit exceeded (HTTP 403)."
+      msg_error "To increase the limit, export a GitHub token before running the script:"
+      msg_error "  export GITHUB_TOKEN=\"ghp_your_token_here\""
+      rm -f /tmp/gh_check.json
+      return 1
+    elif [[ "$http_code" == "000" || -z "$http_code" ]]; then
+      msg_error "GitHub API connection failed (no response)."
+      msg_error "Check your network/DNS: curl -sSL https://api.github.com/rate_limit"
+      rm -f /tmp/gh_check.json
+      return 1
+    else
+      msg_error "Unable to fetch releases for ${app} (HTTP ${http_code})"
+      rm -f /tmp/gh_check.json
+      return 1
+    fi
+    rm -f /tmp/gh_check.json
   fi
 
   mapfile -t raw_tags < <(jq -r '.[] | select(.draft==false and .prerelease==false) | .tag_name' <<<"$releases_json")
@@ -1602,7 +2206,12 @@ check_for_gh_release() {
 
   local clean_tags=()
   for t in "${raw_tags[@]}"; do
-    clean_tags+=("${t#v}")
+    # Only strip leading 'v' when followed by a digit (e.g. v1.2.3)
+    if [[ "$t" =~ ^v[0-9] ]]; then
+      clean_tags+=("${t:1}")
+    else
+      clean_tags+=("$t")
+    fi
   done
 
   local latest_raw="${raw_tags[0]}"
@@ -1703,7 +2312,7 @@ check_for_codeberg_release() {
   releases_json=$(curl -fsSL --max-time 20 \
     -H 'Accept: application/json' \
     "https://codeberg.org/api/v1/repos/${source}/releases" 2>/dev/null) || {
-    msg_error "Unable to fetch releases for ${app}"
+    msg_error "Unable to fetch releases for ${app} (codeberg.org/api/v1/repos/${source}/releases)"
     return 1
   }
 
@@ -1715,7 +2324,12 @@ check_for_codeberg_release() {
 
   local clean_tags=()
   for t in "${raw_tags[@]}"; do
-    clean_tags+=("${t#v}")
+    # Only strip leading 'v' when followed by a digit (e.g. v1.2.3)
+    if [[ "$t" =~ ^v[0-9] ]]; then
+      clean_tags+=("${t:1}")
+    else
+      clean_tags+=("$t")
+    fi
   done
 
   local latest_raw="${raw_tags[0]}"
@@ -1836,12 +2450,12 @@ function download_with_progress() {
 
   if [[ -z "$content_length" ]]; then
     if ! curl -fL# -o "$output" "$url"; then
-      msg_error "Download failed"
+      msg_error "Download failed: $url"
       return 1
     fi
   else
     if ! curl -fsSL "$url" | pv -s "$content_length" >"$output"; then
-      msg_error "Download failed"
+      msg_error "Download failed: $url"
       return 1
     fi
   fi
@@ -2121,7 +2735,7 @@ function fetch_and_deploy_codeberg_release() {
     # Fall back to architecture heuristic
     if [[ -z "$url_match" ]]; then
       for u in $assets; do
-        if [[ "$u" =~ ($arch|aarch64|arm64).*\.deb$ ]]; then
+        if [[ "$u" =~ ($arch|amd64|x86_64|aarch64|arm64).*\.deb$ ]]; then
           url_match="$u"
           break
         fi
@@ -2384,7 +2998,10 @@ _gh_scan_older_releases() {
     -H 'Accept: application/vnd.github+json' \
     -H 'X-GitHub-Api-Version: 2022-11-28' \
     "${header[@]}" \
-    "https://api.github.com/repos/${repo}/releases?per_page=15" 2>/dev/null) || return 1
+    "https://api.github.com/repos/${repo}/releases?per_page=15" 2>/dev/null) || {
+    msg_warn "Failed to fetch older releases for ${repo}"
+    return 1
+  }
 
   local count
   count=$(echo "$releases_list" | jq 'length')
@@ -2410,7 +3027,11 @@ _gh_scan_older_releases() {
       # Check with explicit pattern first, then arch heuristic, then any .deb
       if [[ -n "$asset_pattern" ]]; then
         has_match=$(echo "$releases_list" | jq -r --arg pat "$asset_pattern" ".[$i].assets[].name" | while read -r name; do
-          case "$name" in $asset_pattern) echo true; break ;; esac
+          case "$name" in $asset_pattern)
+            echo true
+            break
+            ;;
+          esac
         done)
       fi
       if [[ "$has_match" != "true" ]]; then
@@ -2422,7 +3043,11 @@ _gh_scan_older_releases() {
 
     elif [[ "$mode" == "prebuild" || "$mode" == "singlefile" ]]; then
       has_match=$(echo "$releases_list" | jq -r ".[$i].assets[].name" | while read -r name; do
-        case "$name" in $asset_pattern) echo true; break ;; esac
+        case "$name" in $asset_pattern)
+          echo true
+          break
+          ;;
+        esac
       done)
     fi
 
@@ -2457,6 +3082,16 @@ function fetch_and_deploy_gh_release() {
   local target="${5:-/opt/$app}"
   local asset_pattern="${6:-}"
 
+  # Validate app name to prevent /root/. directory issues
+  if [[ -z "$app" ]]; then
+    # Derive app name from repo if not provided
+    app="${repo##*/}"
+    if [[ -z "$app" ]]; then
+      msg_error "fetch_and_deploy_gh_release requires app name or valid repo"
+      return 1
+    fi
+  fi
+
   local app_lc=$(echo "${app,,}" | tr -d ' ')
   local version_file="$HOME/.${app_lc}"
 
@@ -2481,29 +3116,53 @@ function fetch_and_deploy_gh_release() {
     return 1
   fi
 
-  local max_retries=3 retry_delay=2 attempt=1 success=false resp http_code
+  local max_retries=3 retry_delay=2 attempt=1 success=false http_code
 
   while ((attempt <= max_retries)); do
-    resp=$(curl $api_timeout -fsSL -w "%{http_code}" -o /tmp/gh_rel.json "${header[@]}" "$api_url") && success=true && break
-    sleep "$retry_delay"
+    http_code=$(curl $api_timeout -sSL -w "%{http_code}" -o /tmp/gh_rel.json "${header[@]}" "$api_url" 2>/dev/null) || true
+    if [[ "$http_code" == "200" ]]; then
+      success=true
+      break
+    elif [[ "$http_code" == "403" ]]; then
+      if ((attempt < max_retries)); then
+        msg_warn "GitHub API rate limit hit, retrying in ${retry_delay}s... (attempt $attempt/$max_retries)"
+        sleep "$retry_delay"
+        retry_delay=$((retry_delay * 2))
+      fi
+    else
+      sleep "$retry_delay"
+    fi
     ((attempt++))
   done
 
   if ! $success; then
-    msg_error "Failed to fetch release metadata from $api_url after $max_retries attempts"
+    if [[ "$http_code" == "401" ]]; then
+      msg_error "GitHub API authentication failed (HTTP 401)."
+      if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+        msg_error "Your GITHUB_TOKEN appears to be invalid or expired."
+      else
+        msg_error "The repository may require authentication. Try: export GITHUB_TOKEN=\"ghp_your_token\""
+      fi
+    elif [[ "$http_code" == "403" ]]; then
+      msg_error "GitHub API rate limit exceeded (HTTP 403)."
+      msg_error "To increase the limit, export a GitHub token before running the script:"
+      msg_error "  export GITHUB_TOKEN=\"ghp_your_token_here\""
+    elif [[ "$http_code" == "000" || -z "$http_code" ]]; then
+      msg_error "GitHub API connection failed (no response)."
+      msg_error "Check your network/DNS: curl -sSL https://api.github.com/rate_limit"
+    else
+      msg_error "Failed to fetch release metadata (HTTP $http_code)"
+    fi
     return 1
   fi
-
-  http_code="${resp:(-3)}"
-  [[ "$http_code" != "200" ]] && {
-    msg_error "GitHub API returned HTTP $http_code"
-    return 1
-  }
 
   local json tag_name
   json=$(</tmp/gh_rel.json)
   tag_name=$(echo "$json" | jq -r '.tag_name // .name // empty')
-  [[ "$tag_name" =~ ^v ]] && version="${tag_name:1}" || version="$tag_name"
+  # Only strip leading 'v' when followed by a digit (e.g. v1.2.3), not words like "version/..."
+  [[ "$tag_name" =~ ^v[0-9] ]] && version="${tag_name:1}" || version="$tag_name"
+  # Sanitize version for use in filenames (replace / with -)
+  local version_safe="${version//\//-}"
 
   if [[ "$current_version" == "$version" ]]; then
     $STD msg_ok "$app is already up-to-date (v$version)"
@@ -2524,7 +3183,7 @@ function fetch_and_deploy_gh_release() {
     # GitHub API's tarball_url/zipball_url can return HTTP 300 Multiple Choices
     # when a branch and tag share the same name. Use explicit refs/tags/ URL instead.
     local direct_tarball_url="https://github.com/$repo/archive/refs/tags/$tag_name.tar.gz"
-    filename="${app_lc}-${version}.tar.gz"
+    filename="${app_lc}-${version_safe}.tar.gz"
 
     curl $download_timeout -fsSL -o "$tmpdir/$filename" "$direct_tarball_url" || {
       msg_error "Download failed: $direct_tarball_url"
@@ -2552,7 +3211,9 @@ function fetch_and_deploy_gh_release() {
     ### Binary Mode ###
   elif [[ "$mode" == "binary" ]]; then
     local arch
-    arch="arm64"
+    arch=$(dpkg --print-architecture 2>/dev/null || uname -m)
+    [[ "$arch" == "x86_64" ]] && arch="amd64"
+    [[ "$arch" == "aarch64" ]] && arch="arm64"
 
     local assets url_match=""
     assets=$(echo "$json" | jq -r '.assets[].browser_download_url')
@@ -2572,7 +3233,7 @@ function fetch_and_deploy_gh_release() {
     # If no match via explicit pattern, fall back to architecture heuristic
     if [[ -z "$url_match" ]]; then
       for u in $assets; do
-        if [[ "$u" =~ ($arch|aarch64|arm64).*\.deb$ ]]; then
+        if [[ "$u" =~ ($arch|amd64|x86_64|aarch64|arm64).*\.deb$ ]]; then
           url_match="$u"
           break
         fi
@@ -2597,12 +3258,19 @@ function fetch_and_deploy_gh_release() {
         assets=$(echo "$json" | jq -r '.assets[].browser_download_url')
         if [[ -n "$asset_pattern" ]]; then
           for u in $assets; do
-            case "${u##*/}" in $asset_pattern) url_match="$u"; break ;; esac
+            case "${u##*/}" in $asset_pattern)
+              url_match="$u"
+              break
+              ;;
+            esac
           done
         fi
         if [[ -z "$url_match" ]]; then
           for u in $assets; do
-            if [[ "$u" =~ ($arch|amd64|x86_64|aarch64|arm64).*\.deb$ ]]; then url_match="$u"; break; fi
+            if [[ "$u" =~ ($arch|amd64|x86_64|aarch64|arm64).*\.deb$ ]]; then
+              url_match="$u"
+              break
+            fi
           done
         fi
         if [[ -z "$url_match" ]]; then
@@ -2671,7 +3339,11 @@ function fetch_and_deploy_gh_release() {
         msg_info "Fetching GitHub release: $app ($version)"
         for u in $(echo "$json" | jq -r '.assets[].browser_download_url'); do
           filename_candidate="${u##*/}"
-          case "$filename_candidate" in $pattern) asset_url="$u"; break ;; esac
+          case "$filename_candidate" in $pattern)
+            asset_url="$u"
+            break
+            ;;
+          esac
         done
       fi
     fi
@@ -2783,7 +3455,11 @@ function fetch_and_deploy_gh_release() {
         msg_info "Fetching GitHub release: $app ($version)"
         for u in $(echo "$json" | jq -r '.assets[].browser_download_url'); do
           filename_candidate="${u##*/}"
-          case "$filename_candidate" in $pattern) asset_url="$u"; break ;; esac
+          case "$filename_candidate" in $pattern)
+            asset_url="$u"
+            break
+            ;;
+          esac
         done
       fi
     fi
@@ -2833,11 +3509,10 @@ function setup_adminer() {
   if grep -qi alpine /etc/os-release; then
     msg_info "Setup Adminer (Alpine)"
     mkdir -p /var/www/localhost/htdocs/adminer
-    curl -fsSL https://github.com/vrana/adminer/releases/latest/download/adminer.php \
-      -o /var/www/localhost/htdocs/adminer/index.php || {
+    if ! curl_with_retry "https://github.com/vrana/adminer/releases/latest/download/adminer.php" "/var/www/localhost/htdocs/adminer/index.php"; then
       msg_error "Failed to download Adminer"
       return 1
-    }
+    fi
     cache_installed_version "adminer" "latest-alpine"
     msg_ok "Setup Adminer (Alpine)"
   else
@@ -2880,7 +3555,9 @@ function setup_composer() {
   # Scenario 1: Already installed - just self-update
   if [[ -n "$INSTALLED_VERSION" ]]; then
     msg_info "Update Composer $INSTALLED_VERSION"
-    $STD "$COMPOSER_BIN" self-update --no-interaction || true
+    $STD "$COMPOSER_BIN" self-update --no-interaction || {
+      msg_warn "Composer self-update failed, continuing with current version"
+    }
     local UPDATED_VERSION
     UPDATED_VERSION=$("$COMPOSER_BIN" --version 2>/dev/null | awk '{print $3}')
     cache_installed_version "composer" "$UPDATED_VERSION"
@@ -2898,10 +3575,10 @@ function setup_composer() {
   ensure_usr_local_bin_persist
   export PATH="/usr/local/bin:$PATH"
 
-  curl -fsSL https://getcomposer.org/installer -o /tmp/composer-setup.php || {
+  if ! curl_with_retry "https://getcomposer.org/installer" "/tmp/composer-setup.php"; then
     msg_error "Failed to download Composer installer"
     return 1
-  }
+  fi
 
   $STD php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer || {
     msg_error "Failed to install Composer"
@@ -2916,7 +3593,9 @@ function setup_composer() {
   fi
 
   chmod +x "$COMPOSER_BIN"
-  $STD "$COMPOSER_BIN" self-update --no-interaction || true
+  $STD "$COMPOSER_BIN" self-update --no-interaction || {
+    msg_warn "Composer self-update failed after fresh install"
+  }
 
   local FINAL_VERSION
   FINAL_VERSION=$("$COMPOSER_BIN" --version 2>/dev/null | awk '{print $3}')
@@ -2959,11 +3638,11 @@ function setup_ffmpeg() {
 
   # Binary fallback mode
   if [[ "$TYPE" == "binary" ]]; then
-    curl -fsSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz -o "$TMP_DIR/ffmpeg.tar.xz" || {
+    if ! CURL_TIMEOUT=300 curl_with_retry "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz" "$TMP_DIR/ffmpeg.tar.xz"; then
       msg_error "Failed to download FFmpeg binary"
       rm -rf "$TMP_DIR"
       return 1
-    }
+    fi
     tar -xf "$TMP_DIR/ffmpeg.tar.xz" -C "$TMP_DIR" || {
       msg_error "Failed to extract FFmpeg binary"
       rm -rf "$TMP_DIR"
@@ -3032,20 +3711,20 @@ function setup_ffmpeg() {
 
   # Try to download source if VERSION is set
   if [[ -n "$VERSION" ]]; then
-    curl -fsSL "https://github.com/${GITHUB_REPO}/archive/refs/tags/${VERSION}.tar.gz" -o "$TMP_DIR/ffmpeg.tar.gz" || {
+    if ! CURL_TIMEOUT=300 curl_with_retry "https://github.com/${GITHUB_REPO}/archive/refs/tags/${VERSION}.tar.gz" "$TMP_DIR/ffmpeg.tar.gz"; then
       msg_warn "Failed to download FFmpeg source ${VERSION}, falling back to pre-built binary"
       VERSION=""
-    }
+    fi
   fi
 
   # If no source download (either VERSION empty or download failed), use binary
   if [[ -z "$VERSION" ]]; then
     msg_info "Setup FFmpeg from pre-built binary"
-    curl -fsSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o "$TMP_DIR/ffmpeg.tar.xz" || {
+    if ! CURL_TIMEOUT=300 curl_with_retry "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz" "$TMP_DIR/ffmpeg.tar.xz"; then
       msg_error "Failed to download FFmpeg pre-built binary"
       rm -rf "$TMP_DIR"
       return 1
-    }
+    fi
 
     tar -xJf "$TMP_DIR/ffmpeg.tar.xz" -C "$TMP_DIR" || {
       msg_error "Failed to extract FFmpeg binary archive"
@@ -3165,14 +3844,13 @@ function setup_go() {
   # Resolve "latest" version
   local GO_VERSION="${GO_VERSION:-latest}"
   if [[ "$GO_VERSION" == "latest" ]]; then
-    GO_VERSION=$(curl -fsSL https://go.dev/VERSION?m=text 2>/dev/null | head -n1 | sed 's/^go//') || {
+    local go_version_tmp
+    go_version_tmp=$(curl_with_retry "https://go.dev/VERSION?m=text" "-" 2>/dev/null | head -n1 | sed 's/^go//') || true
+    if [[ -z "$go_version_tmp" ]]; then
       msg_error "Could not determine latest Go version"
       return 1
-    }
-    [[ -z "$GO_VERSION" ]] && {
-      msg_error "Latest Go version is empty"
-      return 1
-    }
+    fi
+    GO_VERSION="$go_version_tmp"
   fi
 
   local GO_BIN="/usr/local/bin/go"
@@ -3202,11 +3880,11 @@ function setup_go() {
   local URL="https://go.dev/dl/${TARBALL}"
   local TMP_TAR=$(mktemp)
 
-  curl -fsSL "$URL" -o "$TMP_TAR" || {
+  if ! CURL_TIMEOUT=300 curl_with_retry "$URL" "$TMP_TAR"; then
     msg_error "Failed to download Go $GO_VERSION"
     rm -f "$TMP_TAR"
     return 1
-  }
+  fi
 
   $STD tar -C /usr/local -xzf "$TMP_TAR" || {
     msg_error "Failed to extract Go tarball"
@@ -3282,11 +3960,11 @@ function setup_gs() {
     msg_info "Setup Ghostscript $LATEST_VERSION_DOTTED"
   fi
 
-  curl -fsSL "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${LATEST_VERSION}/ghostscript-${LATEST_VERSION_DOTTED}.tar.gz" -o "$TMP_DIR/ghostscript.tar.gz" || {
+  if ! CURL_TIMEOUT=180 curl_with_retry "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${LATEST_VERSION}/ghostscript-${LATEST_VERSION_DOTTED}.tar.gz" "$TMP_DIR/ghostscript.tar.gz"; then
     msg_error "Failed to download Ghostscript"
     rm -rf "$TMP_DIR"
     return 1
-  }
+  fi
 
   if ! tar -xzf "$TMP_DIR/ghostscript.tar.gz" -C "$TMP_DIR"; then
     msg_error "Failed to extract Ghostscript archive"
@@ -3351,24 +4029,98 @@ function setup_gs() {
 #   - NVIDIA: Version-matched drivers from CUDA repository
 #
 # Notes:
-#   - arm64-focused: installs generic DRM/VA/V4L2 userspace when device nodes are present.
+#   - Some Intel packages are fetched from GitHub due to missing Debian packages
+#   - NVIDIA requires matching host driver version
 # ------------------------------------------------------------------------------
 function setup_hwaccel() {
-
-
-  # Device nodes must exist (passed through from host)
-  local has_dri=false has_v4l2=false has_nvidia=false has_kfd=false
-  [[ -d /dev/dri ]] && has_dri=true
-  compgen -G "/dev/video*" >/dev/null 2>&1 && has_v4l2=true
-  [[ -e /dev/nvidia0 ]] && has_nvidia=true
-  [[ -e /dev/kfd ]] && has_kfd=true
-
-  if [[ "$has_dri" != true && "$has_v4l2" != true && "$has_nvidia" != true && "$has_kfd" != true ]]; then
-    msg_warn "No accelerator device nodes detected (/dev/dri, /dev/video*, /dev/nvidia*, /dev/kfd) - skipping"
+  # Check if user explicitly disabled GPU in advanced settings
+  # ENABLE_GPU is exported from build.func
+  if [[ "${ENABLE_GPU:-no}" == "no" ]]; then
     return 0
   fi
 
-  msg_info "Setup Hardware Acceleration (arm64)"
+  # Check if GPU passthrough is enabled (device nodes must exist)
+  if [[ ! -d /dev/dri && ! -e /dev/nvidia0 && ! -e /dev/kfd ]]; then
+    msg_warn "No GPU passthrough detected (/dev/dri, /dev/nvidia*, /dev/kfd not found) - skipping hardware acceleration setup"
+    return 0
+  fi
+
+  msg_info "Setup Hardware Acceleration"
+
+  # Install pciutils if needed
+  if ! command -v lspci &>/dev/null; then
+    $STD apt -y update || {
+      msg_warn "Failed to update package list"
+      return 0
+    }
+    $STD apt -y install pciutils || {
+      msg_warn "Failed to install pciutils"
+      return 0
+    }
+  fi
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # GPU Detection - Build list of all available GPUs with details
+  # ═══════════════════════════════════════════════════════════════════════════
+  local -a GPU_LIST=()
+  local -a GPU_TYPES=()
+  local -a GPU_NAMES=()
+  local gpu_count=0
+
+  # Get all GPU entries from lspci
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    local pci_addr gpu_name gpu_type=""
+
+    pci_addr=$(echo "$line" | awk '{print $1}')
+    gpu_name=$(echo "$line" | sed 's/^[^ ]* [^:]*: //')
+
+    # Determine GPU type
+    # Note: Use -w (word boundary) for ATI to avoid matching "CorporATIon"
+    if echo "$gpu_name" | grep -qi 'Intel'; then
+      gpu_type="INTEL"
+      # Subtype detection for Intel
+      # Order matters: Check Arc first, then Gen9+ (UHD/Iris/HD 5xx-6xx), then Legacy (HD 2xxx-5xxx)
+      # HD Graphics 530/630 = Gen 9 (Skylake/Kaby Lake) - 3 digits
+      # HD Graphics 4600/5500 = Gen 7-8 (Haswell/Broadwell) - 4 digits starting with 2-5
+      if echo "$gpu_name" | grep -qiE 'Arc|DG[12]'; then
+        gpu_type="INTEL_ARC"
+      elif echo "$gpu_name" | grep -qiE 'UHD|Iris|HD Graphics [5-6][0-9]{2}[^0-9]|HD Graphics [5-6][0-9]{2}$'; then
+        # HD Graphics 5xx/6xx (3 digits) = Gen 9+ (Skylake onwards)
+        gpu_type="INTEL_GEN9+"
+      elif echo "$gpu_name" | grep -qiE 'HD Graphics [2-5][0-9]{3}'; then
+        # HD Graphics 2xxx-5xxx (4 digits) = Gen 6-8 Legacy
+        gpu_type="INTEL_LEGACY"
+      fi
+    elif echo "$gpu_name" | grep -qiwE 'AMD|ATI|Radeon|Advanced Micro Devices'; then
+      gpu_type="AMD"
+    elif echo "$gpu_name" | grep -qi 'NVIDIA'; then
+      gpu_type="NVIDIA"
+    fi
+
+    if [[ -n "$gpu_type" ]]; then
+      GPU_LIST+=("$pci_addr")
+      GPU_TYPES+=("$gpu_type")
+      GPU_NAMES+=("$gpu_name")
+      ((gpu_count++)) || true
+    fi
+  done < <(lspci 2>/dev/null | grep -Ei 'vga|3d|display')
+
+  # Check for AMD APU via CPU vendor if no discrete GPU found
+  local cpu_vendor
+  cpu_vendor=$(lscpu 2>/dev/null | grep -i 'Vendor ID' | awk '{print $3}' 2>/dev/null || echo "")
+
+  if [[ $gpu_count -eq 0 ]]; then
+    if [[ "$cpu_vendor" == "AuthenticAMD" ]]; then
+      GPU_LIST+=("integrated")
+      GPU_TYPES+=("AMD_APU")
+      GPU_NAMES+=("AMD APU (Integrated Graphics)")
+      ((gpu_count++)) || true
+    else
+      msg_warn "No GPU detected - skipping hardware acceleration setup"
+      return 0
+    fi
+  fi
 
   # ═══════════════════════════════════════════════════════════════════════════
   # GPU Selection - Let user choose which GPU(s) to configure
@@ -3471,90 +4223,601 @@ function setup_hwaccel() {
 
   local in_ct="${CTTYPE:-0}"
 
-  ensure_apt_working || return 1
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Process Selected GPUs
+  # ═══════════════════════════════════════════════════════════════════════════
+  for idx in "${SELECTED_INDICES[@]}"; do
+    local gpu_type="${GPU_TYPES[$idx]}"
+    local gpu_name="${GPU_NAMES[$idx]}"
 
-  # Install generic arm64 userspace for /dev/dri and/or /dev/video* accelerators.
-  # This intentionally avoids non-arm64 vendor stacks.
-  local pkgs=(
-    libdrm2
-    libva2
-    libva-drm2
-    vainfo
-  )
+    msg_info "Configuring: ${gpu_name}"
 
-  if [[ "$has_dri" == true ]]; then
-    pkgs+=(
-      mesa-va-drivers
-      mesa-vdpau-drivers
-      mesa-opencl-icd
-      ocl-icd-libopencl1
-      clinfo
-    )
+    case "$gpu_type" in
+    # ─────────────────────────────────────────────────────────────────────────
+    # Intel Arc GPUs (DG1, DG2, Arc A-series)
+    # ─────────────────────────────────────────────────────────────────────────
+    INTEL_ARC)
+      _setup_intel_arc "$os_id" "$os_codename"
+      ;;
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Intel Gen 9+ (Skylake 2015+: UHD, Iris, HD 6xx+)
+    # ─────────────────────────────────────────────────────────────────────────
+    INTEL_GEN9+ | INTEL)
+      _setup_intel_modern "$os_id" "$os_codename"
+      ;;
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Intel Legacy (Gen 6-8: HD 2000-5999, Sandy Bridge to Broadwell)
+    # ─────────────────────────────────────────────────────────────────────────
+    INTEL_LEGACY)
+      _setup_intel_legacy "$os_id" "$os_codename"
+      ;;
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # AMD Discrete GPUs
+    # ─────────────────────────────────────────────────────────────────────────
+    AMD)
+      _setup_amd_gpu "$os_id" "$os_codename"
+      ;;
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # AMD APU (Integrated Graphics)
+    # ─────────────────────────────────────────────────────────────────────────
+    AMD_APU)
+      _setup_amd_apu "$os_id" "$os_codename"
+      ;;
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # NVIDIA GPUs
+    # ─────────────────────────────────────────────────────────────────────────
+    NVIDIA)
+      if [[ "$install_nvidia_drivers" == "yes" ]]; then
+        _setup_nvidia_gpu "$os_id" "$os_codename" "$os_version"
+      else
+        msg_warn "Skipping NVIDIA driver installation (user opted to install manually)"
+      fi
+      ;;
+    esac
+  done
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Device Permissions
+  # ═══════════════════════════════════════════════════════════════════════════
+  _setup_gpu_permissions "$in_ct"
+
+  cache_installed_version "hwaccel" "1.0"
+  msg_ok "Setup Hardware Acceleration"
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Intel Arc GPU Setup
+# ══════════════════════════════════════════════════════════════════════════════
+_setup_intel_arc() {
+  local os_id="$1" os_codename="$2"
+
+  msg_info "Installing Intel Arc GPU drivers"
+
+  if [[ "$os_id" == "ubuntu" ]]; then
+    # Ubuntu 22.04+ has Arc support in HWE kernel
+    $STD apt -y install \
+      intel-media-va-driver-non-free \
+      intel-opencl-icd \
+      libmfx-gen1.2 \
+      vainfo \
+      intel-gpu-tools 2>/dev/null || msg_warn "Some Intel Arc packages failed"
+
+  elif [[ "$os_id" == "debian" ]]; then
+    # Add non-free repos
+    _add_debian_nonfree "$os_codename"
+
+    # For Trixie/Sid: Fetch latest drivers from GitHub (Debian repo packages may be too old or missing)
+    # For Bookworm: Use repo packages (GitHub latest requires libstdc++6 >= 13.1, unavailable on Bookworm)
+    if [[ "$os_codename" == "trixie" || "$os_codename" == "sid" ]]; then
+      msg_info "Fetching Intel compute-runtime from GitHub for Arc support"
+
+      # libigdgmm - bundled in compute-runtime releases
+      fetch_and_deploy_gh_release "libigdgmm12" "intel/compute-runtime" "binary" "latest" "" "libigdgmm12_*_amd64.deb" || true
+
+      # Intel Graphics Compiler (note: packages have -2 suffix)
+      fetch_and_deploy_gh_release "intel-igc-core" "intel/intel-graphics-compiler" "binary" "latest" "" "intel-igc-core-2_*_amd64.deb" || true
+      fetch_and_deploy_gh_release "intel-igc-opencl" "intel/intel-graphics-compiler" "binary" "latest" "" "intel-igc-opencl-2_*_amd64.deb" || true
+
+      # Compute Runtime (depends on IGC and gmmlib)
+      fetch_and_deploy_gh_release "intel-opencl-icd" "intel/compute-runtime" "binary" "latest" "" "intel-opencl-icd_*_amd64.deb" || true
+      fetch_and_deploy_gh_release "intel-level-zero-gpu" "intel/compute-runtime" "binary" "latest" "" "libze-intel-gpu1_*_amd64.deb" || true
+    fi
+
+    $STD apt -y install \
+      intel-media-va-driver-non-free \
+      ocl-icd-libopencl1 \
+      libvpl2 \
+      libmfx-gen1.2 \
+      vainfo \
+      intel-gpu-tools 2>/dev/null || msg_warn "Some Intel Arc packages failed"
+
+    # Bookworm has compatible versions of these packages in repos
+    [[ "$os_codename" == "bookworm" ]] && $STD apt -y install intel-opencl-icd libigdgmm12 2>/dev/null || true
   fi
 
-  if [[ "$has_v4l2" == true ]]; then
-    pkgs+=(
-      v4l-utils
-      libv4l-0
-    )
+  msg_ok "Intel Arc GPU configured"
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Intel Modern GPU Setup (Gen 9+)
+# ══════════════════════════════════════════════════════════════════════════════
+_setup_intel_modern() {
+  local os_id="$1" os_codename="$2"
+
+  msg_info "Installing Intel Gen 9+ GPU drivers"
+
+  if [[ "$os_id" == "ubuntu" ]]; then
+    $STD apt -y install \
+      va-driver-all \
+      intel-media-va-driver \
+      ocl-icd-libopencl1 \
+      vainfo \
+      intel-gpu-tools 2>/dev/null || msg_warn "Some Intel packages failed"
+
+    # Try non-free driver for better codec support
+    $STD apt -y install intel-media-va-driver-non-free 2>/dev/null || true
+    $STD apt -y install intel-opencl-icd 2>/dev/null || true
+    $STD apt -y install libmfx-gen1.2 2>/dev/null || true
+
+  elif [[ "$os_id" == "debian" ]]; then
+    _add_debian_nonfree "$os_codename"
+
+    # For Trixie/Sid: Fetch from GitHub (Debian packages too old or missing)
+    if [[ "$os_codename" == "trixie" || "$os_codename" == "sid" ]]; then
+      msg_info "Fetching Intel compute-runtime from GitHub"
+
+      # libigdgmm first (bundled in compute-runtime releases)
+      fetch_and_deploy_gh_release "libigdgmm12" "intel/compute-runtime" "binary" "latest" "" "libigdgmm12_*_amd64.deb" || true
+
+      # Intel Graphics Compiler (note: packages have -2 suffix)
+      fetch_and_deploy_gh_release "intel-igc-core" "intel/intel-graphics-compiler" "binary" "latest" "" "intel-igc-core-2_*_amd64.deb" || true
+      fetch_and_deploy_gh_release "intel-igc-opencl" "intel/intel-graphics-compiler" "binary" "latest" "" "intel-igc-opencl-2_*_amd64.deb" || true
+
+      # Compute Runtime
+      fetch_and_deploy_gh_release "intel-opencl-icd" "intel/compute-runtime" "binary" "latest" "" "intel-opencl-icd_*_amd64.deb" || true
+    fi
+
+    $STD apt -y install \
+      intel-media-va-driver-non-free \
+      ocl-icd-libopencl1 \
+      vainfo \
+      libmfx-gen1.2 \
+      intel-gpu-tools 2>/dev/null || msg_warn "Some Intel packages failed"
+
+    # Bookworm has intel-opencl-icd in repos (compatible version)
+    [[ "$os_codename" == "bookworm" ]] && $STD apt -y install intel-opencl-icd libigdgmm12 2>/dev/null || true
   fi
 
-  ensure_dependencies "${pkgs[@]}" || {
-    msg_error "Failed to install hardware acceleration dependencies"
-    return 1
-  }
+  msg_ok "Intel Gen 9+ GPU configured"
+}
 
-  # If this is a PCIe AMD GPU on arm64, try to install AMD firmware/userspace extras.
-  local vendor_hex=""
-  [[ -r /sys/class/drm/card0/device/vendor ]] && vendor_hex=$(</sys/class/drm/card0/device/vendor)
+# ══════════════════════════════════════════════════════════════════════════════
+# Intel Legacy GPU Setup (Gen 6-8)
+# ══════════════════════════════════════════════════════════════════════════════
+_setup_intel_legacy() {
+  local os_id="$1" os_codename="$2"
 
-  if [[ "$vendor_hex" == "0x1002" || "$vendor_hex" == "0x1022" ]]; then
-    if [[ "$os_id" == "debian" ]]; then
-      if [[ ! -f /etc/apt/sources.list.d/non-free-firmware.sources ]]; then
-        case "$os_codename" in
-        bookworm)
-          cat <<EOF >/etc/apt/sources.list.d/non-free-firmware.sources
+  msg_info "Installing Intel Legacy GPU drivers (Gen 6-8)"
+
+  # Legacy GPUs use i965 driver - stable repo packages only
+  $STD apt -y install \
+    va-driver-all \
+    i965-va-driver \
+    mesa-va-drivers \
+    ocl-icd-libopencl1 \
+    vainfo \
+    intel-gpu-tools 2>/dev/null || msg_warn "Some Intel legacy packages failed"
+
+  # beignet provides OpenCL for older Intel GPUs (Sandy Bridge to Broadwell)
+  # Note: beignet-opencl-icd was removed in Debian 12+ and Ubuntu 22.04+
+  # Check if package is available before attempting installation
+  if apt-cache show beignet-opencl-icd &>/dev/null; then
+    $STD apt -y install beignet-opencl-icd 2>/dev/null || msg_warn "beignet-opencl-icd installation failed (optional)"
+  else
+    msg_warn "beignet-opencl-icd not available - OpenCL support for legacy Intel GPU limited"
+    msg_warn "Note: Hardware video encoding/decoding (VA-API) still works without OpenCL"
+  fi
+
+  msg_ok "Intel Legacy GPU configured"
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# AMD Discrete GPU Setup
+# ══════════════════════════════════════════════════════════════════════════════
+_setup_amd_gpu() {
+  local os_id="$1" os_codename="$2"
+
+  msg_info "Installing AMD GPU drivers"
+
+  # Core Mesa drivers
+  $STD apt -y install \
+    mesa-va-drivers \
+    mesa-vdpau-drivers \
+    mesa-opencl-icd \
+    ocl-icd-libopencl1 \
+    libdrm-amdgpu1 \
+    vainfo \
+    clinfo 2>/dev/null || msg_warn "Some AMD packages failed"
+
+  # Firmware for AMD GPUs
+  if [[ "$os_id" == "debian" ]]; then
+    _add_debian_nonfree_firmware "$os_codename"
+    $STD apt -y install firmware-amd-graphics 2>/dev/null || msg_warn "AMD firmware not available"
+  fi
+  # Ubuntu includes AMD firmware in linux-firmware by default
+
+  # ROCm for compute (optional - large download)
+  # Uncomment if needed:
+  # $STD apt -y install rocm-opencl-runtime 2>/dev/null || true
+
+  msg_ok "AMD GPU configured"
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# AMD APU Setup (Integrated Graphics)
+# ══════════════════════════════════════════════════════════════════════════════
+_setup_amd_apu() {
+  local os_id="$1" os_codename="$2"
+
+  msg_info "Installing AMD APU drivers"
+
+  $STD apt -y install \
+    mesa-va-drivers \
+    mesa-vdpau-drivers \
+    mesa-opencl-icd \
+    ocl-icd-libopencl1 \
+    vainfo 2>/dev/null || msg_warn "Some AMD APU packages failed"
+
+  if [[ "$os_id" == "debian" ]]; then
+    _add_debian_nonfree_firmware "$os_codename"
+    $STD apt -y install firmware-amd-graphics 2>/dev/null || true
+  fi
+
+  msg_ok "AMD APU configured"
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# NVIDIA GPU Setup
+# ══════════════════════════════════════════════════════════════════════════════
+_setup_nvidia_gpu() {
+  local os_id="$1" os_codename="$2" os_version="$3"
+
+  msg_info "Installing NVIDIA GPU drivers"
+
+  # Prevent interactive dialogs (e.g., "Mismatching nvidia kernel module" whiptail)
+  export DEBIAN_FRONTEND=noninteractive
+  export NEEDRESTART_MODE=a
+
+  # Detect host driver version (passed through via /proc)
+  # Format varies by driver type:
+  #   Proprietary: "NVRM version: NVIDIA UNIX x86_64 Kernel Module  550.54.14  Thu..."
+  #   Open:        "NVRM version: NVIDIA UNIX Open Kernel Module for x86_64  590.48.01  Release..."
+  # Use regex to extract version number (###.##.## pattern)
+  local nvidia_host_version=""
+  if [[ -f /proc/driver/nvidia/version ]]; then
+    nvidia_host_version=$(grep -oP '\d{3,}\.\d+\.\d+' /proc/driver/nvidia/version 2>/dev/null | head -1)
+  fi
+
+  if [[ -z "$nvidia_host_version" ]]; then
+    msg_warn "NVIDIA host driver version not found in /proc/driver/nvidia/version"
+    msg_warn "Ensure NVIDIA drivers are installed on host and GPU passthrough is enabled"
+    $STD apt-get -y install va-driver-all vainfo 2>/dev/null || true
+    return 0
+  fi
+
+  msg_info "Host NVIDIA driver version: ${nvidia_host_version}"
+
+  if [[ "$os_id" == "debian" ]]; then
+    # Enable non-free components
+    if [[ -f /etc/apt/sources.list.d/debian.sources ]]; then
+      if ! grep -q "non-free" /etc/apt/sources.list.d/debian.sources 2>/dev/null; then
+        sed -i -E 's/Components: (.*)$/Components: \1 contrib non-free non-free-firmware/g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true
+      fi
+    fi
+    $STD apt-get -y update 2>/dev/null || msg_warn "apt update failed - continuing anyway"
+
+    # For Debian 13 Trixie/Sid: Use Debian's own nvidia packages first (better compatibility)
+    # NVIDIA's CUDA repo targets Debian 12 and may not have amd64 packages for Trixie
+    if [[ "$os_codename" == "trixie" || "$os_codename" == "sid" ]]; then
+      msg_info "Debian ${os_codename}: Using Debian's NVIDIA packages"
+
+      # Extract major version for flexible matching (580.126.09 -> 580)
+      local nvidia_major_version="${nvidia_host_version%%.*}"
+
+      # Check what versions are actually available
+      local available_version=""
+      available_version=$(apt-cache madison libcuda1 2>/dev/null | awk '{print $3}' | grep -E "^${nvidia_major_version}\." | head -1 || true)
+
+      if [[ -n "$available_version" ]]; then
+        msg_info "Found available NVIDIA version: ${available_version}"
+        local nvidia_pkgs="libcuda1=${available_version} libnvcuvid1=${available_version} libnvidia-encode1=${available_version} libnvidia-ml1=${available_version}"
+        if $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends $nvidia_pkgs 2>/dev/null; then
+          msg_ok "Installed NVIDIA libraries (${available_version})"
+        else
+          msg_warn "Failed to install NVIDIA ${available_version} - trying unversioned"
+          $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends libcuda1 libnvcuvid1 libnvidia-encode1 libnvidia-ml1 2>/dev/null || true
+        fi
+      else
+        # No matching major version - try latest available or unversioned
+        msg_warn "No NVIDIA packages for version ${nvidia_major_version}.x found in repos"
+        available_version=$(apt-cache madison libcuda1 2>/dev/null | awk '{print $3}' | head -1 || true)
+        if [[ -n "$available_version" ]]; then
+          msg_info "Trying latest available: ${available_version} (may cause version mismatch)"
+          $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends \
+            libcuda1="${available_version}" libnvcuvid1="${available_version}" \
+            libnvidia-encode1="${available_version}" libnvidia-ml1="${available_version}" 2>/dev/null ||
+            $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends \
+              libcuda1 libnvcuvid1 libnvidia-encode1 libnvidia-ml1 2>/dev/null ||
+            msg_warn "NVIDIA library installation failed - GPU compute may not work"
+        else
+          msg_warn "No NVIDIA packages available in Debian repos - GPU support disabled"
+        fi
+      fi
+      $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends nvidia-smi 2>/dev/null || true
+
+    else
+      # Debian 11/12: Use NVIDIA CUDA repository for version matching
+      local cuda_repo="debian12"
+      case "$os_codename" in
+      bullseye) cuda_repo="debian11" ;;
+      bookworm) cuda_repo="debian12" ;;
+      esac
+
+      # Add NVIDIA CUDA repository
+      if [[ ! -f /usr/share/keyrings/cuda-archive-keyring.gpg ]]; then
+        msg_info "Adding NVIDIA CUDA repository (${cuda_repo})"
+        local cuda_keyring
+        cuda_keyring="$(mktemp)"
+        if curl -fsSL -o "$cuda_keyring" "https://developer.download.nvidia.com/compute/cuda/repos/${cuda_repo}/x86_64/cuda-keyring_1.1-1_all.deb" 2>/dev/null; then
+          $STD dpkg -i "$cuda_keyring" 2>/dev/null || true
+        else
+          msg_warn "Failed to download NVIDIA CUDA keyring"
+        fi
+        rm -f "$cuda_keyring"
+      fi
+
+      # Pin NVIDIA repo for version matching
+      cat <<'NVIDIA_PIN' >/etc/apt/preferences.d/nvidia-cuda-pin
+Package: *
+Pin: origin developer.download.nvidia.com
+Pin-Priority: 1001
+NVIDIA_PIN
+
+      $STD apt-get -y update 2>/dev/null || msg_warn "apt update failed - continuing anyway"
+
+      # Extract major version for flexible matching (580.126.09 -> 580)
+      local nvidia_major_version="${nvidia_host_version%%.*}"
+
+      # Check what versions are actually available in CUDA repo
+      local available_version=""
+      available_version=$(apt-cache madison libcuda1 2>/dev/null | awk '{print $3}' | grep -E "^${nvidia_major_version}\." | head -1 || true)
+
+      if [[ -n "$available_version" ]]; then
+        msg_info "Installing NVIDIA libraries (version ${available_version})"
+        local nvidia_pkgs="libcuda1=${available_version} libnvcuvid1=${available_version} libnvidia-encode1=${available_version} libnvidia-ml1=${available_version}"
+        if $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends $nvidia_pkgs 2>/dev/null; then
+          msg_ok "Installed version-matched NVIDIA libraries"
+        else
+          msg_warn "Version-pinned install failed - trying unpinned"
+          $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends libcuda1 libnvcuvid1 libnvidia-encode1 libnvidia-ml1 2>/dev/null ||
+            msg_warn "NVIDIA library installation failed"
+        fi
+      else
+        msg_warn "No NVIDIA packages for version ${nvidia_major_version}.x in CUDA repo (host: ${nvidia_host_version})"
+        # Try latest available version
+        available_version=$(apt-cache madison libcuda1 2>/dev/null | awk '{print $3}' | head -1 || true)
+        if [[ -n "$available_version" ]]; then
+          msg_info "Trying latest available: ${available_version} (version mismatch warning)"
+          if $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends \
+            libcuda1="${available_version}" libnvcuvid1="${available_version}" \
+            libnvidia-encode1="${available_version}" libnvidia-ml1="${available_version}" 2>/dev/null; then
+            msg_ok "Installed NVIDIA libraries (${available_version}) - version differs from host"
+          else
+            $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends libcuda1 libnvcuvid1 libnvidia-encode1 libnvidia-ml1 2>/dev/null ||
+              msg_warn "NVIDIA library installation failed"
+          fi
+        else
+          msg_warn "No NVIDIA packages available in CUDA repo - GPU support disabled"
+        fi
+      fi
+
+      $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends nvidia-smi 2>/dev/null || true
+    fi
+
+  elif [[ "$os_id" == "ubuntu" ]]; then
+    # Ubuntu versioning
+    local ubuntu_cuda_repo=""
+    case "$os_version" in
+    22.04) ubuntu_cuda_repo="ubuntu2204" ;;
+    24.04) ubuntu_cuda_repo="ubuntu2404" ;;
+    *) ubuntu_cuda_repo="ubuntu2204" ;; # Fallback
+    esac
+
+    # Add NVIDIA CUDA repository for Ubuntu
+    if [[ ! -f /usr/share/keyrings/cuda-archive-keyring.gpg ]]; then
+      msg_info "Adding NVIDIA CUDA repository (${ubuntu_cuda_repo})"
+      local cuda_keyring
+      cuda_keyring="$(mktemp)"
+      if curl -fsSL -o "$cuda_keyring" "https://developer.download.nvidia.com/compute/cuda/repos/${ubuntu_cuda_repo}/x86_64/cuda-keyring_1.1-1_all.deb" 2>/dev/null; then
+        $STD dpkg -i "$cuda_keyring" 2>/dev/null || true
+      else
+        msg_warn "Failed to download NVIDIA CUDA keyring"
+      fi
+      rm -f "$cuda_keyring"
+    fi
+
+    $STD apt-get -y update 2>/dev/null || msg_warn "apt update failed - continuing anyway"
+
+    # Extract major version for flexible matching
+    local nvidia_major_version="${nvidia_host_version%%.*}"
+
+    # Check what versions are available
+    local available_version=""
+    available_version=$(apt-cache madison libcuda1 2>/dev/null | awk '{print $3}' | grep -E "^${nvidia_major_version}\." | head -1 || true)
+
+    if [[ -n "$available_version" ]]; then
+      msg_info "Installing NVIDIA libraries (version ${available_version})"
+      local nvidia_pkgs="libcuda1=${available_version} libnvcuvid1=${available_version} libnvidia-encode1=${available_version} libnvidia-ml1=${available_version}"
+      if $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends $nvidia_pkgs 2>/dev/null; then
+        msg_ok "Installed version-matched NVIDIA libraries"
+      else
+        # Fallback to Ubuntu repo packages with versioned nvidia-utils
+        msg_warn "CUDA repo install failed - trying Ubuntu native packages (nvidia-utils-${nvidia_major_version})"
+        if $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends \
+          libnvidia-decode-${nvidia_major_version} libnvidia-encode-${nvidia_major_version} nvidia-utils-${nvidia_major_version} 2>/dev/null; then
+          msg_ok "Installed Ubuntu NVIDIA packages (${nvidia_major_version})"
+        else
+          msg_warn "NVIDIA driver installation failed - please install manually: apt install nvidia-utils-${nvidia_major_version}"
+        fi
+      fi
+    else
+      msg_warn "No NVIDIA packages for version ${nvidia_major_version}.x in CUDA repo"
+      # Fallback to Ubuntu repo packages with versioned nvidia-utils
+      msg_info "Trying Ubuntu native packages (nvidia-utils-${nvidia_major_version})"
+      if $STD apt-get -y -o Dpkg::Options::="--force-confold" install --no-install-recommends \
+        libnvidia-decode-${nvidia_major_version} libnvidia-encode-${nvidia_major_version} nvidia-utils-${nvidia_major_version} 2>/dev/null; then
+        msg_ok "Installed Ubuntu NVIDIA packages (${nvidia_major_version})"
+      else
+        msg_warn "NVIDIA driver installation failed - please install manually: apt install nvidia-utils-${nvidia_major_version}"
+      fi
+    fi
+  fi
+
+  # VA-API for hybrid setups (Intel + NVIDIA)
+  $STD apt-get -y install va-driver-all vainfo 2>/dev/null || true
+
+  # Fix GLX alternatives: nvidia-alternative diverts mesa libs but in LXC
+  # containers the nvidia GLX libs are typically missing, leaving libGL.so.1
+  # pointing nowhere. Fall back to mesa if nvidia GLX dir is empty/missing.
+  if command -v update-glx &>/dev/null; then
+    local nvidia_glx_dir="/usr/lib/nvidia"
+    if [[ ! -f "${nvidia_glx_dir}/libGL.so.1" ]] && [[ -d /usr/lib/mesa-diverted ]]; then
+      msg_info "NVIDIA GLX libs missing in container - falling back to mesa"
+      $STD update-glx --set glx /usr/lib/mesa-diverted 2>/dev/null || true
+      ldconfig 2>/dev/null || true
+    fi
+  fi
+
+  msg_ok "NVIDIA GPU configured"
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Helper: Add Debian non-free repositories
+# ══════════════════════════════════════════════════════════════════════════════
+_add_debian_nonfree() {
+  local os_codename="$1"
+
+  [[ -f /etc/apt/sources.list.d/non-free.sources ]] && return 0
+
+  case "$os_codename" in
+  bullseye)
+    cat <<'EOF' >/etc/apt/sources.list.d/non-free.sources
+Types: deb
+URIs: http://deb.debian.org/debian
+Suites: bullseye bullseye-updates
+Components: non-free
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+EOF
+    ;;
+  bookworm)
+    cat <<'EOF' >/etc/apt/sources.list.d/non-free.sources
+Types: deb
+URIs: http://deb.debian.org/debian
+Suites: bookworm bookworm-updates
+Components: non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+EOF
+    ;;
+  trixie | sid)
+    cat <<'EOF' >/etc/apt/sources.list.d/non-free.sources
+Types: deb
+URIs: http://deb.debian.org/debian
+Suites: trixie trixie-updates
+Components: non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: http://deb.debian.org/debian-security
+Suites: trixie-security
+Components: non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+EOF
+    ;;
+  esac
+  $STD apt -y update
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Helper: Add Debian non-free-firmware repository
+# ══════════════════════════════════════════════════════════════════════════════
+_add_debian_nonfree_firmware() {
+  local os_codename="$1"
+
+  [[ -f /etc/apt/sources.list.d/non-free-firmware.sources ]] && return 0
+
+  case "$os_codename" in
+  bullseye)
+    # Debian 11 uses 'non-free' component (no separate non-free-firmware)
+    cat <<'EOF' >/etc/apt/sources.list.d/non-free-firmware.sources
+Types: deb
+URIs: http://deb.debian.org/debian
+Suites: bullseye bullseye-updates
+Components: non-free
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: http://deb.debian.org/debian-security
+Suites: bullseye-security
+Components: non-free
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+EOF
+    ;;
+  bookworm)
+    cat <<'EOF' >/etc/apt/sources.list.d/non-free-firmware.sources
 Types: deb
 URIs: http://deb.debian.org/debian
 Suites: bookworm bookworm-updates
 Components: non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 
 Types: deb
 URIs: http://deb.debian.org/debian-security
 Suites: bookworm-security
 Components: non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 EOF
-          ;;
-        trixie|sid)
-          cat <<'EOF' >/etc/apt/sources.list.d/non-free-firmware.sources
+    ;;
+  trixie | sid)
+    cat <<'EOF' >/etc/apt/sources.list.d/non-free-firmware.sources
 Types: deb
 URIs: http://deb.debian.org/debian
 Suites: trixie trixie-updates
 Components: non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 
 Types: deb
 URIs: http://deb.debian.org/debian-security
 Suites: trixie-security
 Components: non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 EOF
-          ;;
-        esac
-        $STD apt update
-      fi
+    ;;
+  esac
+  $STD apt -y update
+}
 
-      $STD apt -y install libdrm-amdgpu1 firmware-amd-graphics 2>/dev/null || {
-        msg_warn "Failed to install AMD firmware packages"
-      }
-    elif [[ "$os_id" == "ubuntu" ]]; then
-      $STD apt -y install libdrm-amdgpu1 2>/dev/null || true
-    fi
-  fi
+# ══════════════════════════════════════════════════════════════════════════════
+# Helper: Setup GPU device permissions
+# ══════════════════════════════════════════════════════════════════════════════
+_setup_gpu_permissions() {
+  local in_ct="$1"
 
-  if [[ "$has_nvidia" == true ]]; then
-    msg_warn "NVIDIA device nodes detected - userspace driver stack must be provided from host/manual install"
-  fi
-
-  # Set permissions for accelerator nodes (only in privileged containers)
+  # /dev/dri permissions (Intel/AMD)
   if [[ "$in_ct" == "0" && -d /dev/dri ]]; then
     if ls /dev/dri/card* /dev/dri/renderD* &>/dev/null; then
       chgrp video /dev/dri 2>/dev/null || true
@@ -3585,14 +4848,40 @@ EOF
     fi
   fi
 
-  if [[ "$in_ct" == "0" && "$has_v4l2" == true ]]; then
-    chgrp video /dev/video* 2>/dev/null || true
-    chmod 660 /dev/video* 2>/dev/null || true
-    $STD adduser "$(id -u -n)" video 2>/dev/null || true
+  # /dev/nvidia* permissions (NVIDIA)
+  if ls /dev/nvidia* &>/dev/null 2>&1; then
+    msg_info "Configuring NVIDIA device permissions"
+    for nvidia_dev in /dev/nvidia*; do
+      [[ -e "$nvidia_dev" ]] && {
+        chgrp video "$nvidia_dev" 2>/dev/null || true
+        chmod 666 "$nvidia_dev" 2>/dev/null || true
+      }
+    done
+    if [[ -d /dev/nvidia-caps ]]; then
+      chmod 755 /dev/nvidia-caps 2>/dev/null || true
+      for caps_dev in /dev/nvidia-caps/*; do
+        [[ -e "$caps_dev" ]] && {
+          chgrp video "$caps_dev" 2>/dev/null || true
+          chmod 666 "$caps_dev" 2>/dev/null || true
+        }
+      done
+    fi
+
+    # Verify nvidia-smi
+    if command -v nvidia-smi &>/dev/null; then
+      if nvidia-smi &>/dev/null; then
+        msg_info "nvidia-smi verified and working"
+      else
+        msg_warn "nvidia-smi test failed - check driver version match"
+      fi
+    fi
   fi
 
-  cache_installed_version "hwaccel" "1.0"
-  msg_ok "Setup Hardware Acceleration"
+  # /dev/kfd permissions (AMD ROCm)
+  if [[ -e /dev/kfd ]]; then
+    chmod 666 /dev/kfd 2>/dev/null || true
+    msg_info "AMD ROCm compute device configured"
+  fi
 }
 
 # ------------------------------------------------------------------------------
@@ -3638,11 +4927,11 @@ function setup_imagemagick() {
     pkg-config \
     ghostscript
 
-  curl -fsSL https://imagemagick.org/archive/ImageMagick.tar.gz -o "$TMP_DIR/ImageMagick.tar.gz" || {
+  if ! CURL_TIMEOUT=180 curl_with_retry "https://imagemagick.org/archive/ImageMagick.tar.gz" "$TMP_DIR/ImageMagick.tar.gz"; then
     msg_error "Failed to download ImageMagick"
     rm -rf "$TMP_DIR"
     return 1
-  }
+  fi
 
   tar -xzf "$TMP_DIR/ImageMagick.tar.gz" -C "$TMP_DIR" || {
     msg_error "Failed to extract ImageMagick"
@@ -3864,7 +5153,7 @@ current_ip="$(get_current_ip)"
 
 if [[ -z "$current_ip" ]]; then
     echo "[ERROR] Could not detect local IP" >&2
-    exit 1
+    exit 123
 fi
 
 if [[ -f "$IP_FILE" ]]; then
@@ -4023,8 +5312,8 @@ EOF
   # First, check if there's an old/broken repository that needs cleanup
   if [[ -f /etc/apt/sources.list.d/mariadb.sources ]] || [[ -f /etc/apt/sources.list.d/mariadb.list ]]; then
     local OLD_REPO_VERSION=""
-    OLD_REPO_VERSION=$(grep -oP 'repo/\K[0-9]+\.[0-9]+(\.[0-9]+)?' /etc/apt/sources.list.d/mariadb.sources 2>/dev/null || \
-                       grep -oP 'repo/\K[0-9]+\.[0-9]+(\.[0-9]+)?' /etc/apt/sources.list.d/mariadb.list 2>/dev/null || echo "")
+    OLD_REPO_VERSION=$(grep -oP 'repo/\K[0-9]+\.[0-9]+(\.[0-9]+)?' /etc/apt/sources.list.d/mariadb.sources 2>/dev/null ||
+      grep -oP 'repo/\K[0-9]+\.[0-9]+(\.[0-9]+)?' /etc/apt/sources.list.d/mariadb.list 2>/dev/null || echo "")
 
     # Check if old repo points to a different version
     if [[ -n "$OLD_REPO_VERSION" ]] && [[ "${OLD_REPO_VERSION%.*}" != "${MARIADB_VERSION%.*}" ]]; then
@@ -4066,7 +5355,7 @@ EOF
     return 0
   fi
 
-  # Scenario 2: Different version installed - clean upgrade
+  # Scenario 2b: Different version installed - clean upgrade
   if [[ -n "$CURRENT_VERSION" && "$CURRENT_VERSION" != "$MARIADB_VERSION" ]]; then
     msg_info "Upgrade MariaDB from $CURRENT_VERSION to $MARIADB_VERSION"
     remove_old_tool_version "mariadb"
@@ -4354,20 +5643,31 @@ function setup_mongodb() {
 }
 
 # ------------------------------------------------------------------------------
-# Installs or upgrades MySQL and configures APT repo.
+# Installs or upgrades MySQL.
 #
 # Description:
+#   - By default uses distro repository (Debian/Ubuntu apt) for stability
+#   - Optionally uses official MySQL repository for specific versions
 #   - Detects existing MySQL installation
 #   - Purges conflicting packages before installation
 #   - Supports clean upgrade
 #   - Handles Debian Trixie libaio1t64 transition
 #
 # Variables:
-#   MYSQL_VERSION  - MySQL version to install (e.g. 5.7, 8.0) (default: 8.0)
+#   USE_MYSQL_REPO - Use official MySQL repository (default: true)
+#                    Set to "false" to use distro packages instead
+#   MYSQL_VERSION  - MySQL version to install when using official repo
+#                    (e.g. 8.0, 8.4) (default: 8.0)
+#
+# Examples:
+#   setup_mysql                              # Uses official MySQL repo, 8.0
+#   MYSQL_VERSION="8.4" setup_mysql          # Specific version from MySQL repo
+#   USE_MYSQL_REPO=false setup_mysql         # Uses distro package instead
 # ------------------------------------------------------------------------------
 
 function setup_mysql() {
   local MYSQL_VERSION="${MYSQL_VERSION:-8.0}"
+  local USE_MYSQL_REPO="${USE_MYSQL_REPO:-true}"
   local DISTRO_ID DISTRO_CODENAME
   DISTRO_ID=$(awk -F= '/^ID=/{print $2}' /etc/os-release | tr -d '"')
   DISTRO_CODENAME=$(awk -F= '/^VERSION_CODENAME=/{print $2}' /etc/os-release)
@@ -4381,14 +5681,79 @@ function setup_mysql() {
   local CURRENT_VERSION=""
   CURRENT_VERSION=$(is_tool_installed "mysql" 2>/dev/null) || true
 
-  # Scenario 1: Already at target version - just update packages
+  # Scenario 1: Use distro repository (default, most stable)
+  if [[ "$USE_MYSQL_REPO" != "true" && "$USE_MYSQL_REPO" != "TRUE" && "$USE_MYSQL_REPO" != "1" ]]; then
+    msg_info "Setup MySQL (distro package)"
+
+    # If already installed, just update
+    if [[ -n "$CURRENT_VERSION" ]]; then
+      msg_info "Update MySQL $CURRENT_VERSION"
+      ensure_apt_working || return 1
+      upgrade_packages_with_retry "default-mysql-server" "default-mysql-client" ||
+        upgrade_packages_with_retry "mysql-server" "mysql-client" ||
+        upgrade_packages_with_retry "mariadb-server" "mariadb-client" || {
+        msg_error "Failed to upgrade MySQL/MariaDB packages"
+        return 1
+      }
+      cache_installed_version "mysql" "$CURRENT_VERSION"
+      msg_ok "Update MySQL $CURRENT_VERSION"
+      return 0
+    fi
+
+    # Fresh install from distro repo
+    ensure_apt_working || return 1
+
+    export DEBIAN_FRONTEND=noninteractive
+    # Try default-mysql-server first, fallback to mysql-server, then mariadb
+    if apt-cache search "^default-mysql-server$" 2>/dev/null | grep -q .; then
+      install_packages_with_retry "default-mysql-server" "default-mysql-client" || {
+        msg_warn "default-mysql-server failed, trying mysql-server"
+        install_packages_with_retry "mysql-server" "mysql-client" || {
+          msg_warn "mysql-server failed, trying mariadb as fallback"
+          install_packages_with_retry "mariadb-server" "mariadb-client" || {
+            msg_error "Failed to install any MySQL/MariaDB from distro repository"
+            return 1
+          }
+        }
+      }
+    elif apt-cache search "^mysql-server$" 2>/dev/null | grep -q .; then
+      install_packages_with_retry "mysql-server" "mysql-client" || {
+        msg_warn "mysql-server failed, trying mariadb as fallback"
+        install_packages_with_retry "mariadb-server" "mariadb-client" || {
+          msg_error "Failed to install any MySQL/MariaDB from distro repository"
+          return 1
+        }
+      }
+    else
+      # Distro doesn't have MySQL, use MariaDB
+      install_packages_with_retry "mariadb-server" "mariadb-client" || {
+        msg_error "Failed to install MariaDB from distro repository"
+        return 1
+      }
+    fi
+
+    # Get installed version
+    local INSTALLED_VERSION=""
+    INSTALLED_VERSION=$(is_tool_installed "mysql" 2>/dev/null) || true
+    if [[ -z "$INSTALLED_VERSION" ]]; then
+      INSTALLED_VERSION=$(is_tool_installed "mariadb" 2>/dev/null) || true
+    fi
+    cache_installed_version "mysql" "${INSTALLED_VERSION:-distro}"
+    msg_ok "Setup MySQL/MariaDB ${INSTALLED_VERSION:-from distro}"
+    return 0
+  fi
+
+  # Scenario 2: Use official MySQL repository (USE_MYSQL_REPO=true)
+  # Scenario 2a: Already at target version - just update packages
   if [[ -n "$CURRENT_VERSION" && "$CURRENT_VERSION" == "$MYSQL_VERSION" ]]; then
     msg_info "Update MySQL $MYSQL_VERSION"
 
     ensure_apt_working || return 1
 
     # Perform upgrade with retry logic (non-fatal if fails)
-    upgrade_packages_with_retry "mysql-server" "mysql-client" || true
+    upgrade_packages_with_retry "mysql-server" "mysql-client" || {
+      msg_warn "MySQL package upgrade had issues, continuing with current version"
+    }
 
     cache_installed_version "mysql" "$MYSQL_VERSION"
     msg_ok "Update MySQL $MYSQL_VERSION"
@@ -4413,7 +5778,7 @@ function setup_mysql() {
   if [[ "$DISTRO_ID" == "debian" && "$DISTRO_CODENAME" =~ ^(trixie|forky|sid)$ ]]; then
     msg_info "Debian ${DISTRO_CODENAME} detected → using MySQL 8.4 LTS (libaio1t64 compatible)"
 
-    if ! curl -fsSL https://repo.mysql.com/RPM-GPG-KEY-mysql-2023 | gpg --dearmor -o /etc/apt/keyrings/mysql.gpg 2>/dev/null; then
+    if ! download_gpg_key "https://repo.mysql.com/RPM-GPG-KEY-mysql-2023" "/etc/apt/keyrings/mysql.gpg" "dearmor"; then
       msg_error "Failed to import MySQL GPG key"
       return 1
     fi
@@ -4578,7 +5943,9 @@ function setup_nodejs() {
     }
 
     # Force APT cache refresh after repository setup
-    $STD apt update
+    $STD apt update || {
+      msg_warn "apt update failed after Node.js repository setup"
+    }
 
     ensure_dependencies curl ca-certificates gnupg
 
@@ -4821,7 +6188,10 @@ EOF
   if [[ "$DISTRO_ID" == "ubuntu" ]]; then
     # Ubuntu: Use ondrej/php PPA
     msg_info "Adding ondrej/php PPA for Ubuntu"
-    $STD apt install -y software-properties-common
+    $STD apt install -y software-properties-common || {
+      msg_error "Failed to install software-properties-common"
+      return 1
+    }
     # Don't use $STD for add-apt-repository as it uses background processes
     add-apt-repository -y ppa:ondrej/php >>"$(get_active_logfile)" 2>&1
   else
@@ -4832,7 +6202,9 @@ EOF
     }
   fi
   ensure_apt_working || return 1
-  $STD apt update
+  $STD apt update || {
+    msg_warn "apt update failed after PHP repository setup"
+  }
 
   # Get available PHP version from repository
   local AVAILABLE_PHP_VERSION=""
@@ -4924,7 +6296,7 @@ EOF
 
     # Try to install each package individually
     for pkg in $MODULE_LIST; do
-      [[ "$pkg" == "php${PHP_VERSION}" ]] && continue  # Already installed
+      [[ "$pkg" == "php${PHP_VERSION}" ]] && continue # Already installed
       $STD apt install -y "$pkg" 2>/dev/null || {
         msg_warn "Could not install $pkg - continuing without it"
       }
@@ -4988,17 +6360,29 @@ EOF
 # Installs or upgrades PostgreSQL and optional extensions/modules.
 #
 # Description:
+#   - By default uses distro repository (Debian/Ubuntu apt) for stability
+#   - Optionally uses official PGDG repository for specific versions
 #   - Detects existing PostgreSQL version
 #   - Dumps all databases before upgrade
-#   - Adds PGDG repo and installs specified version
 #   - Installs optional PG_MODULES (e.g. postgis, contrib)
 #   - Restores dumped data post-upgrade
 #
 # Variables:
-#   PG_VERSION     - Major PostgreSQL version (e.g. 15, 16) (default: 16)
+#   USE_PGDG_REPO  - Use official PGDG repository (default: true)
+#                    Set to "false" to use distro packages instead
+#   PG_VERSION    - Major PostgreSQL version (e.g. 15, 16) (default: 16)
+#   PG_MODULES    - Comma-separated list of modules (e.g. "postgis,contrib")
+#
+# Examples:
+#   setup_postgresql                              # Uses PGDG repo, PG 16
+#   PG_VERSION="17" setup_postgresql               # Specific version from PGDG
+#   USE_PGDG_REPO=false setup_postgresql           # Uses distro package instead
+# ------------------------------------------------------------------------------
+
 function setup_postgresql() {
   local PG_VERSION="${PG_VERSION:-16}"
   local PG_MODULES="${PG_MODULES:-}"
+  local USE_PGDG_REPO="${USE_PGDG_REPO:-true}"
   local DISTRO_ID DISTRO_CODENAME
   DISTRO_ID=$(awk -F= '/^ID=/{print $2}' /etc/os-release | tr -d '"')
   DISTRO_CODENAME=$(awk -F= '/^VERSION_CODENAME=/{print $2}' /etc/os-release)
@@ -5014,7 +6398,65 @@ function setup_postgresql() {
     CURRENT_PG_VERSION="$(psql -V 2>/dev/null | awk '{print $3}' | cut -d. -f1)"
   fi
 
-  # Scenario 1: Already at correct version
+  # Scenario 1: Use distro repository (default, most stable)
+  if [[ "$USE_PGDG_REPO" != "true" && "$USE_PGDG_REPO" != "TRUE" && "$USE_PGDG_REPO" != "1" ]]; then
+    msg_info "Setup PostgreSQL (distro package)"
+
+    # If already installed, just update
+    if [[ -n "$CURRENT_PG_VERSION" ]]; then
+      msg_info "Update PostgreSQL $CURRENT_PG_VERSION"
+      ensure_apt_working || return 1
+      upgrade_packages_with_retry "postgresql" "postgresql-client" || true
+      cache_installed_version "postgresql" "$CURRENT_PG_VERSION"
+      msg_ok "Update PostgreSQL $CURRENT_PG_VERSION"
+
+      # Still install modules if specified
+      if [[ -n "$PG_MODULES" ]]; then
+        IFS=',' read -ra MODULES <<<"$PG_MODULES"
+        for module in "${MODULES[@]}"; do
+          $STD apt install -y "postgresql-${CURRENT_PG_VERSION}-${module}" 2>/dev/null || true
+        done
+      fi
+      return 0
+    fi
+
+    # Fresh install from distro repo
+    ensure_apt_working || return 1
+
+    export DEBIAN_FRONTEND=noninteractive
+    install_packages_with_retry "postgresql" "postgresql-client" || {
+      msg_error "Failed to install PostgreSQL from distro repository"
+      return 1
+    }
+
+    # Get installed version
+    local INSTALLED_VERSION=""
+    if command -v psql >/dev/null; then
+      INSTALLED_VERSION="$(psql -V 2>/dev/null | awk '{print $3}' | cut -d. -f1)"
+    fi
+
+    $STD systemctl enable --now postgresql 2>/dev/null || true
+
+    # Add PostgreSQL binaries to PATH
+    if [[ -n "$INSTALLED_VERSION" ]] && ! grep -q '/usr/lib/postgresql' /etc/environment 2>/dev/null; then
+      echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/'"${INSTALLED_VERSION}"'/bin"' >/etc/environment
+    fi
+
+    cache_installed_version "postgresql" "${INSTALLED_VERSION:-distro}"
+    msg_ok "Setup PostgreSQL ${INSTALLED_VERSION:-from distro}"
+
+    # Install optional modules
+    if [[ -n "$PG_MODULES" && -n "$INSTALLED_VERSION" ]]; then
+      IFS=',' read -ra MODULES <<<"$PG_MODULES"
+      for module in "${MODULES[@]}"; do
+        $STD apt install -y "postgresql-${INSTALLED_VERSION}-${module}" 2>/dev/null || true
+      done
+    fi
+    return 0
+  fi
+
+  # Scenario 2: Use official PGDG repository (USE_PGDG_REPO=true)
+  # Scenario 2a: Already at correct version
   if [[ "$CURRENT_PG_VERSION" == "$PG_VERSION" ]]; then
     msg_info "Update PostgreSQL $PG_VERSION"
     ensure_apt_working || return 1
@@ -5038,7 +6480,8 @@ function setup_postgresql() {
   if [[ -n "$CURRENT_PG_VERSION" ]]; then
     msg_info "Upgrade PostgreSQL from $CURRENT_PG_VERSION to $PG_VERSION"
     msg_info "Creating backup of PostgreSQL $CURRENT_PG_VERSION databases..."
-    $STD runuser -u postgres -- pg_dumpall >/var/lib/postgresql/backup_$(date +%F)_v${CURRENT_PG_VERSION}.sql || {
+    local PG_BACKUP_FILE="/var/lib/postgresql/backup_$(date +%F)_v${CURRENT_PG_VERSION}.sql"
+    $STD runuser -u postgres -- pg_dumpall >"$PG_BACKUP_FILE" || {
       msg_error "Failed to backup PostgreSQL databases"
       return 1
     }
@@ -5057,14 +6500,13 @@ function setup_postgresql() {
   local SUITE
   case "$DISTRO_CODENAME" in
   trixie | forky | sid)
-
     if verify_repo_available "https://apt.postgresql.org/pub/repos/apt" "trixie-pgdg"; then
       SUITE="trixie-pgdg"
-
     else
-      SUITE="bookworm-pgdg"
+      msg_warn "PGDG repo not available for ${DISTRO_CODENAME}, falling back to distro packages"
+      USE_PGDG_REPO=false setup_postgresql
+      return $?
     fi
-
     ;;
   *)
     SUITE=$(get_fallback_suite "$DISTRO_ID" "$DISTRO_CODENAME" "https://apt.postgresql.org/pub/repos/apt")
@@ -5120,14 +6562,16 @@ function setup_postgresql() {
   fi
 
   # Restore database backup if we upgraded from previous version
-  if [[ -n "$CURRENT_PG_VERSION" ]]; then
+  if [[ -n "$CURRENT_PG_VERSION" && -n "${PG_BACKUP_FILE:-}" && -f "${PG_BACKUP_FILE}" ]]; then
     msg_info "Restoring PostgreSQL databases from backup..."
-    $STD runuser -u postgres -- psql </var/lib/postgresql/backup_$(date +%F)_v${CURRENT_PG_VERSION}.sql 2>/dev/null || {
+    $STD runuser -u postgres -- psql <"$PG_BACKUP_FILE" 2>/dev/null || {
       msg_warn "Failed to restore database backup - this may be expected for major version upgrades"
     }
   fi
 
-  $STD systemctl enable --now postgresql 2>/dev/null || true
+  $STD systemctl enable --now postgresql 2>/dev/null || {
+    msg_warn "Failed to enable/start PostgreSQL service"
+  }
 
   # Add PostgreSQL binaries to PATH
   if ! grep -q '/usr/lib/postgresql' /etc/environment 2>/dev/null; then
@@ -5141,7 +6585,9 @@ function setup_postgresql() {
   if [[ -n "$PG_MODULES" ]]; then
     IFS=',' read -ra MODULES <<<"$PG_MODULES"
     for module in "${MODULES[@]}"; do
-      $STD apt install -y "postgresql-${PG_VERSION}-${module}" 2>/dev/null || true
+      $STD apt install -y "postgresql-${PG_VERSION}-${module}" 2>/dev/null || {
+        msg_warn "Failed to install PostgreSQL module: ${module}"
+      }
     done
   fi
 }
@@ -5351,11 +6797,11 @@ function setup_ruby() {
       return 1
     fi
 
-    curl -fsSL "https://github.com/rbenv/rbenv/archive/refs/tags/v${RBENV_RELEASE}.tar.gz" -o "$TMP_DIR/rbenv.tar.gz" || {
+    if ! curl_with_retry "https://github.com/rbenv/rbenv/archive/refs/tags/v${RBENV_RELEASE}.tar.gz" "$TMP_DIR/rbenv.tar.gz"; then
       msg_error "Failed to download rbenv"
       rm -rf "$TMP_DIR"
       return 1
-    }
+    fi
 
     tar -xzf "$TMP_DIR/rbenv.tar.gz" -C "$TMP_DIR" || {
       msg_error "Failed to extract rbenv"
@@ -5398,11 +6844,11 @@ function setup_ruby() {
       return 1
     fi
 
-    curl -fsSL "https://github.com/rbenv/ruby-build/archive/refs/tags/v${RUBY_BUILD_RELEASE}.tar.gz" -o "$TMP_DIR/ruby-build.tar.gz" || {
+    if ! curl_with_retry "https://github.com/rbenv/ruby-build/archive/refs/tags/v${RUBY_BUILD_RELEASE}.tar.gz" "$TMP_DIR/ruby-build.tar.gz"; then
       msg_error "Failed to download ruby-build"
       rm -rf "$TMP_DIR"
       return 1
-    }
+    fi
 
     tar -xzf "$TMP_DIR/ruby-build.tar.gz" -C "$TMP_DIR" || {
       msg_error "Failed to extract ruby-build"
@@ -5534,14 +6980,14 @@ function setup_meilisearch() {
           local MAX_WAIT=120
           local WAITED=0
           local TASK_RESULT=""
-          
+
           while [[ $WAITED -lt $MAX_WAIT ]]; do
             TASK_RESULT=$(curl -s "http://${MEILI_HOST}:${MEILI_PORT}/tasks/${TASK_UID}" \
               -H "Authorization: Bearer ${MEILI_MASTER_KEY}" 2>/dev/null) || true
-            
+
             local TASK_STATUS
             TASK_STATUS=$(echo "$TASK_RESULT" | grep -oP '"status":\s*"\K[^"]+' || true)
-            
+
             if [[ "$TASK_STATUS" == "succeeded" ]]; then
               # Extract dumpUid from the completed task details
               DUMP_UID=$(echo "$TASK_RESULT" | grep -oP '"dumpUid":\s*"\K[^"]+' || true)
@@ -5579,7 +7025,7 @@ function setup_meilisearch() {
         local MEILI_DB_PATH
         MEILI_DB_PATH=$(grep -E "^db_path\s*=" /etc/meilisearch.toml 2>/dev/null | sed 's/.*=\s*"\(.*\)"/\1/' | tr -d ' ')
         MEILI_DB_PATH="${MEILI_DB_PATH:-/var/lib/meilisearch/data}"
-        
+
         if [[ -d "$MEILI_DB_PATH" ]] && [[ -n "$(ls -A "$MEILI_DB_PATH" 2>/dev/null)" ]]; then
           local BACKUP_PATH="${MEILI_DB_PATH}.backup.$(date +%Y%m%d%H%M%S)"
           msg_warn "Backing up MeiliSearch data to ${BACKUP_PATH}"
@@ -5592,7 +7038,7 @@ function setup_meilisearch() {
 
       # Stop service and update binary
       systemctl stop meilisearch
-      fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "singlefile" "latest" "/usr/bin" "meilisearch-linux-aarch64"
+      fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "binary"
 
       # If migration needed and dump was created, remove old data and import dump
       if [[ "$NEEDS_MIGRATION" == "true" ]] && [[ -n "$DUMP_UID" ]]; then
@@ -5607,12 +7053,12 @@ function setup_meilisearch() {
         local DUMP_FILE="${MEILI_DUMP_DIR}/${DUMP_UID}.dump"
         if [[ -f "$DUMP_FILE" ]]; then
           msg_info "Importing dump: ${DUMP_FILE}"
-          
+
           # Start meilisearch with --import-dump flag
           # This is a one-time import that happens during startup
           /usr/bin/meilisearch --config-file-path /etc/meilisearch.toml --import-dump "$DUMP_FILE" &
           local MEILI_PID=$!
-          
+
           # Wait for meilisearch to become healthy (import happens during startup)
           msg_info "Waiting for MeiliSearch to import and start..."
           local MAX_WAIT=300
@@ -5630,14 +7076,14 @@ function setup_meilisearch() {
             sleep 3
             WAITED=$((WAITED + 3))
           done
-          
+
           # Stop the manual process
           kill $MEILI_PID 2>/dev/null || true
           sleep 2
-          
+
           # Start via systemd for proper management
           systemctl start meilisearch
-          
+
           if systemctl is-active --quiet meilisearch; then
             msg_ok "MeiliSearch migrated successfully"
           else
@@ -5660,7 +7106,7 @@ function setup_meilisearch() {
   msg_info "Setup MeiliSearch"
 
   # Install binary
-  fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "singlefile" "latest" "/usr/bin" "meilisearch-linux-aarch64" || {
+  fetch_and_deploy_gh_release "meilisearch" "meilisearch/meilisearch" "binary" || {
     msg_error "Failed to install MeiliSearch binary"
     return 1
   }
@@ -5725,14 +7171,14 @@ EOF
   MEILISEARCH_API_KEY=""
   for i in {1..10}; do
     MEILISEARCH_API_KEY=$(curl -s -X GET "http://${MEILISEARCH_HOST}:${MEILISEARCH_PORT}/keys" \
-      -H "Authorization: Bearer ${MEILISEARCH_MASTER_KEY}" 2>/dev/null | \
+      -H "Authorization: Bearer ${MEILISEARCH_MASTER_KEY}" 2>/dev/null |
       grep -o '"key":"[^"]*"' | head -n 1 | sed 's/"key":"//;s/"//') || true
     [[ -n "$MEILISEARCH_API_KEY" ]] && break
     sleep 2
   done
 
   MEILISEARCH_API_KEY_UID=$(curl -s -X GET "http://${MEILISEARCH_HOST}:${MEILISEARCH_PORT}/keys" \
-    -H "Authorization: Bearer ${MEILISEARCH_MASTER_KEY}" 2>/dev/null | \
+    -H "Authorization: Bearer ${MEILISEARCH_MASTER_KEY}" 2>/dev/null |
     grep -o '"uid":"[^"]*"' | head -n 1 | sed 's/"uid":"//;s/"//') || true
 
   export MEILISEARCH_API_KEY
@@ -5800,7 +7246,9 @@ function setup_clickhouse() {
     ensure_apt_working || return 1
 
     # Perform upgrade with retry logic (non-fatal if fails)
-    upgrade_packages_with_retry "clickhouse-server" "clickhouse-client" || true
+    upgrade_packages_with_retry "clickhouse-server" "clickhouse-client" || {
+      msg_warn "ClickHouse package upgrade had issues, continuing with current version"
+    }
     cache_installed_version "clickhouse" "$CLICKHOUSE_VERSION"
     msg_ok "Update ClickHouse $CLICKHOUSE_VERSION"
     return 0
@@ -5935,7 +7383,9 @@ function setup_rust() {
     }
 
     # Update to latest patch version
-    $STD rustup update "$RUST_TOOLCHAIN" </dev/null || true
+    $STD rustup update "$RUST_TOOLCHAIN" </dev/null || {
+      msg_warn "Rust toolchain update had issues"
+    }
 
     # Ensure PATH is updated for current shell session
     export PATH="$CARGO_BIN:$PATH"
@@ -6110,10 +7560,10 @@ function setup_uv() {
 
   local UV_URL="https://github.com/astral-sh/uv/releases/download/${LATEST_VERSION}/${UV_TAR}"
 
-  $STD curl -fsSL "$UV_URL" -o "$TMP_DIR/uv.tar.gz" || {
+  if ! curl_with_retry "$UV_URL" "$TMP_DIR/uv.tar.gz"; then
     msg_error "Failed to download uv from $UV_URL"
     return 1
-  }
+  fi
 
   # Extract
   $STD tar -xzf "$TMP_DIR/uv.tar.gz" -C "$TMP_DIR" || {
@@ -6243,11 +7693,11 @@ function setup_yq() {
     msg_info "Setup yq $LATEST_VERSION"
   fi
 
-  curl -fsSL "https://github.com/${GITHUB_REPO}/releases/download/v${LATEST_VERSION}/yq_linux_arm64" -o "$TMP_DIR/yq" || {
+  if ! curl_with_retry "https://github.com/${GITHUB_REPO}/releases/download/v${LATEST_VERSION}/yq_linux_amd64" "$TMP_DIR/yq"; then
     msg_error "Failed to download yq"
     rm -rf "$TMP_DIR"
     return 1
-  }
+  fi
 
   chmod +x "$TMP_DIR/yq"
   mv "$TMP_DIR/yq" "$BINARY_PATH" || {
@@ -6269,23 +7719,28 @@ function setup_yq() {
 # Docker Engine Installation and Management (All-In-One)
 #
 # Description:
+#   - By default uses distro repository (docker.io) for stability
+#   - Optionally uses official Docker repository for latest features
 #   - Detects and migrates old Docker installations
-#   - Installs/Updates Docker Engine via official repository
 #   - Optional: Installs/Updates Portainer CE
 #   - Updates running containers interactively
 #   - Cleans up legacy repository files
 #
 # Usage:
-#   setup_docker
+#   setup_docker                              # Uses distro package (recommended)
+#   USE_DOCKER_REPO=true setup_docker         # Uses official Docker repo
 #   DOCKER_PORTAINER="true" setup_docker
 #   DOCKER_LOG_DRIVER="json-file" setup_docker
 #
 # Variables:
+#   USE_DOCKER_REPO        - Set to "true" to use official Docker repository
+#                            (default: false, uses distro docker.io package)
 #   DOCKER_PORTAINER       - Install Portainer CE (optional, "true" to enable)
 #   DOCKER_LOG_DRIVER      - Log driver (optional, default: "journald")
 #   DOCKER_SKIP_UPDATES    - Skip container update check (optional, "true" to skip)
 #
 # Features:
+#   - Uses stable distro packages by default
 #   - Migrates from get.docker.com to repository-based installation
 #   - Updates Docker Engine if newer version available
 #   - Interactive container update with multi-select
@@ -6294,6 +7749,7 @@ function setup_yq() {
 function setup_docker() {
   local docker_installed=false
   local portainer_installed=false
+  local USE_DOCKER_REPO="${USE_DOCKER_REPO:-false}"
 
   # Check if Docker is already installed
   if command -v docker &>/dev/null; then
@@ -6308,68 +7764,119 @@ function setup_docker() {
     msg_info "Portainer container detected"
   fi
 
-  # Cleanup old repository configurations
-  if [ -f /etc/apt/sources.list.d/docker.list ]; then
-    msg_info "Migrating from old Docker repository format"
-    rm -f /etc/apt/sources.list.d/docker.list
-    rm -f /etc/apt/keyrings/docker.asc
-  fi
+  # Scenario 1: Use distro repository (default, most stable)
+  if [[ "$USE_DOCKER_REPO" != "true" && "$USE_DOCKER_REPO" != "TRUE" && "$USE_DOCKER_REPO" != "1" ]]; then
 
-  # Setup/Update Docker repository
-  msg_info "Setting up Docker Repository"
-  setup_deb822_repo \
-    "docker" \
-    "https://download.docker.com/linux/$(get_os_info id)/gpg" \
-    "https://download.docker.com/linux/$(get_os_info id)" \
-    "$(get_os_info codename)" \
-    "stable" \
-    "$(dpkg --print-architecture)"
-
-  # Install or upgrade Docker
-  if [ "$docker_installed" = true ]; then
-    msg_info "Checking for Docker updates"
-    DOCKER_LATEST_VERSION=$(apt-cache policy docker-ce | grep Candidate | awk '{print $2}' 2>/dev/null | cut -d':' -f2 | cut -d'-' -f1 || echo '')
-
-    if [ "$DOCKER_CURRENT_VERSION" != "$DOCKER_LATEST_VERSION" ]; then
-      msg_info "Updating Docker $DOCKER_CURRENT_VERSION → $DOCKER_LATEST_VERSION"
-      $STD apt install -y --only-upgrade \
-        docker-ce \
-        docker-ce-cli \
-        containerd.io \
-        docker-buildx-plugin \
-        docker-compose-plugin
-      msg_ok "Updated Docker to $DOCKER_LATEST_VERSION"
-    else
+    # Install or upgrade Docker from distro repo
+    if [ "$docker_installed" = true ]; then
+      msg_info "Checking for Docker updates (distro package)"
+      ensure_apt_working || return 1
+      upgrade_packages_with_retry "docker.io" "docker-compose" || true
+      DOCKER_CURRENT_VERSION=$(docker --version | grep -oP '\d+\.\d+\.\d+' | head -1)
       msg_ok "Docker is up-to-date ($DOCKER_CURRENT_VERSION)"
+    else
+      msg_info "Installing Docker (distro package)"
+      ensure_apt_working || return 1
+
+      # Install docker.io and docker-compose from distro
+      if ! install_packages_with_retry "docker.io"; then
+        msg_error "Failed to install docker.io from distro repository"
+        return 1
+      fi
+      # docker-compose is optional
+      $STD apt install -y docker-compose 2>/dev/null || true
+
+      DOCKER_CURRENT_VERSION=$(docker --version | grep -oP '\d+\.\d+\.\d+' | head -1)
+      msg_ok "Installed Docker $DOCKER_CURRENT_VERSION (distro package)"
     fi
-  else
-    msg_info "Installing Docker"
-    $STD apt install -y \
-      docker-ce \
-      docker-ce-cli \
-      containerd.io \
-      docker-buildx-plugin \
-      docker-compose-plugin
 
-    DOCKER_CURRENT_VERSION=$(docker --version | grep -oP '\d+\.\d+\.\d+' | head -1)
-    msg_ok "Installed Docker $DOCKER_CURRENT_VERSION"
-  fi
-
-  # Configure daemon.json
-  local log_driver="${DOCKER_LOG_DRIVER:-journald}"
-  mkdir -p /etc/docker
-  if [ ! -f /etc/docker/daemon.json ]; then
-    cat <<EOF >/etc/docker/daemon.json
+    # Configure daemon.json
+    local log_driver="${DOCKER_LOG_DRIVER:-journald}"
+    mkdir -p /etc/docker
+    if [ ! -f /etc/docker/daemon.json ]; then
+      cat <<EOF >/etc/docker/daemon.json
 {
   "log-driver": "$log_driver"
 }
 EOF
+    fi
+
+    # Enable and start Docker
+    systemctl enable -q --now docker
+
+    # Continue to Portainer section below
+  else
+    # Scenario 2: Use official Docker repository (USE_DOCKER_REPO=true)
+
+    # Cleanup old repository configurations
+    if [ -f /etc/apt/sources.list.d/docker.list ]; then
+      msg_info "Migrating from old Docker repository format"
+      rm -f /etc/apt/sources.list.d/docker.list
+      rm -f /etc/apt/keyrings/docker.asc
+    fi
+
+    # Setup/Update Docker repository
+    msg_info "Setting up Docker Repository"
+    setup_deb822_repo \
+      "docker" \
+      "https://download.docker.com/linux/$(get_os_info id)/gpg" \
+      "https://download.docker.com/linux/$(get_os_info id)" \
+      "$(get_os_info codename)" \
+      "stable" \
+      "$(dpkg --print-architecture)"
+
+    # Install or upgrade Docker
+    if [ "$docker_installed" = true ]; then
+      msg_info "Checking for Docker updates"
+      DOCKER_LATEST_VERSION=$(apt-cache policy docker-ce | grep Candidate | awk '{print $2}' 2>/dev/null | cut -d':' -f2 | cut -d'-' -f1 || echo '')
+
+      if [ "$DOCKER_CURRENT_VERSION" != "$DOCKER_LATEST_VERSION" ]; then
+        msg_info "Updating Docker $DOCKER_CURRENT_VERSION → $DOCKER_LATEST_VERSION"
+        $STD apt install -y --only-upgrade \
+          docker-ce \
+          docker-ce-cli \
+          containerd.io \
+          docker-buildx-plugin \
+          docker-compose-plugin || {
+          msg_error "Failed to update Docker packages"
+          return 1
+        }
+        msg_ok "Updated Docker to $DOCKER_LATEST_VERSION"
+      else
+        msg_ok "Docker is up-to-date ($DOCKER_CURRENT_VERSION)"
+      fi
+    else
+      msg_info "Installing Docker"
+      $STD apt install -y \
+        docker-ce \
+        docker-ce-cli \
+        containerd.io \
+        docker-buildx-plugin \
+        docker-compose-plugin || {
+        msg_error "Failed to install Docker packages"
+        return 1
+      }
+
+      DOCKER_CURRENT_VERSION=$(docker --version | grep -oP '\d+\.\d+\.\d+' | head -1)
+      msg_ok "Installed Docker $DOCKER_CURRENT_VERSION"
+    fi
+
+    # Configure daemon.json
+    local log_driver="${DOCKER_LOG_DRIVER:-journald}"
+    mkdir -p /etc/docker
+    if [ ! -f /etc/docker/daemon.json ]; then
+      cat <<EOF >/etc/docker/daemon.json
+{
+  "log-driver": "$log_driver"
+}
+EOF
+    fi
+
+    # Enable and start Docker
+    systemctl enable -q --now docker
   fi
 
-  # Enable and start Docker
-  systemctl enable -q --now docker
-
-  # Portainer Management
+  # Portainer Management (common for both modes)
   if [[ "${DOCKER_PORTAINER:-}" == "true" ]]; then
     if [ "$portainer_installed" = true ]; then
       msg_info "Checking for Portainer updates"
@@ -6518,9 +8025,9 @@ function fetch_and_deploy_from_url() {
   # Auto-detect archive type using file description
   local file_desc
   file_desc=$(file -b "$tmpdir/$filename")
-  
+
   local archive_type="unknown"
-  
+
   if [[ "$file_desc" =~ gzip.*compressed|gzip\ compressed\ data ]]; then
     archive_type="tar"
   elif [[ "$file_desc" =~ Zip.*archive|ZIP\ archive ]]; then

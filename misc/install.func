@@ -51,7 +51,9 @@ get_lxc_ip
 # post_progress_to_api()
 #
 # - Lightweight progress ping from inside the container
-# - Updates the existing telemetry record status from "installing" to "configuring"
+# - Updates the existing telemetry record status
+# - Arguments:
+#   * $1: status (optional, default: "configuring")
 # - Signals that the installation is actively progressing (not stuck)
 # - Fire-and-forget: never blocks or fails the script
 # - Only executes if DIAGNOSTICS=yes and RANDOM_UUID is set
@@ -61,9 +63,11 @@ post_progress_to_api() {
   [[ "${DIAGNOSTICS:-no}" == "no" ]] && return 0
   [[ -z "${RANDOM_UUID:-}" ]] && return 0
 
+  local progress_status="${1:-configuring}"
+
   curl -fsS -m 5 -X POST "https://telemetry.community-scripts.org/telemetry" \
     -H "Content-Type: application/json" \
-    -d "{\"random_id\":\"${RANDOM_UUID}\",\"execution_id\":\"${EXECUTION_ID:-${RANDOM_UUID}}\",\"type\":\"lxc\",\"nsapp\":\"${app:-unknown}\",\"status\":\"configuring\"}" &>/dev/null || true
+    -d "{\"random_id\":\"${RANDOM_UUID}\",\"execution_id\":\"${EXECUTION_ID:-${RANDOM_UUID}}\",\"type\":\"lxc\",\"nsapp\":\"${app:-unknown}\",\"status\":\"${progress_status}\"}" &>/dev/null || true
 }
 
 # ==============================================================================
@@ -122,7 +126,7 @@ setting_up_container() {
   if [ "$(hostname -I)" = "" ]; then
     echo 1>&2 -e "\n${CROSS}${RD} No Network After $RETRY_NUM Tries${CL}"
     echo -e "${NETWORK}Check Network Settings"
-    exit 1
+    exit 121
   fi
   rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
   systemctl disable -q --now systemd-networkd-wait-online.service
@@ -173,7 +177,7 @@ network_check() {
       echo -e "${INFO}${RD}Expect Issues Without Internet${CL}"
     else
       echo -e "${NETWORK}Check Network Settings"
-      exit 1
+      exit 122
     fi
   fi
 
@@ -229,7 +233,7 @@ fi
 EOF
     chmod +x /usr/local/bin/apt-proxy-detect.sh
   fi
-  $STD apt-get update
+  apt_update_safe
   $STD apt-get -o Dpkg::Options::="--force-confold" -y dist-upgrade
 	$STD apt-get install -y sudo curl mc gnupg2 openssh-server wget gcc
   rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
@@ -239,12 +243,12 @@ EOF
   local tools_content
   tools_content=$(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/misc/tools.func) || {
     msg_error "Failed to download tools.func"
-    exit 6
+    exit 115
   }
   source /dev/stdin <<<"$tools_content"
   if ! declare -f fetch_and_deploy_gh_release >/dev/null 2>&1; then
     msg_error "tools.func loaded but incomplete — missing expected functions"
-    exit 6
+    exit 115
   fi
 }
 

@@ -37,8 +37,9 @@ THIN="discard=on,ssd=1,"
 set -e
 trap 'error_handler $LINENO "$BASH_COMMAND"' ERR
 trap cleanup EXIT
-trap 'post_update_to_api "failed" "INTERRUPTED"' SIGINT
-trap 'post_update_to_api "failed" "TERMINATED"' SIGTERM
+trap 'post_update_to_api "failed" "130"' SIGINT
+trap 'post_update_to_api "failed" "143"' SIGTERM
+trap 'post_update_to_api "failed" "129"; exit 129' SIGHUP
 
 function error_handler() {
   local exit_code="$?"
@@ -524,9 +525,9 @@ fi
 
 msg_info "Finalizing image (hostname, SSH config)"
 # Set hostname and prepare for unique machine-id
-virt-customize -q -a "$WORK_FILE" --hostname "${HN}" >/dev/null 2>&1
-virt-customize -q -a "$WORK_FILE" --run-command "truncate -s 0 /etc/machine-id" >/dev/null 2>&1
-virt-customize -q -a "$WORK_FILE" --run-command "rm -f /var/lib/dbus/machine-id" >/dev/null 2>&1
+virt-customize -q -a "$WORK_FILE" --hostname "${HN}" >/dev/null 2>&1 || true
+virt-customize -q -a "$WORK_FILE" --run-command "truncate -s 0 /etc/machine-id" >/dev/null 2>&1 || true
+virt-customize -q -a "$WORK_FILE" --run-command "rm -f /var/lib/dbus/machine-id" >/dev/null 2>&1 || true
 
 # Configure SSH for Cloud-Init
 if [ "$USE_CLOUD_INIT" = "yes" ]; then
@@ -551,7 +552,7 @@ msg_ok "Finalized image"
 
 # Create first-boot Docker install script (fallback if virt-customize failed)
 if [ "$DOCKER_PREINSTALLED" = "no" ]; then
-  virt-customize -q -a "$WORK_FILE" --run-command 'cat > /root/install-docker.sh << "DOCKERSCRIPT"
+  if virt-customize -q -a "$WORK_FILE" --run-command 'cat > /root/install-docker.sh << "DOCKERSCRIPT"
 #!/bin/bash
 exec > /var/log/install-docker.log 2>&1
 echo "[$(date)] Starting Docker installation"
@@ -580,9 +581,9 @@ systemctl restart docker
 touch /root/.docker-installed
 echo "[$(date)] Docker installation completed"
 DOCKERSCRIPT
-chmod +x /root/install-docker.sh' >/dev/null 2>&1
+chmod +x /root/install-docker.sh' >/dev/null 2>&1; then
 
-  virt-customize -q -a "$WORK_FILE" --run-command 'cat > /etc/systemd/system/install-docker.service << "DOCKERSERVICE"
+    virt-customize -q -a "$WORK_FILE" --run-command 'cat > /etc/systemd/system/install-docker.service << "DOCKERSERVICE"
 [Unit]
 Description=Install Docker on First Boot
 After=network-online.target
@@ -597,7 +598,11 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 DOCKERSERVICE
-systemctl enable install-docker.service' >/dev/null 2>&1
+systemctl enable install-docker.service' >/dev/null 2>&1 || true
+  else
+    msg_warn "virt-customize failed for this image. Docker must be installed manually after first boot:"
+    msg_warn "  curl -fsSL https://get.docker.com | sh"
+  fi
 fi
 
 # Resize disk to target size
@@ -632,7 +637,7 @@ DISK_REF_IMPORTED="$(printf '%s\n' "$IMPORT_OUT" | sed -n "s/.*successfully impo
 [[ -z "$DISK_REF_IMPORTED" ]] && {
   msg_error "Unable to determine imported disk reference."
   echo "$IMPORT_OUT"
-  exit 1
+  exit 226
 }
 
 msg_ok "Imported disk (${CL}${BL}${DISK_REF_IMPORTED}${CL})"

@@ -13,7 +13,7 @@ setting_up_container
 network_check
 update_os
 
-PHP_VERSION="8.4" PHP_APACHE="YES" setup_php
+PHP_VERSION="8.5" PHP_APACHE="YES" setup_php
 setup_composer
 setup_mariadb
 MARIADB_DB_NAME="firefly" MARIADB_DB_USER="firefly" setup_mariadb_db
@@ -72,7 +72,7 @@ cat <<EOF >/etc/apache2/sites-available/firefly.conf
 </VirtualHost>
 EOF
 chown www-data:www-data /opt/firefly/storage/oauth-*.key
-$STD a2enmod php8.4
+$STD a2enmod php8.5
 $STD a2enmod rewrite
 $STD a2ensite firefly.conf
 $STD a2dissite 000-default.conf

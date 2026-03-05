@@ -59,8 +59,9 @@ shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
 trap cleanup EXIT
-trap 'post_update_to_api "failed" "INTERRUPTED"' SIGINT
-trap 'post_update_to_api "failed" "TERMINATED"' SIGTERM
+trap 'post_update_to_api "failed" "130"' SIGINT
+trap 'post_update_to_api "failed" "143"' SIGTERM
+trap 'post_update_to_api "failed" "129"; exit 129' SIGHUP
 function error_handler() {
   local exit_code="$?"
   local line_number="$1"
@@ -153,7 +154,7 @@ pve_check() {
     if ((MINOR < 0 || MINOR > 9)); then
       msg_error "This version of Proxmox VE is not supported."
       msg_error "Supported: Proxmox VE version 8.0 – 8.9"
-      exit 1
+      exit 105
     fi
     return 0
   fi
@@ -164,7 +165,7 @@ pve_check() {
     if ((MINOR < 0 || MINOR > 1)); then
       msg_error "This version of Proxmox VE is not supported."
       msg_error "Supported: Proxmox VE version 9.0 – 9.1"
-      exit 1
+      exit 105
     fi
     return 0
   fi
@@ -172,7 +173,7 @@ pve_check() {
   # All other unsupported versions
   msg_error "This version of Proxmox VE is not supported."
   msg_error "Supported versions: Proxmox VE 8.0 – 8.x or 9.0 – 9.1"
-  exit 1
+  exit 105
 }
 
 function arch_check() {

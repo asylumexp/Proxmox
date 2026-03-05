@@ -15,8 +15,8 @@ update_os
 
 msg_info "Installing Dependencies"
 $STD apt install -y \
-    nginx \
-    openssl
+  nginx \
+  openssl
 msg_ok "Installed Dependencies"
 
 PHP_VERSION="8.2" PHP_FPM="YES" setup_php

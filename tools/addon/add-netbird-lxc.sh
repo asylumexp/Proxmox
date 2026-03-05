@@ -3,8 +3,8 @@
 # Copyright (c) 2021-2026 tteck
 # Author: tteck (tteckster)
 # Co-Author: MickLesk (Canbiz)
-# License: MIT
-# https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# Source: https://netbird.io/ | Github: https://github.com/netbirdio/netbird
 
 function header_info {
   clear
@@ -73,7 +73,7 @@ fi
 DISTRO=$(pct exec "$CTID" -- cat /etc/os-release | grep -w "ID" | cut -d'=' -f2 | tr -d '"')
 if [[ "$DISTRO" != "debian" && "$DISTRO" != "ubuntu" ]]; then
   msg "\e[1;31m Error: This script only supports Debian or Ubuntu LXC containers. Detected: $DISTRO. Aborting...\e[0m"
-  exit 1
+  exit 238
 fi
 
 CTID_CONFIG_PATH=/etc/pve/lxc/${CTID}.conf

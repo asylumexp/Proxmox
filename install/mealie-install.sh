@@ -28,7 +28,7 @@ $STD apt install -y \
 msg_ok "Installed Dependencies"
 
 PYTHON_VERSION="3.12" setup_uv
-POSTGRES_VERSION="16" setup_postgresql
+PG_VERSION="16" setup_postgresql
 NODE_MODULE="yarn" NODE_VERSION="24" setup_nodejs
 fetch_and_deploy_gh_release "mealie" "mealie-recipes/mealie" "tarball" "latest" "/opt/mealie"
 PG_DB_NAME="mealie_db" PG_DB_USER="mealie_user" PG_DB_GRANT_SUPERUSER="true" setup_postgresql_db

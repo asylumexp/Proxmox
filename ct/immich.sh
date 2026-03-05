@@ -72,9 +72,9 @@ EOF
   SOURCE_DIR=${STAGING_DIR}/image-source
   cd /tmp
   if [[ -f ~/.intel_version ]]; then
-    curl -fsSLO https://raw.githubusercontent.com/immich-app/base-images/refs/heads/main/server/Dockerfile
+    curl -fsSLO https://raw.githubusercontent.com/immich-app/immich/refs/heads/main/machine-learning/Dockerfile
     readarray -t INTEL_URLS < <(
-      sed -n "/intel-[igc|opencl]/p" ./Dockerfile | awk '{print $2}'
+      sed -n "/intel-[igc|opencl]/p" ./Dockerfile | awk '{print $3}'
       sed -n "/libigdgmm12/p" ./Dockerfile | awk '{print $3}'
     )
     INTEL_RELEASE="$(grep "intel-opencl-icd_" ./Dockerfile | awk -F '_' '{print $2}')"
@@ -97,7 +97,7 @@ EOF
   if [[ -f ~/.immich_library_revisions ]]; then
     libraries=("libjxl" "libheif" "libraw" "imagemagick" "libvips")
     cd "$BASE_DIR"
-    msg_info "Checking for updates to custom image-processing libraries"
+    msg_warn "Checking for updates to custom image-processing libraries (recompile time: 2-15min per library)"
     $STD git pull
     for library in "${libraries[@]}"; do
       compile_"$library"
@@ -215,9 +215,15 @@ EOF
     export VIRTUAL_ENV="${ML_DIR}"/ml-venv
     if [[ -f ~/.openvino ]]; then
       msg_info "Updating HW-accelerated machine-learning"
-      $STD uv add --no-sync --optional openvino onnxruntime-openvino==1.20.0 --active -n -p python3.12 --managed-python
-      $STD sudo --preserve-env=VIRTUAL_ENV -nu immich uv sync --extra openvino --no-dev --active --link-mode copy -n -p python3.12 --managed-python
-      patchelf --clear-execstack "${VIRTUAL_ENV}/lib/python3.12/site-packages/onnxruntime/capi/onnxruntime_pybind11_state.cpython-312-aarch64-linux-gnu.so"
+      $STD uv add --no-sync --optional openvino onnxruntime-openvino==1.24.1 --active -n -p python3.13 --managed-python
+      $STD sudo --preserve-env=VIRTUAL_ENV -nu immich uv sync --extra openvino --no-dev --active --link-mode copy -n -p python3.13 --managed-python
+      local sofile
+      if [[ "$(uname -m)" == "aarch64" || "$(uname -m)" == "arm64" ]]; then
+        sofile="${VIRTUAL_ENV}/lib/python3.13/site-packages/onnxruntime/capi/onnxruntime_pybind11_state.cpython-313-aarch64-linux-gnu.so"
+      else
+        sofile="${VIRTUAL_ENV}/lib/python3.13/site-packages/onnxruntime/capi/onnxruntime_pybind11_state.cpython-313-x86_64-linux-gnu.so"
+      fi
+      patchelf --clear-execstack "$sofile"
       msg_ok "Updated HW-accelerated machine-learning"
     else
       msg_info "Updating machine-learning"
@@ -338,7 +344,7 @@ function compile_libraw() {
   if [[ "$LIBRAW_REVISION" != "$(grep 'libraw' ~/.immich_library_revisions | awk '{print $2}')" ]]; then
     msg_info "Recompiling libraw"
     [[ -d "$SOURCE" ]] && rm -rf "$SOURCE"
-    $STD git clone https://github.com/libraw/libraw.git "$SOURCE"
+    $STD git clone https://github.com/LibRaw/LibRaw.git "$SOURCE"
     cd "$SOURCE"
     $STD git reset --hard "$LIBRAW_REVISION"
     $STD autoreconf --install

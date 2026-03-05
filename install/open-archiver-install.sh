@@ -38,6 +38,7 @@ sed -i "s|^DATABASE_URL=.*|DATABASE_URL=\"postgresql://$PG_DB_USER:$PG_DB_PASS@l
 sed -i "s|^MEILI_HOST=.*|MEILI_HOST=http://localhost:7700|g" /opt/openarchiver/.env
 sed -i "s|^MEILI_MASTER_KEY=.*|MEILI_MASTER_KEY=$MEILISEARCH_MASTER_KEY|g" /opt/openarchiver/.env
 sed -i "s|^REDIS_HOST=.*|REDIS_HOST=localhost|g" /opt/openarchiver/.env
+sed -i "s|^REDIS_USER=.*|REDIS_USER=|g" /opt/openarchiver/.env
 sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=|g" /opt/openarchiver/.env
 sed -i "s|^STORAGE_LOCAL_ROOT_PATH=.*|STORAGE_LOCAL_ROOT_PATH=/opt/openarchiver-data|g" /opt/openarchiver/.env
 sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$JWT_KEY|g" /opt/openarchiver/.env

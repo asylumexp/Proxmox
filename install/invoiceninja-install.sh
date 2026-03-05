@@ -15,22 +15,22 @@ update_os
 
 msg_info "Installing Dependencies"
 $STD apt install -y \
-    nginx \
-    supervisor \
-    libnss3 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libasound2 \
-    libpango-1.0-0 \
-    libcairo2
+  nginx \
+  supervisor \
+  libnss3 \
+  libatk1.0-0 \
+  libatk-bridge2.0-0 \
+  libcups2 \
+  libdrm2 \
+  libxkbcommon0 \
+  libxcomposite1 \
+  libxdamage1 \
+  libxfixes3 \
+  libxrandr2 \
+  libgbm1 \
+  libasound2 \
+  libpango-1.0-0 \
+  libcairo2
 msg_ok "Installed Dependencies"
 
 setup_mariadb

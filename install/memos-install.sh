@@ -14,7 +14,12 @@ setting_up_container
 network_check
 update_os
 
-fetch_and_deploy_gh_release "memos" "usememos/memos" "prebuild" "v0.25.3" "/opt/memos" "memos*linux_arm64.tar.gz"
+ARCH=$(dpkg --print-architecture 2>/dev/null || uname -m)
+if [[ "$ARCH" == "arm64" || "$ARCH" == "aarch64" ]]; then
+  fetch_and_deploy_gh_release "memos" "usememos/memos" "prebuild" "v0.25.3" "/opt/memos" "memos*linux_arm64.tar.gz"
+else
+  fetch_and_deploy_gh_release "memos" "usememos/memos" "prebuild" "latest" "/opt/memos" "memos*linux_amd64.tar.gz"
+fi
 mkdir -p /opt/memos_data
 
 msg_info "Creating Service"

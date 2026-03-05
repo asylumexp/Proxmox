@@ -6,7 +6,7 @@ source <(curl -fsSL https://raw.githubusercontent.com/asylumexp/Proxmox/main/mis
 # Source: https://www.iobroker.net/#en/intro
 
 APP="ioBroker"
-var_tags="${var_tags:-automtation}"
+var_tags="${var_tags:-automation}"
 var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-2048}"
 var_disk="${var_disk:-8}"

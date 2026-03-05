@@ -28,7 +28,7 @@ function update_script() {
     exit
   fi
 
-  if [[ -f "$HOME/.overseerr" ]] && [[ "$(cat "$HOME/.overseerr")" == "1.34.0" ]]; then
+  if [[ -f "$HOME/.overseerr" ]] && [[ "$(printf '%s\n' "1.35.0" "$(cat "$HOME/.overseerr")" | sort -V | head -n1)" == "1.35.0" ]]; then
     echo
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "Overseerr v1.34.0 detected."
@@ -44,10 +44,11 @@ function update_script() {
     fi
 
     msg_info "Switching update script to Seerr"
-    cat <<'EOF' >/usr/bin/update
-#!/usr/bin/env bash
+    TMP_UPDATE=$(mktemp)
+    cat <<'EOF' >"$TMP_UPDATE"
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/ct/seerr.sh)"
 EOF
+    mv "$TMP_UPDATE" /usr/bin/update
     chmod +x /usr/bin/update
     msg_ok "Switched update script to Seerr"
     msg_warn "Please type 'update' again to complete the migration"

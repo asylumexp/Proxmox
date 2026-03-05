@@ -24,7 +24,7 @@ $STD apt install -y \
   caddy
 
 mkdir -p ~/.config/pip
-cat > ~/.config/pip/pip.conf << EOF
+cat >~/.config/pip/pip.conf <<EOF
 [global]
 break-system-packages = true
 EOF

@@ -14,10 +14,10 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt install -y nginx
+$STD apt install -y ffmpeg
 msg_ok "Installed Dependencies"
 
-JAVA_VERSION="21" setup_java
+JAVA_VERSION="25" setup_java
 NODE_VERSION="22" setup_nodejs
 setup_mariadb
 setup_yq
@@ -30,6 +30,11 @@ $STD npm install --force
 $STD npm run build --configuration=production
 msg_ok "Built Frontend"
 
+msg_info "Embedding Frontend into Backend"
+mkdir -p /opt/booklore/booklore-api/src/main/resources/static
+cp -r /opt/booklore/booklore-ui/dist/booklore/browser/* /opt/booklore/booklore-api/src/main/resources/static/
+msg_ok "Embedded Frontend into Backend"
+
 msg_info "Creating Environment"
 mkdir -p /opt/booklore_storage/{data,books,bookdrop}
 cat <<EOF >/opt/booklore_storage/.env
@@ -41,6 +46,7 @@ DATABASE_PASSWORD=${MARIADB_DB_PASS}
 # App Configuration (Spring Boot mapping from app.* properties)
 APP_PATH_CONFIG=/opt/booklore_storage/data
 APP_BOOKDROP_FOLDER=/opt/booklore_storage/bookdrop
+SERVER_PORT=6060
 EOF
 msg_ok "Created Environment"
 
@@ -48,25 +54,15 @@ msg_info "Building Backend"
 cd /opt/booklore/booklore-api
 APP_VERSION=$(get_latest_github_release "booklore-app/BookLore")
 yq eval ".app.version = \"${APP_VERSION}\"" -i src/main/resources/application.yaml
-$STD ./gradlew clean build --no-daemon
+$STD ./gradlew clean build -x test --no-daemon
 mkdir -p /opt/booklore/dist
 JAR_PATH=$(find /opt/booklore/booklore-api/build/libs -maxdepth 1 -type f -name "booklore-api-*.jar" ! -name "*plain*" | head -n1)
 if [[ -z "$JAR_PATH" ]]; then
   msg_error "Backend JAR not found"
-  exit 1
+  exit 153
 fi
 cp "$JAR_PATH" /opt/booklore/dist/app.jar
 msg_ok "Built Backend"
-
-msg_info "Configuring Nginx"
-rm -rf /usr/share/nginx/html
-ln -s /opt/booklore/booklore-ui/dist/booklore/browser /usr/share/nginx/html
-rm -f /etc/nginx/sites-enabled/default
-cp /opt/booklore/nginx.conf /etc/nginx/nginx.conf
-sed -i 's/listen \${BOOKLORE_PORT};/listen 6060;/' /etc/nginx/nginx.conf
-sed -i 's/listen \[::\]:${BOOKLORE_PORT};/listen [::]:6060;/' /etc/nginx/nginx.conf
-systemctl restart nginx
-msg_ok "Configured Nginx"
 
 msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/booklore.service
@@ -78,7 +74,7 @@ After=network.target mariadb.service
 Type=simple
 User=root
 WorkingDirectory=/opt/booklore/dist
-ExecStart=/usr/bin/java -jar /opt/booklore/dist/app.jar
+ExecStart=/usr/bin/java -XX:+UseG1GC -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError -jar /opt/booklore/dist/app.jar
 EnvironmentFile=/opt/booklore_storage/.env
 SuccessExitStatus=143
 TimeoutStopSec=10

@@ -28,7 +28,10 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
+
   setup_mariadb
+  PHP_VERSION="8.5" PHP_APACHE="YES" setup_php
+
   if check_for_gh_release "firefly" "firefly-iii/firefly-iii"; then
     systemctl stop apache2
     cp /opt/firefly/.env /opt/.env

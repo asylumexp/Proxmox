@@ -68,8 +68,9 @@ CLOUD="${TAB}☁️${TAB}${CL}"
 set -Eeo pipefail
 trap 'error_handler $LINENO "$BASH_COMMAND"' ERR
 trap cleanup EXIT
-trap 'post_update_to_api "failed" "INTERRUPTED"' SIGINT
-trap 'post_update_to_api "failed" "TERMINATED"' SIGTERM
+trap 'post_update_to_api "failed" "130"' SIGINT
+trap 'post_update_to_api "failed" "143"' SIGTERM
+trap 'post_update_to_api "failed" "129"; exit 129' SIGHUP
 function error_handler() {
   local exit_code="$?"
   local line_number="$1"
@@ -225,7 +226,7 @@ pve_check() {
     if ((MINOR < 0 || MINOR > 9)); then
       msg_error "This version of Proxmox VE is not supported."
       msg_error "Supported: Proxmox VE version 8.0 – 8.9"
-      exit 1
+      exit 105
     fi
     return 0
   fi
@@ -236,7 +237,7 @@ pve_check() {
     if ((MINOR < 0 || MINOR > 1)); then
       msg_error "This version of Proxmox VE is not supported."
       msg_error "Supported: Proxmox VE version 9.0 – 9.1"
-      exit 1
+      exit 105
     fi
     return 0
   fi
@@ -244,7 +245,7 @@ pve_check() {
   # All other unsupported versions
   msg_error "This version of Proxmox VE is not supported."
   msg_error "Supported versions: Proxmox VE 8.0 – 8.x or 9.0 – 9.1"
-  exit 1
+  exit 105
 }
 
 function arch_check() {
@@ -555,7 +556,7 @@ fi
 if [[ -z "$DISK_REF" ]]; then
   msg_error "Unable to determine imported disk reference."
   echo "$IMPORT_OUT"
-  exit 1
+  exit 226
 fi
 
 qm set $VMID \
@@ -634,7 +635,7 @@ if qm status "$VMID" | grep -q "running"; then
   msg_ok "Network interfaces configured in OpenWrt"
 else
   msg_error "VM is not running"
-  exit 1
+  exit 226
 fi
 
 msg_info "Waiting for OpenWrt to shut down..."

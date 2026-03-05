@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-21T00:20:43Z",
+  "generated": "2026-03-05T12:12:30Z",
   "versions": [
     {
       "slug": "2fauth",
@@ -18,16 +18,16 @@
     {
       "slug": "adguardhome-sync",
       "repo": "bakito/adguardhome-sync",
-      "version": "v0.8.2",
+      "version": "v0.9.0",
       "pinned": false,
-      "date": "2025-10-24T17:13:47Z"
+      "date": "2026-02-27T18:37:37Z"
     },
     {
       "slug": "adventurelog",
       "repo": "seanmorley15/adventurelog",
-      "version": "v0.11.0",
+      "version": "v0.12.0",
       "pinned": false,
-      "date": "2025-09-01T16:19:38Z"
+      "date": "2026-02-23T14:06:45Z"
     },
     {
       "slug": "alpine-redlib",
@@ -39,9 +39,9 @@
     {
       "slug": "ampache",
       "repo": "ampache/ampache",
-      "version": "7.9.0",
+      "version": "7.9.2",
       "pinned": false,
-      "date": "2026-02-19T07:01:25Z"
+      "date": "2026-03-05T03:54:03Z"
     },
     {
       "slug": "argus",
@@ -88,9 +88,9 @@
     {
       "slug": "backrest",
       "repo": "garethgeorge/backrest",
-      "version": "v1.11.2",
+      "version": "v1.12.0",
       "pinned": false,
-      "date": "2026-01-27T06:27:56Z"
+      "date": "2026-02-22T06:49:49Z"
     },
     {
       "slug": "baikal",
@@ -109,16 +109,16 @@
     {
       "slug": "bazarr",
       "repo": "morpheus65535/bazarr",
-      "version": "v1.5.5",
+      "version": "v1.5.6",
       "pinned": false,
-      "date": "2026-02-01T18:00:34Z"
+      "date": "2026-02-26T11:33:11Z"
     },
     {
       "slug": "bentopdf",
       "repo": "alam00000/bentopdf",
-      "version": "v2.2.1",
+      "version": "v2.4.0",
       "pinned": false,
-      "date": "2026-02-14T16:33:47Z"
+      "date": "2026-03-01T14:25:43Z"
     },
     {
       "slug": "beszel",
@@ -144,23 +144,23 @@
     {
       "slug": "blocky",
       "repo": "0xERR0R/blocky",
-      "version": "v0.28.2",
+      "version": "v0.29.0",
       "pinned": false,
-      "date": "2025-11-18T05:51:46Z"
+      "date": "2026-02-27T15:48:56Z"
     },
     {
       "slug": "booklore",
       "repo": "booklore-app/BookLore",
-      "version": "v1.18.5",
+      "version": "v2.0.5",
       "pinned": false,
-      "date": "2026-01-24T17:15:32Z"
+      "date": "2026-03-01T16:13:13Z"
     },
     {
       "slug": "bookstack",
       "repo": "BookStackApp/BookStack",
-      "version": "v25.12.7",
+      "version": "v25.12.8",
       "pinned": false,
-      "date": "2026-02-19T23:36:55Z"
+      "date": "2026-02-27T10:33:14Z"
     },
     {
       "slug": "byparr",
@@ -193,16 +193,16 @@
     {
       "slug": "checkmate",
       "repo": "bluewave-labs/Checkmate",
-      "version": "v3.4.0",
+      "version": "v3.5.0",
       "pinned": false,
-      "date": "2026-02-20T21:08:55Z"
+      "date": "2026-03-04T19:51:22Z"
     },
     {
       "slug": "cleanuparr",
       "repo": "Cleanuparr/Cleanuparr",
-      "version": "v2.6.4",
+      "version": "v2.7.7",
       "pinned": false,
-      "date": "2026-02-20T14:35:43Z"
+      "date": "2026-03-02T13:08:32Z"
     },
     {
       "slug": "cloudreve",
@@ -214,23 +214,23 @@
     {
       "slug": "comfyui",
       "repo": "comfyanonymous/ComfyUI",
-      "version": "v0.14.2",
+      "version": "v0.16.0",
       "pinned": false,
-      "date": "2026-02-18T06:12:02Z"
+      "date": "2026-03-05T10:35:07Z"
     },
     {
       "slug": "commafeed",
       "repo": "Athou/commafeed",
-      "version": "6.2.0",
+      "version": "7.0.0",
       "pinned": false,
-      "date": "2026-02-09T19:44:58Z"
+      "date": "2026-02-21T21:54:15Z"
     },
     {
       "slug": "configarr",
       "repo": "raydak-labs/configarr",
-      "version": "v1.22.0",
+      "version": "v1.23.0",
       "pinned": false,
-      "date": "2026-02-20T21:55:46Z"
+      "date": "2026-02-23T12:28:13Z"
     },
     {
       "slug": "convertx",
@@ -242,16 +242,23 @@
     {
       "slug": "cosmos",
       "repo": "azukaar/Cosmos-Server",
-      "version": "v0.20.2",
+      "version": "v0.21.7",
       "pinned": false,
-      "date": "2026-01-24T00:12:39Z"
+      "date": "2026-03-03T18:15:29Z"
     },
     {
       "slug": "cronicle",
       "repo": "jhuckaby/Cronicle",
-      "version": "v0.9.106",
+      "version": "v0.9.107",
       "pinned": false,
-      "date": "2026-02-11T17:11:46Z"
+      "date": "2026-02-23T17:48:27Z"
+    },
+    {
+      "slug": "cronmaster",
+      "repo": "fccview/cronmaster",
+      "version": "2.1.0",
+      "pinned": false,
+      "date": "2026-02-11T19:29:11Z"
     },
     {
       "slug": "cryptpad",
@@ -263,16 +270,16 @@
     {
       "slug": "databasus",
       "repo": "databasus/databasus",
-      "version": "v3.15.1",
+      "version": "v3.16.4",
       "pinned": false,
-      "date": "2026-02-20T12:28:04Z"
+      "date": "2026-03-01T08:20:17Z"
     },
     {
       "slug": "dawarich",
       "repo": "Freika/dawarich",
-      "version": "1.2.0",
+      "version": "1.3.1",
       "pinned": false,
-      "date": "2026-02-15T22:33:56Z"
+      "date": "2026-02-27T19:47:40Z"
     },
     {
       "slug": "discopanel",
@@ -284,16 +291,16 @@
     {
       "slug": "dispatcharr",
       "repo": "Dispatcharr/Dispatcharr",
-      "version": "v0.19.0",
+      "version": "v0.20.2",
       "pinned": false,
-      "date": "2026-02-10T21:18:10Z"
+      "date": "2026-03-03T01:40:33Z"
     },
     {
       "slug": "docmost",
       "repo": "docmost/docmost",
-      "version": "v0.25.3",
+      "version": "v0.70.1",
       "pinned": false,
-      "date": "2026-02-10T02:58:23Z"
+      "date": "2026-03-04T12:54:49Z"
     },
     {
       "slug": "domain-locker",
@@ -305,9 +312,9 @@
     {
       "slug": "domain-monitor",
       "repo": "Hosteroid/domain-monitor",
-      "version": "v1.1.3",
+      "version": "v1.1.4",
       "pinned": false,
-      "date": "2026-02-11T15:48:18Z"
+      "date": "2026-03-02T09:25:01Z"
     },
     {
       "slug": "donetick",
@@ -319,9 +326,9 @@
     {
       "slug": "drawio",
       "repo": "jgraph/drawio",
-      "version": "v29.5.1",
+      "version": "v29.5.2",
       "pinned": false,
-      "date": "2026-02-20T17:22:31Z"
+      "date": "2026-02-22T10:36:14Z"
     },
     {
       "slug": "duplicati",
@@ -354,16 +361,16 @@
     {
       "slug": "endurain",
       "repo": "endurain-project/endurain",
-      "version": "v0.17.4",
+      "version": "v0.17.6",
       "pinned": false,
-      "date": "2026-02-11T04:54:22Z"
+      "date": "2026-02-27T23:08:50Z"
     },
     {
       "slug": "ersatztv",
       "repo": "ErsatzTV/ErsatzTV",
-      "version": "v26.2.0",
+      "version": "v26.3.0",
       "pinned": false,
-      "date": "2026-02-02T20:54:26Z"
+      "date": "2026-02-24T21:36:34Z"
     },
     {
       "slug": "excalidraw",
@@ -375,16 +382,16 @@
     {
       "slug": "firefly",
       "repo": "firefly-iii/firefly-iii",
-      "version": "v6.4.23",
+      "version": "v6.5.3",
       "pinned": false,
-      "date": "2026-02-20T07:02:05Z"
+      "date": "2026-03-04T06:53:02Z"
     },
     {
       "slug": "fladder",
       "repo": "DonutWare/Fladder",
-      "version": "v0.10.0",
+      "version": "v0.10.1",
       "pinned": false,
-      "date": "2026-02-20T14:16:51Z"
+      "date": "2026-02-21T12:45:53Z"
     },
     {
       "slug": "flaresolverr",
@@ -415,6 +422,13 @@
       "date": "2026-01-25T18:20:14Z"
     },
     {
+      "slug": "frigate",
+      "repo": "blakeblackshear/frigate",
+      "version": "v0.17.0",
+      "pinned": true,
+      "date": "2026-02-27T03:03:01Z"
+    },
+    {
       "slug": "gatus",
       "repo": "TwiN/gatus",
       "version": "v5.35.0",
@@ -424,9 +438,9 @@
     {
       "slug": "ghostfolio",
       "repo": "ghostfolio/ghostfolio",
-      "version": "2.240.0",
+      "version": "2.247.0",
       "pinned": false,
-      "date": "2026-02-18T20:08:56Z"
+      "date": "2026-03-04T07:48:00Z"
     },
     {
       "slug": "gitea",
@@ -438,9 +452,9 @@
     {
       "slug": "gitea-mirror",
       "repo": "RayLabsHQ/gitea-mirror",
-      "version": "v3.9.2",
+      "version": "v3.12.2",
       "pinned": false,
-      "date": "2025-11-08T05:36:48Z"
+      "date": "2026-03-05T04:26:50Z"
     },
     {
       "slug": "glance",
@@ -459,23 +473,30 @@
     {
       "slug": "gokapi",
       "repo": "Forceu/Gokapi",
-      "version": "v2.2.2",
+      "version": "v2.2.3",
       "pinned": false,
-      "date": "2026-01-31T21:11:27Z"
+      "date": "2026-03-04T21:29:16Z"
     },
     {
       "slug": "gotify",
       "repo": "gotify/server",
-      "version": "v2.9.0",
+      "version": "v2.9.1",
       "pinned": false,
-      "date": "2026-02-13T15:22:31Z"
+      "date": "2026-02-28T19:07:07Z"
+    },
+    {
+      "slug": "gramps-web",
+      "repo": "gramps-project/gramps-web-api",
+      "version": "v3.7.1.1",
+      "pinned": false,
+      "date": "2026-01-30T09:15:46Z"
     },
     {
       "slug": "grist",
       "repo": "gristlabs/grist-core",
-      "version": "v1.7.10",
+      "version": "v1.7.11",
       "pinned": false,
-      "date": "2026-01-12T20:50:50Z"
+      "date": "2026-02-27T17:13:50Z"
     },
     {
       "slug": "grocy",
@@ -529,16 +550,16 @@
     {
       "slug": "homarr",
       "repo": "homarr-labs/homarr",
-      "version": "v1.53.2",
+      "version": "v1.54.0",
       "pinned": false,
-      "date": "2026-02-20T19:41:55Z"
+      "date": "2026-02-27T19:38:50Z"
     },
     {
       "slug": "homebox",
       "repo": "sysadminsmedia/homebox",
-      "version": "v0.23.1",
+      "version": "v0.24.0",
       "pinned": false,
-      "date": "2026-02-01T22:53:32Z"
+      "date": "2026-03-03T16:09:55Z"
     },
     {
       "slug": "homepage",
@@ -562,18 +583,11 @@
       "date": "2025-12-23T14:53:51Z"
     },
     {
-      "slug": "huntarr",
-      "repo": "plexguide/Huntarr.io",
-      "version": "9.3.7",
-      "pinned": false,
-      "date": "2026-02-19T01:03:53Z"
-    },
-    {
       "slug": "immich-public-proxy",
       "repo": "alangrainger/immich-public-proxy",
-      "version": "v1.15.3",
+      "version": "v1.15.4",
       "pinned": false,
-      "date": "2026-02-16T22:54:27Z"
+      "date": "2026-03-02T21:28:06Z"
     },
     {
       "slug": "inspircd",
@@ -592,16 +606,16 @@
     {
       "slug": "invoiceninja",
       "repo": "invoiceninja/invoiceninja",
-      "version": "v5.12.64",
+      "version": "v5.12.69",
       "pinned": false,
-      "date": "2026-02-18T07:59:44Z"
+      "date": "2026-02-26T22:23:32Z"
     },
     {
       "slug": "jackett",
       "repo": "Jackett/Jackett",
-      "version": "v0.24.1167",
+      "version": "v0.24.1287",
       "pinned": false,
-      "date": "2026-02-20T05:54:07Z"
+      "date": "2026-03-05T05:49:33Z"
     },
     {
       "slug": "jellystat",
@@ -613,16 +627,16 @@
     {
       "slug": "joplin-server",
       "repo": "laurent22/joplin",
-      "version": "v3.5.12",
+      "version": "v3.5.13",
       "pinned": false,
-      "date": "2026-01-17T14:20:33Z"
+      "date": "2026-02-25T21:19:11Z"
     },
     {
       "slug": "jotty",
       "repo": "fccview/jotty",
-      "version": "1.20.0",
+      "version": "1.21.0",
       "pinned": false,
-      "date": "2026-02-12T09:23:30Z"
+      "date": "2026-03-02T11:08:54Z"
     },
     {
       "slug": "kapowarr",
@@ -653,11 +667,18 @@
       "date": "2026-02-20T09:19:45Z"
     },
     {
+      "slug": "kima-hub",
+      "repo": "Chevron7Locked/kima-hub",
+      "version": "v1.6.2",
+      "pinned": false,
+      "date": "2026-03-05T05:38:02Z"
+    },
+    {
       "slug": "kimai",
       "repo": "kimai/kimai",
-      "version": "2.49.0",
+      "version": "2.51.0",
       "pinned": false,
-      "date": "2026-02-15T20:40:19Z"
+      "date": "2026-03-01T15:56:56Z"
     },
     {
       "slug": "kitchenowl",
@@ -669,9 +690,9 @@
     {
       "slug": "koel",
       "repo": "koel/koel",
-      "version": "v8.3.0",
+      "version": "v8.3.1",
       "pinned": false,
-      "date": "2026-01-08T21:32:58Z"
+      "date": "2026-03-04T08:22:06Z"
     },
     {
       "slug": "koillection",
@@ -697,9 +718,9 @@
     {
       "slug": "kubo",
       "repo": "ipfs/kubo",
-      "version": "v0.39.0",
+      "version": "v0.40.1",
       "pinned": false,
-      "date": "2025-11-27T03:47:38Z"
+      "date": "2026-02-27T17:58:22Z"
     },
     {
       "slug": "kutt",
@@ -711,9 +732,9 @@
     {
       "slug": "leantime",
       "repo": "Leantime/leantime",
-      "version": "v3.7.0",
+      "version": "v3.7.1",
       "pinned": false,
-      "date": "2026-02-18T00:02:31Z"
+      "date": "2026-02-22T01:25:16Z"
     },
     {
       "slug": "librenms",
@@ -732,9 +753,9 @@
     {
       "slug": "libretranslate",
       "repo": "LibreTranslate/LibreTranslate",
-      "version": "v1.9.0",
+      "version": "v1.9.5",
       "pinned": false,
-      "date": "2026-02-10T19:05:48Z"
+      "date": "2026-03-03T18:25:04Z"
     },
     {
       "slug": "lidarr",
@@ -774,9 +795,9 @@
     {
       "slug": "lubelogger",
       "repo": "hargata/lubelog",
-      "version": "v1.6.0",
+      "version": "v1.6.1",
       "pinned": false,
-      "date": "2026-02-10T20:16:32Z"
+      "date": "2026-02-26T20:01:24Z"
     },
     {
       "slug": "mafl",
@@ -795,9 +816,9 @@
     {
       "slug": "mail-archiver",
       "repo": "s1t5/mail-archiver",
-      "version": "2602.2",
+      "version": "2602.4",
       "pinned": false,
-      "date": "2026-02-17T09:46:52Z"
+      "date": "2026-02-26T08:43:01Z"
     },
     {
       "slug": "managemydamnlife",
@@ -809,9 +830,9 @@
     {
       "slug": "manyfold",
       "repo": "manyfold3d/manyfold",
-      "version": "v0.132.1",
+      "version": "v0.133.1",
       "pinned": false,
-      "date": "2026-02-09T22:02:28Z"
+      "date": "2026-02-26T15:50:34Z"
     },
     {
       "slug": "mealie",
@@ -830,9 +851,9 @@
     {
       "slug": "mediamtx",
       "repo": "bluenviron/mediamtx",
-      "version": "v1.16.1",
+      "version": "v1.16.3",
       "pinned": false,
-      "date": "2026-02-07T18:58:24Z"
+      "date": "2026-03-01T15:49:12Z"
     },
     {
       "slug": "meilisearch",
@@ -844,16 +865,16 @@
     {
       "slug": "memos",
       "repo": "usememos/memos",
-      "version": "v0.25.3",
-      "pinned": true,
-      "date": "2025-11-25T15:40:41Z"
+      "version": "v0.26.2",
+      "pinned": false,
+      "date": "2026-02-23T13:28:34Z"
     },
     {
       "slug": "metube",
       "repo": "alexta69/metube",
-      "version": "2026.02.19",
+      "version": "2026.03.03",
       "pinned": false,
-      "date": "2026-02-19T08:24:04Z"
+      "date": "2026-03-03T19:15:55Z"
     },
     {
       "slug": "miniflux",
@@ -900,9 +921,9 @@
     {
       "slug": "netbox",
       "repo": "netbox-community/netbox",
-      "version": "v4.5.3",
+      "version": "v4.5.4",
       "pinned": false,
-      "date": "2026-02-17T15:39:18Z"
+      "date": "2026-03-03T20:32:16Z"
     },
     {
       "slug": "nextcloud-exporter",
@@ -921,9 +942,9 @@
     {
       "slug": "nightscout",
       "repo": "nightscout/cgm-remote-monitor",
-      "version": "15.0.3",
+      "version": "v15.0.6",
       "pinned": false,
-      "date": "2025-05-08T22:12:34Z"
+      "date": "2026-03-03T23:04:35Z"
     },
     {
       "slug": "nocodb",
@@ -935,9 +956,9 @@
     {
       "slug": "nodebb",
       "repo": "NodeBB/NodeBB",
-      "version": "v4.8.1",
+      "version": "v4.9.1",
       "pinned": false,
-      "date": "2026-01-28T14:19:11Z"
+      "date": "2026-03-01T20:52:43Z"
     },
     {
       "slug": "nodecast-tv",
@@ -949,9 +970,9 @@
     {
       "slug": "oauth2-proxy",
       "repo": "oauth2-proxy/oauth2-proxy",
-      "version": "v7.14.2",
+      "version": "v7.14.3",
       "pinned": false,
-      "date": "2026-01-18T00:26:09Z"
+      "date": "2026-02-26T14:10:21Z"
     },
     {
       "slug": "ombi",
@@ -963,9 +984,9 @@
     {
       "slug": "open-archiver",
       "repo": "LogicLabs-OU/OpenArchiver",
-      "version": "v0.4.1",
+      "version": "v0.4.2",
       "pinned": false,
-      "date": "2026-01-17T12:24:31Z"
+      "date": "2026-02-24T20:47:40Z"
     },
     {
       "slug": "opencloud",
@@ -980,6 +1001,13 @@
       "version": "v1.12.1",
       "pinned": false,
       "date": "2026-02-03T09:00:43Z"
+    },
+    {
+      "slug": "openproject",
+      "repo": "jemalloc/jemalloc",
+      "version": "5.3.0",
+      "pinned": false,
+      "date": "2022-05-06T19:14:21Z"
     },
     {
       "slug": "ots",
@@ -1010,18 +1038,11 @@
       "date": "2025-02-24T19:47:06Z"
     },
     {
-      "slug": "palmr",
-      "repo": "kyantech/Palmr",
-      "version": "v3.3.2-beta",
-      "pinned": false,
-      "date": "2025-12-10T05:42:43Z"
-    },
-    {
       "slug": "pangolin",
       "repo": "fosrl/pangolin",
-      "version": "1.15.4",
+      "version": "1.16.2",
       "pinned": false,
-      "date": "2026-02-13T23:01:29Z"
+      "date": "2026-02-28T20:35:52Z"
     },
     {
       "slug": "paperless-ai",
@@ -1033,16 +1054,16 @@
     {
       "slug": "paperless-gpt",
       "repo": "icereed/paperless-gpt",
-      "version": "v0.25.0",
+      "version": "v0.25.1",
       "pinned": false,
-      "date": "2026-02-16T08:31:48Z"
+      "date": "2026-02-26T14:50:11Z"
     },
     {
       "slug": "paperless-ngx",
       "repo": "paperless-ngx/paperless-ngx",
-      "version": "v2.20.7",
+      "version": "v2.20.10",
       "pinned": false,
-      "date": "2026-02-16T16:52:23Z"
+      "date": "2026-03-04T19:20:57Z"
     },
     {
       "slug": "patchmon",
@@ -1103,9 +1124,9 @@
     {
       "slug": "planka",
       "repo": "plankanban/planka",
-      "version": "v2.0.1",
+      "version": "v2.0.3",
       "pinned": false,
-      "date": "2026-02-17T15:26:55Z"
+      "date": "2026-03-01T16:03:23Z"
     },
     {
       "slug": "plant-it",
@@ -1117,16 +1138,23 @@
     {
       "slug": "pocketbase",
       "repo": "pocketbase/pocketbase",
-      "version": "v0.36.4",
+      "version": "v0.36.5",
       "pinned": false,
-      "date": "2026-02-17T08:02:51Z"
+      "date": "2026-02-21T11:45:32Z"
     },
     {
       "slug": "pocketid",
       "repo": "pocket-id/pocket-id",
-      "version": "v2.2.0",
+      "version": "v2.3.0",
       "pinned": false,
-      "date": "2026-01-11T15:01:07Z"
+      "date": "2026-02-23T19:50:48Z"
+    },
+    {
+      "slug": "powerdns",
+      "repo": "poweradmin/poweradmin",
+      "version": "v4.0.7",
+      "pinned": false,
+      "date": "2026-02-15T20:09:48Z"
     },
     {
       "slug": "privatebin",
@@ -1134,6 +1162,13 @@
       "version": "2.0.3",
       "pinned": false,
       "date": "2025-11-12T07:10:14Z"
+    },
+    {
+      "slug": "profilarr",
+      "repo": "Dictionarry-Hub/profilarr",
+      "version": "v1.1.4",
+      "pinned": false,
+      "date": "2026-01-29T14:57:25Z"
     },
     {
       "slug": "projectsend",
@@ -1145,9 +1180,9 @@
     {
       "slug": "prometheus",
       "repo": "prometheus/prometheus",
-      "version": "v3.9.1",
+      "version": "v3.10.0",
       "pinned": false,
-      "date": "2026-01-07T17:05:53Z"
+      "date": "2026-02-26T01:19:51Z"
     },
     {
       "slug": "prometheus-alertmanager",
@@ -1194,9 +1229,9 @@
     {
       "slug": "pulse",
       "repo": "rcourtman/Pulse",
-      "version": "v5.1.12",
+      "version": "v5.1.19",
       "pinned": false,
-      "date": "2026-02-20T20:53:16Z"
+      "date": "2026-03-05T11:14:54Z"
     },
     {
       "slug": "pve-scripts-local",
@@ -1215,9 +1250,9 @@
     {
       "slug": "qbittorrent-exporter",
       "repo": "martabal/qbittorrent-exporter",
-      "version": "v1.13.2",
+      "version": "v1.13.3",
       "pinned": false,
-      "date": "2025-12-13T22:59:03Z"
+      "date": "2026-02-22T13:01:42Z"
     },
     {
       "slug": "qdrant",
@@ -1229,9 +1264,9 @@
     {
       "slug": "qui",
       "repo": "autobrr/qui",
-      "version": "v1.13.1",
+      "version": "v1.14.1",
       "pinned": false,
-      "date": "2026-01-28T20:12:50Z"
+      "date": "2026-02-23T13:13:31Z"
     },
     {
       "slug": "radarr",
@@ -1243,9 +1278,9 @@
     {
       "slug": "radicale",
       "repo": "Kozea/Radicale",
-      "version": "v3.6.0",
+      "version": "v3.6.1",
       "pinned": false,
-      "date": "2026-01-10T06:56:46Z"
+      "date": "2026-02-24T06:36:23Z"
     },
     {
       "slug": "rclone",
@@ -1257,9 +1292,9 @@
     {
       "slug": "rdtclient",
       "repo": "rogerfar/rdt-client",
-      "version": "v2.0.121",
+      "version": "v2.0.125",
       "pinned": false,
-      "date": "2026-02-19T04:48:39Z"
+      "date": "2026-03-01T18:29:10Z"
     },
     {
       "slug": "reactive-resume",
@@ -1271,9 +1306,9 @@
     {
       "slug": "recyclarr",
       "repo": "recyclarr/recyclarr",
-      "version": "v8.0.1",
+      "version": "v8.3.2",
       "pinned": false,
-      "date": "2026-02-20T04:52:19Z"
+      "date": "2026-02-25T22:39:51Z"
     },
     {
       "slug": "reitti",
@@ -1320,9 +1355,9 @@
     {
       "slug": "scanopy",
       "repo": "scanopy/scanopy",
-      "version": "v0.14.6",
+      "version": "v0.14.12",
       "pinned": false,
-      "date": "2026-02-18T16:54:14Z"
+      "date": "2026-03-05T07:24:59Z"
     },
     {
       "slug": "scraparr",
@@ -1330,6 +1365,13 @@
       "version": "v3.0.3",
       "pinned": false,
       "date": "2026-02-12T14:20:56Z"
+    },
+    {
+      "slug": "seaweedfs",
+      "repo": "seaweedfs/seaweedfs",
+      "version": "4.15",
+      "pinned": false,
+      "date": "2026-03-05T06:30:30Z"
     },
     {
       "slug": "seelf",
@@ -1341,16 +1383,16 @@
     {
       "slug": "seerr",
       "repo": "seerr-team/seerr",
-      "version": "v3.0.1",
+      "version": "v3.1.0",
       "pinned": false,
-      "date": "2026-02-14T19:30:24Z"
+      "date": "2026-02-27T17:25:29Z"
     },
     {
       "slug": "semaphore",
       "repo": "semaphoreui/semaphore",
-      "version": "v2.17.12",
+      "version": "v2.17.15",
       "pinned": false,
-      "date": "2026-02-20T09:16:50Z"
+      "date": "2026-02-28T09:04:40Z"
     },
     {
       "slug": "shelfmark",
@@ -1362,9 +1404,9 @@
     {
       "slug": "signoz",
       "repo": "SigNoz/signoz-otel-collector",
-      "version": "v0.142.0",
+      "version": "v0.144.2",
       "pinned": false,
-      "date": "2026-02-06T11:40:30Z"
+      "date": "2026-02-26T05:57:26Z"
     },
     {
       "slug": "silverbullet",
@@ -1376,23 +1418,23 @@
     {
       "slug": "slskd",
       "repo": "slskd/slskd",
-      "version": "0.24.4",
+      "version": "0.24.5",
       "pinned": false,
-      "date": "2026-02-16T16:50:17Z"
+      "date": "2026-03-01T04:00:42Z"
     },
     {
       "slug": "snipeit",
       "repo": "grokability/snipe-it",
-      "version": "v8.3.7",
+      "version": "v8.4.0",
       "pinned": false,
-      "date": "2025-12-12T09:13:40Z"
+      "date": "2026-02-23T20:59:43Z"
     },
     {
       "slug": "snowshare",
       "repo": "TuroYT/snowshare",
-      "version": "v1.3.6",
+      "version": "v1.3.8",
       "pinned": false,
-      "date": "2026-02-19T11:06:29Z"
+      "date": "2026-03-02T07:43:42Z"
     },
     {
       "slug": "sonarr",
@@ -1400,6 +1442,13 @@
       "version": "v4.0.16.2944",
       "pinned": false,
       "date": "2025-11-05T01:56:48Z"
+    },
+    {
+      "slug": "sonobarr",
+      "repo": "Dodelidoo-Labs/sonobarr",
+      "version": "0.12.1",
+      "pinned": false,
+      "date": "2026-03-03T13:43:02Z"
     },
     {
       "slug": "speedtest-tracker",
@@ -1418,16 +1467,16 @@
     {
       "slug": "sportarr",
       "repo": "Sportarr/Sportarr",
-      "version": "v4.0.983.1057",
+      "version": "v4.0.985.1060",
       "pinned": false,
-      "date": "2026-01-26T18:54:50Z"
+      "date": "2026-03-04T01:00:04Z"
     },
     {
       "slug": "stirling-pdf",
       "repo": "Stirling-Tools/Stirling-PDF",
-      "version": "v2.5.2",
+      "version": "v2.6.0",
       "pinned": false,
-      "date": "2026-02-20T23:20:20Z"
+      "date": "2026-03-03T20:46:42Z"
     },
     {
       "slug": "streamlink-webui",
@@ -1446,9 +1495,9 @@
     {
       "slug": "sure",
       "repo": "we-promise/sure",
-      "version": "chart-v0.6.8-alpha.13",
+      "version": "v0.6.8",
       "pinned": false,
-      "date": "2026-02-20T11:15:15Z"
+      "date": "2026-02-28T12:55:36Z"
     },
     {
       "slug": "tandoor",
@@ -1514,18 +1563,25 @@
       "date": "2026-02-13T16:30:09Z"
     },
     {
+      "slug": "tinyauth",
+      "repo": "steveiliop56/tinyauth",
+      "version": "v5.0.1",
+      "pinned": false,
+      "date": "2026-03-04T21:05:05Z"
+    },
+    {
       "slug": "traccar",
       "repo": "traccar/traccar",
-      "version": "v6.11.1",
+      "version": "v6.12.2",
       "pinned": false,
-      "date": "2025-12-07T19:19:08Z"
+      "date": "2026-02-27T15:08:36Z"
     },
     {
       "slug": "tracearr",
       "repo": "connorgallopo/Tracearr",
-      "version": "v1.4.18",
+      "version": "v1.4.21",
       "pinned": false,
-      "date": "2026-02-15T19:55:40Z"
+      "date": "2026-03-03T18:43:20Z"
     },
     {
       "slug": "tracktor",
@@ -1537,23 +1593,23 @@
     {
       "slug": "traefik",
       "repo": "traefik/traefik",
-      "version": "v3.6.8",
+      "version": "v3.6.9",
       "pinned": false,
-      "date": "2026-02-11T16:44:37Z"
+      "date": "2026-02-23T17:21:17Z"
     },
     {
       "slug": "trilium",
       "repo": "TriliumNext/Trilium",
-      "version": "v0.101.3",
+      "version": "v0.102.0",
       "pinned": false,
-      "date": "2026-01-08T18:05:22Z"
+      "date": "2026-03-01T20:37:40Z"
     },
     {
       "slug": "trip",
       "repo": "itskovacs/TRIP",
-      "version": "1.40.0",
+      "version": "1.41.1",
       "pinned": false,
-      "date": "2026-02-10T20:12:53Z"
+      "date": "2026-03-04T07:25:35Z"
     },
     {
       "slug": "tududi",
@@ -1565,9 +1621,9 @@
     {
       "slug": "tunarr",
       "repo": "chrisbenincasa/tunarr",
-      "version": "v1.1.15",
+      "version": "v1.1.18",
       "pinned": false,
-      "date": "2026-02-19T23:51:17Z"
+      "date": "2026-02-26T22:09:44Z"
     },
     {
       "slug": "uhf",
@@ -1593,9 +1649,9 @@
     {
       "slug": "upgopher",
       "repo": "wanetty/upgopher",
-      "version": "v1.13.0",
+      "version": "v1.15.2",
       "pinned": false,
-      "date": "2026-01-16T20:26:34Z"
+      "date": "2026-03-03T13:40:45Z"
     },
     {
       "slug": "upsnap",
@@ -1607,30 +1663,30 @@
     {
       "slug": "uptimekuma",
       "repo": "louislam/uptime-kuma",
-      "version": "2.1.3",
+      "version": "2.2.0",
       "pinned": false,
-      "date": "2026-02-19T05:37:30Z"
+      "date": "2026-03-05T02:08:14Z"
     },
     {
       "slug": "vaultwarden",
       "repo": "dani-garcia/vaultwarden",
-      "version": "1.35.3",
+      "version": "1.35.4",
       "pinned": false,
-      "date": "2026-02-10T20:37:03Z"
+      "date": "2026-02-23T21:43:25Z"
     },
     {
       "slug": "victoriametrics",
       "repo": "VictoriaMetrics/VictoriaMetrics",
-      "version": "v1.136.0",
+      "version": "v1.137.0",
       "pinned": false,
-      "date": "2026-02-16T13:17:50Z"
+      "date": "2026-03-02T10:09:29Z"
     },
     {
       "slug": "vikunja",
       "repo": "go-vikunja/vikunja",
-      "version": "v1.1.0",
+      "version": "v2.1.0",
       "pinned": false,
-      "date": "2026-02-09T10:34:29Z"
+      "date": "2026-02-27T14:26:53Z"
     },
     {
       "slug": "wallabag",
@@ -1649,9 +1705,9 @@
     {
       "slug": "wanderer",
       "repo": "meilisearch/meilisearch",
-      "version": "v1.35.1",
+      "version": "v1.37.0",
       "pinned": false,
-      "date": "2026-02-16T17:01:17Z"
+      "date": "2026-03-02T09:16:36Z"
     },
     {
       "slug": "warracker",
@@ -1663,9 +1719,9 @@
     {
       "slug": "watcharr",
       "repo": "sbondCo/Watcharr",
-      "version": "v2.1.1",
+      "version": "v3.0.0",
       "pinned": false,
-      "date": "2025-07-15T22:38:01Z"
+      "date": "2026-03-04T09:29:14Z"
     },
     {
       "slug": "watchyourlan",
@@ -1684,9 +1740,9 @@
     {
       "slug": "wealthfolio",
       "repo": "afadil/wealthfolio",
-      "version": "v2.1.0",
+      "version": "v3.0.3",
       "pinned": false,
-      "date": "2025-12-01T21:57:36Z"
+      "date": "2026-03-03T21:47:55Z"
     },
     {
       "slug": "web-check",
@@ -1712,16 +1768,16 @@
     {
       "slug": "wishlist",
       "repo": "cmintey/wishlist",
-      "version": "v0.60.0",
+      "version": "v0.60.1",
       "pinned": false,
-      "date": "2026-02-10T04:05:26Z"
+      "date": "2026-02-24T04:01:37Z"
     },
     {
       "slug": "wizarr",
       "repo": "wizarrrr/wizarr",
-      "version": "v2025.12.0",
+      "version": "v2026.2.1",
       "pinned": false,
-      "date": "2025-12-09T14:30:23Z"
+      "date": "2026-02-25T01:07:56Z"
     },
     {
       "slug": "writefreely",
@@ -1740,16 +1796,23 @@
     {
       "slug": "yubal",
       "repo": "guillevc/yubal",
-      "version": "v0.6.1",
+      "version": "v0.6.2",
       "pinned": false,
-      "date": "2026-02-18T23:24:16Z"
+      "date": "2026-02-24T15:15:46Z"
+    },
+    {
+      "slug": "zerobyte",
+      "repo": "restic/restic",
+      "version": "v0.18.1",
+      "pinned": false,
+      "date": "2025-09-21T18:24:38Z"
     },
     {
       "slug": "zigbee2mqtt",
       "repo": "Koenkk/zigbee2mqtt",
-      "version": "2.8.0",
+      "version": "2.9.1",
       "pinned": false,
-      "date": "2026-02-01T19:27:25Z"
+      "date": "2026-03-02T11:16:46Z"
     },
     {
       "slug": "zipline",
@@ -1761,23 +1824,23 @@
     {
       "slug": "zitadel",
       "repo": "zitadel/zitadel",
-      "version": "v4.11.0",
+      "version": "v4.12.1",
       "pinned": false,
-      "date": "2026-02-16T09:48:38Z"
+      "date": "2026-03-04T12:40:17Z"
     },
     {
       "slug": "zoraxy",
       "repo": "tobychui/zoraxy",
-      "version": "v3.3.2-rc1",
+      "version": "v3.3.2-rc2",
       "pinned": false,
-      "date": "2026-02-15T02:16:17Z"
+      "date": "2026-02-27T03:31:25Z"
     },
     {
       "slug": "zwave-js-ui",
       "repo": "zwave-js/zwave-js-ui",
-      "version": "v11.12.0",
+      "version": "v11.13.0",
       "pinned": false,
-      "date": "2026-02-19T10:14:19Z"
+      "date": "2026-03-04T15:09:54Z"
     }
   ]
 }
