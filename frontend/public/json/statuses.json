@@ -141,7 +141,7 @@
     "grocy.json": "✅",
     "guardian.json": "✅",
     "gwn-manager.json": "❌",
-    "haos-vm.json": "❌",
+    "haos-vm.json": "✅",
     "headscale.json": "✅",
     "healthchecks.json": "❌",
     "heimdall-dashboard.json": "✅",
