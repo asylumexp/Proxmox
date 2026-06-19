@@ -1,3 +1,12 @@
+## Future of arm64 Helper Scripts
+
+Hey everyone, just wanted to let everyone know that I have joined the Community Scripts team and have begun work on merging arm64 support into the main [Community Scripts Proxmox VE Helper-Scripts](https://github.com/community-scripts/ProxmoxVE) repository.
+
+I will soon be archiving this repository, thank you to everyone who used and contributed to this project over the past four years.
+
+
+
+---
 <div align="center">
   <p align="center">
     <a href="#">
