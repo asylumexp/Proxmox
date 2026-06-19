@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="index, follow">
+  <title>The ARM64 scripts have been moved</title>
+  <meta
+    name="description"
+    content="Pimox Scripts"
+  >
+  <style>
+    :root {
+      --background: #f6f8fb;
+      --panel: #ffffff;
+      --border: #d9e0ea;
+      --text: #111827;
+      --muted: #4b5563;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      background: var(--background);
+    }
+
+    main {
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    section {
+      width: 100%;
+      max-width: 800px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 2.5rem;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    }
+
+    h1 {
+      margin: 0 0 1rem;
+      font-size: 2rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-top: 1.75rem;
+    }
+
+    .button {
+      display: inline-flex;
+      width: 100%;
+      min-height: 2.75rem;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.2;
+      text-align: center;
+      text-decoration: none;
+      transition:
+        border-color 160ms ease,
+        background 160ms ease,
+        color 160ms ease;
+    }
+
+    .button:hover {
+      border-color: #b8c2d2;
+      background: #f9fafb;
+    }
+
+    .button.primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .button.primary:hover {
+      border-color: var(--primary-hover);
+      background: var(--primary-hover);
+    }
+
+    @media (max-width: 560px) {
+      main {
+        align-items: flex-start;
+        padding: 1rem;
+      }
+
+      section {
+        padding: 1.5rem;
+      }
+
+      .button {
+        min-height: 2.5rem;
+        padding: 0.55rem 0.4rem;
+        font-size: 0.78rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section>
+      <h1>The ARM64 Helper Scripts have been moved</h1>
+      <p>
+        I have recently joined the community-scripts team, and have begun work recently on porting scripts to work on ARM64.
+        The original repository has now been archived and will no longer be accessible. Thank you to everyone who used and
+        contributed to this project over the past four years.
+      </p>
+      <div class="actions" aria-label="Project links">
+        <a class="button primary" href="https://community-scripts.org/">Visit Community Scripts</a>
+        <a class="button" href="https://github.com/community-scripts/ProxmoxVE">View Upstream Repository</a>
+        <a class="button" href="https://github.com/asylumexp/Proxmox">View ARM64 Repository</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
